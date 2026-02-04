@@ -33,6 +33,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
 
   if (!enrollment.track) return null;
   const trackData = TRACKS[enrollment.track];
+  const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY || '';
+  const isTestMode = razorpayKey.startsWith('rzp_test_');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -51,15 +53,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
   };
 
   const handlePayment = () => {
-    const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY;
-    
     if (!razorpayKey) {
-      setErrorMessage("Configuration Error: Payment Key (VITE_RAZORPAY_KEY) is not set in environment variables.");
+      setErrorMessage("Configuration Error: Payment Key (VITE_RAZORPAY_KEY) is missing in Vercel.");
       return;
     }
 
     if (typeof window.Razorpay === 'undefined') {
-      setErrorMessage("Payment gateway failed to load. Please check your internet connection and refresh.");
+      setErrorMessage("Payment gateway failed to load. Please check your internet connection.");
       return;
     }
 
@@ -68,7 +68,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
 
     const options = {
       key: razorpayKey,
-      amount: trackData.price * 100, // Paise
+      amount: trackData.price * 100, // Amount in paise
       currency: "INR",
       name: "Industrial Immersion",
       description: `${trackData.title} Enrollment`,
@@ -86,7 +86,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
         if (submissionResult.success) {
           setStep(4);
         } else {
-          setErrorMessage("Payment received but registration failed. Please contact support with Payment ID: " + response.razorpay_payment_id);
+          setErrorMessage("Payment received but profile update failed. Contact support with ID: " + response.razorpay_payment_id);
         }
         setIsProcessing(false);
       },
@@ -117,35 +117,38 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
       
       <div className="relative bg-[#080808] border border-white/10 w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[95vh] neon-border">
-        {/* Header */}
+        {/* Header with Mode Indicator */}
         <div className="p-8 border-b border-white/5 bg-white/[0.01] flex justify-between items-center">
           <div className="flex-1">
-            <div className="flex items-center gap-1.5 mb-2">
+            <div className="flex items-center justify-between mb-4">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">
+                {step === 1 && "Phase 01: Profile"}
+                {step === 2 && "Phase 02: Verification"}
+                {step === 3 && "Phase 03: Settlement"}
+                {step === 4 && "Phase 04: Confirmed"}
+              </p>
+              {razorpayKey && (
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${isTestMode ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
+                  {isTestMode ? 'Test Mode' : 'Live Mode'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
               {[1, 2, 3, 4].map(s => (
                 <div key={s} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= s ? 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-white/5'}`} />
               ))}
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">
-              {step === 1 && "Phase 01: Profile"}
-              {step === 2 && "Phase 02: Verification"}
-              {step === 3 && "Phase 03: Settlement"}
-              {step === 4 && "Phase 04: Confirmed"}
-            </p>
           </div>
-          <button onClick={onClose} className="ml-6 p-2 hover:bg-white/10 rounded-full transition-colors text-gray-500 hover:text-white">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button onClick={onClose} className="ml-6 p-2 hover:bg-white/10 rounded-full transition-colors text-gray-500">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
           {errorMessage && (
-            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-center animate-in fade-in slide-in-from-top-2">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-center">
+              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               {errorMessage}
             </div>
           )}
@@ -155,7 +158,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Full Legal Name *</label>
-                  <input required name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-700" placeholder="Arnav Sharma" />
+                  <input required name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Arnav Sharma" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Email *</label>
@@ -193,21 +196,42 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
               <div className="p-8 bg-blue-600/5 border border-blue-500/20 rounded-3xl relative overflow-hidden">
                 <p className="text-[10px] text-gray-500 font-black uppercase mb-2 tracking-widest">Enrolling in</p>
                 <p className="font-heading font-bold text-white text-2xl mb-6">{trackData.title}</p>
-                <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                
+                {/* Summary Table */}
+                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/5">
+                  <div>
+                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Full Name</span>
+                    <span className="text-white text-sm font-medium">{formData.fullName}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Email</span>
+                    <span className="text-white text-sm font-medium truncate block">{formData.email}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Phone</span>
+                    <span className="text-white text-sm font-medium">{formData.phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Current Status</span>
+                    <span className="text-white text-sm font-medium">{formData.currentStatus}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/5">
                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Enrollment Fee</span>
+                      <span className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Total Payable</span>
                       <span className="text-white font-bold text-3xl">₹{trackData.price.toLocaleString()}</span>
-                   </div>
-                   <div className="text-right">
-                      <span className="text-blue-500 text-[10px] uppercase font-bold tracking-widest block mb-1">Duration</span>
-                      <span className="text-white font-medium">{trackData.duration}</span>
                    </div>
                 </div>
               </div>
-              <button onClick={() => setStep(3)} className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-blue-500/30 text-lg uppercase tracking-widest flex items-center justify-center gap-3">
-                Proceed to Checkout
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </button>
+
+              <div className="space-y-4">
+                <button onClick={() => setStep(3)} className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-blue-500/30 text-lg uppercase tracking-widest flex items-center justify-center gap-3">
+                  Confirm Details
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </button>
+                <button onClick={() => setStep(1)} className="w-full text-[10px] text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-[0.2em]">Edit Information</button>
+              </div>
             </div>
           )}
 
@@ -219,13 +243,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
                   </svg>
                </div>
                <div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Secure Payment</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-white">Secure Checkout</h3>
                   <p className="text-gray-500 text-sm max-w-xs mx-auto leading-relaxed">
-                    Transaction secured by <strong>Razorpay</strong>. UPI, Netbanking and Cards accepted.
+                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2">Note: You are in Test Mode. Real payments will not work.</span>}
                   </p>
                </div>
                <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/40'}`}>
-                  {isProcessing ? "Opening Gateway..." : `Pay ₹${trackData.price.toLocaleString()}`}
+                  {isProcessing ? "Connecting..." : `Pay ₹${trackData.price.toLocaleString()}`}
                </button>
             </div>
           )}
@@ -236,7 +260,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
               <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Cohort Confirmed</h3>
-              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been received. Welcome to the program.</p>
+              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been received successfully. Welcome to the program.</p>
               <button onClick={onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Return to Site</button>
             </div>
           )}
