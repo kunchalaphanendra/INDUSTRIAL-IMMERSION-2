@@ -29,11 +29,25 @@ export const apiService = {
       }
       return { 
         success: false, 
-        error: `Configuration Error: Missing Database Credentials (VITE_ prefix).` 
+        error: `Configuration Error: Missing VITE_BACKEND_API_URL or VITE_BACKEND_API_KEY in Vercel.` 
       };
     }
 
     try {
+      const payload = {
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        linkedin: data.linkedin || null,
+        current_status: data.currentStatus,
+        career_goals: data.careerGoals,
+        track_key: data.track,
+        payment_status: 'completed',
+        razorpay_payment_id: data.paymentId || null,
+        razorpay_order_id: data.orderId || null,
+        razorpay_signature: data.signature || null
+      };
+
       const response = await fetch(config.url, {
         method: 'POST',
         headers: {
@@ -42,29 +56,21 @@ export const apiService = {
           'Authorization': `Bearer ${config.key}`,
           'Prefer': 'return=minimal' 
         },
-        body: JSON.stringify({
-          full_name: data.fullName,
-          email: data.email,
-          phone: data.phone,
-          linkedin: data.linkedin || null,
-          current_status: data.currentStatus,
-          career_goals: data.careerGoals,
-          track_key: data.track,
-          payment_status: 'completed',
-          razorpay_payment_id: data.paymentId || null,
-          razorpay_order_id: data.orderId || null,
-          razorpay_signature: data.signature || null
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errText = await response.text();
-        return { success: false, error: `Database Error: ${errText}` };
+        const errBody = await response.json().catch(() => ({ message: 'Unknown database error' }));
+        return { 
+          success: false, 
+          error: `Supabase Error: ${errBody.message || response.statusText}. Ensure table 'applications' exists with correct columns.` 
+        };
       }
 
       return { success: true };
     } catch (error: any) {
-      return { success: false, error: "Connection failed. Please check your network." };
+      return { success: false, error: "Network connection failed. Data not saved." };
     }
   }
 };
+
