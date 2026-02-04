@@ -12,6 +12,13 @@ export interface TrackData {
   features: string[];
 }
 
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl?: string;
+}
+
 export interface UserRegistration {
   fullName: string;
   email: string;
@@ -28,6 +35,14 @@ export interface UserRegistration {
 export interface EnrollmentState {
   track: TrackKey | null;
   userData?: UserRegistration;
+}
+
+export interface EnrollmentRecord {
+  id: string;
+  track_key: TrackKey;
+  created_at: string;
+  payment_status: string;
+  progress: number; // 0 to 100
 }
 
 export enum SpecializationKey {
