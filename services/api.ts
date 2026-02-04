@@ -13,16 +13,83 @@ const getApiConfig = () => {
 };
 
 export const apiService = {
-  async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
+  // --- AUTH METHODS ---
+  async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+    const config = getApiConfig();
+    try {
+      const response = await fetch(`${config.url}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.key
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          data: { full_name: fullName }
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.msg || data.error_description || 'Signup failed');
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async signIn(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+    const config = getApiConfig();
+    try {
+      const response = await fetch(`${config.url}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.key
+        },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+      
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email,
+        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`
+      };
+
+      return { success: true, user, token: data.access_token };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async getCurrentUser(token: string): Promise<User | null> {
+    const config = getApiConfig();
+    try {
+      const response = await fetch(`${config.url}/auth/v1/user`, {
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) return null;
+      return {
+        id: data.id,
+        email: data.email,
+        fullName: data.user_metadata?.full_name || data.email.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  // --- APPLICATION METHODS ---
+  async submitApplication(data: any, token?: string): Promise<{ success: boolean; error?: string }> {
     const config = getApiConfig();
     const endpoint = `${config.url}/rest/v1/applications`;
-
-    if (!config.url || !config.key) {
-      if (window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) {
-        return { success: true };
-      }
-      return { success: false, error: "Missing API Config" };
-    }
 
     try {
       const payload = {
@@ -44,7 +111,7 @@ export const apiService = {
         headers: {
           'Content-Type': 'application/json',
           'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`,
+          'Authorization': token ? `Bearer ${token}` : `Bearer ${config.key}`,
           'Prefer': 'return=minimal' 
         },
         body: JSON.stringify(payload),
@@ -58,8 +125,6 @@ export const apiService = {
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
     const config = getApiConfig();
-    if (!config.url || !config.key) return [];
-
     try {
       const response = await fetch(`${config.url}/rest/v1/applications?email=eq.${email}&select=*`, {
         headers: {
@@ -74,13 +139,14 @@ export const apiService = {
         track_key: item.track_key,
         created_at: item.created_at,
         payment_status: item.payment_status,
-        progress: Math.floor(Math.random() * 40) // Simulated progress
+        progress: Math.floor(Math.random() * 40)
       }));
     } catch {
       return [];
     }
   }
 };
+
 
 
 
