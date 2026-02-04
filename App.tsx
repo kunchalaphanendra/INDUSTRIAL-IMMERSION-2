@@ -11,6 +11,7 @@ import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import { PARTNERS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
+import { apiService } from './services/api';
 
 const PartnersSection: React.FC = () => (
   <section className="py-12 bg-black border-y border-white/5 overflow-hidden">
@@ -68,19 +69,29 @@ const App: React.FC = () => {
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('ii_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const recoverSession = async () => {
+      const token = localStorage.getItem('ii_token');
+      if (token) {
+        const userData = await apiService.getCurrentUser(token);
+        if (userData) {
+          setUser(userData);
+        } else {
+          localStorage.removeItem('ii_token');
+          localStorage.removeItem('ii_user');
+        }
+      }
+      setIsInitializing(false);
+    };
+    recoverSession();
   }, []);
 
   const handleTrackSelect = (track: TrackKey) => {
     if (!user) {
-      setShowAuthModal(true);
-      // We will handle track selection after auth
       setSelectedTrack(track);
+      setShowAuthModal(true);
     } else {
       setSelectedTrack(track);
       setEnrollment({ track });
@@ -90,17 +101,25 @@ const App: React.FC = () => {
   const handleAuthSuccess = (loggedUser: User) => {
     setUser(loggedUser);
     setShowAuthModal(false);
-    // If the user was trying to enroll, continue the flow
     if (selectedTrack) {
       setEnrollment({ track: selectedTrack });
     }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('ii_token');
     localStorage.removeItem('ii_user');
     setUser(null);
     setView('landing');
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (view === 'dashboard' && user) {
     return (
@@ -158,3 +177,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
