@@ -1,10 +1,5 @@
 
-import { UserRegistration, TrackKey, PaymentStatus } from '../types';
-
-/**
- * PRODUCTION API SERVICE for Supabase
- * Handles mapping from the frontend (camelCase) to the Database (snake_case)
- */
+import { UserRegistration, TrackKey, User, EnrollmentRecord } from '../types';
 
 const getApiConfig = () => {
   const env = (import.meta as any).env || {};
@@ -12,7 +7,7 @@ const getApiConfig = () => {
   const key = (env.VITE_BACKEND_API_KEY || '').trim();
 
   return { 
-    url: baseUrl ? (baseUrl.replace(/\/$/, '') + '/rest/v1/applications') : '', 
+    url: baseUrl ? baseUrl.replace(/\/$/, '') : '', 
     key 
   };
 };
@@ -20,21 +15,17 @@ const getApiConfig = () => {
 export const apiService = {
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     const config = getApiConfig();
+    const endpoint = `${config.url}/rest/v1/applications`;
 
     if (!config.url || !config.key) {
       if (window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) {
-        console.warn("Bypassing API submission in Localhost. Check Vercel for live data.");
         return { success: true };
       }
-      return { 
-        success: false, 
-        error: `Configuration Error: Missing VITE_BACKEND_API_URL or VITE_BACKEND_API_KEY in Vercel.` 
-      };
+      return { success: false, error: "Missing API Config" };
     }
 
     try {
-      // Map frontend fields to Supabase snake_case columns
-      const payload: any = {
+      const payload = {
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
@@ -48,7 +39,7 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      const response = await fetch(config.url, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,29 +50,37 @@ export const apiService = {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        
-        // Detailed error for common Supabase issues like missing columns
-        if (response.status === 400 || errBody.code === 'PGRST204' || (errBody.message && errBody.message.includes('column'))) {
-          return { 
-            success: false, 
-            error: `Database Schema Error: Your 'applications' table is missing columns (likely 'razorpay_order_id'). Please run the SQL fix provided to update your table.` 
-          };
-        }
-        
-        return { 
-          success: false, 
-          error: `Supabase Error: ${errBody.message || response.statusText}` 
-        };
-      }
+      return { success: response.ok };
+    } catch (error) {
+      return { success: false, error: "Network error" };
+    }
+  },
 
-      return { success: true };
-    } catch (error: any) {
-      console.error("Submission failed:", error);
-      return { success: false, error: "Network error: Failed to reach the database." };
+  async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
+    const config = getApiConfig();
+    if (!config.url || !config.key) return [];
+
+    try {
+      const response = await fetch(`${config.url}/rest/v1/applications?email=eq.${email}&select=*`, {
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${config.key}`
+        }
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data.map((item: any) => ({
+        id: item.id,
+        track_key: item.track_key,
+        created_at: item.created_at,
+        payment_status: item.payment_status,
+        progress: Math.floor(Math.random() * 40) // Simulated progress
+      }));
+    } catch {
+      return [];
     }
   }
 };
+
 
 
