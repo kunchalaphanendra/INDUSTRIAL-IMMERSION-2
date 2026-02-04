@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ProgramSelector from './components/ProgramSelector';
@@ -7,8 +7,10 @@ import PricingSection from './components/PricingSection';
 import Features from './components/Features';
 import Footer from './components/Footer';
 import CheckoutModal from './components/CheckoutModal';
+import AuthModal from './components/AuthModal';
+import Dashboard from './components/Dashboard';
 import { PARTNERS } from './constants';
-import { TrackKey, EnrollmentState } from './types';
+import { TrackKey, EnrollmentState, User } from './types';
 
 const PartnersSection: React.FC = () => (
   <section className="py-12 bg-black border-y border-white/5 overflow-hidden">
@@ -54,17 +56,6 @@ const GetStarted: React.FC = () => {
               Review Roadmap
             </button>
           </div>
-          <div className="mt-12 flex items-center justify-center gap-8 grayscale opacity-50">
-             <div className="flex flex-col items-center">
-                <span className="text-white font-bold text-2xl">4.9/5</span>
-                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Student Rating</span>
-             </div>
-             <div className="w-px h-8 bg-white/10" />
-             <div className="flex flex-col items-center">
-                <span className="text-white font-bold text-2xl">2.5k+</span>
-                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Alumni Network</span>
-             </div>
-          </div>
         </div>
       </div>
     </section>
@@ -72,17 +63,70 @@ const GetStarted: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('ii_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   const handleTrackSelect = (track: TrackKey) => {
-    setSelectedTrack(track);
-    setEnrollment({ track });
+    if (!user) {
+      setShowAuthModal(true);
+      // We will handle track selection after auth
+      setSelectedTrack(track);
+    } else {
+      setSelectedTrack(track);
+      setEnrollment({ track });
+    }
   };
+
+  const handleAuthSuccess = (loggedUser: User) => {
+    setUser(loggedUser);
+    setShowAuthModal(false);
+    // If the user was trying to enroll, continue the flow
+    if (selectedTrack) {
+      setEnrollment({ track: selectedTrack });
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ii_user');
+    setUser(null);
+    setView('landing');
+  };
+
+  if (view === 'dashboard' && user) {
+    return (
+      <>
+        <Navbar 
+          user={user} 
+          onLoginClick={() => setShowAuthModal(true)} 
+          onDashboardClick={() => setView('dashboard')} 
+        />
+        <Dashboard 
+          user={user} 
+          onLogout={handleLogout} 
+          onBackToLanding={() => setView('landing')} 
+        />
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar 
+        user={user} 
+        onLoginClick={() => setShowAuthModal(true)} 
+        onDashboardClick={() => setView('dashboard')} 
+      />
       <main>
         <Hero />
         <PartnersSection />
@@ -95,10 +139,18 @@ const App: React.FC = () => {
         <GetStarted />
       </main>
       <Footer />
+
       {enrollment && (
         <CheckoutModal 
           enrollment={enrollment} 
           onClose={() => setEnrollment(null)} 
+        />
+      )}
+
+      {showAuthModal && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)} 
+          onSuccess={handleAuthSuccess} 
         />
       )}
     </div>
