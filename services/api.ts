@@ -21,7 +21,6 @@ export const apiService = {
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     const config = getApiConfig();
 
-    // Bypass in development environments if config is missing
     if (!config.url || !config.key) {
       if (window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) {
         console.warn("Bypassing API submission in Localhost. Check Vercel for live data.");
@@ -34,7 +33,8 @@ export const apiService = {
     }
 
     try {
-      const payload = {
+      // Map frontend fields to Supabase snake_case columns
+      const payload: any = {
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
@@ -60,17 +60,28 @@ export const apiService = {
       });
 
       if (!response.ok) {
-        const errBody = await response.json().catch(() => ({ message: 'Unknown database error' }));
+        const errBody = await response.json().catch(() => ({}));
+        
+        // Detailed error for common Supabase issues like missing columns
+        if (response.status === 400 || errBody.code === 'PGRST204' || (errBody.message && errBody.message.includes('column'))) {
+          return { 
+            success: false, 
+            error: `Database Schema Error: Your 'applications' table is missing columns (likely 'razorpay_order_id'). Please run the SQL fix provided to update your table.` 
+          };
+        }
+        
         return { 
           success: false, 
-          error: `Supabase Error: ${errBody.message || response.statusText}. Ensure table 'applications' exists with correct columns.` 
+          error: `Supabase Error: ${errBody.message || response.statusText}` 
         };
       }
 
       return { success: true };
     } catch (error: any) {
-      return { success: false, error: "Network connection failed. Data not saved." };
+      console.error("Submission failed:", error);
+      return { success: false, error: "Network error: Failed to reach the database." };
     }
   }
 };
+
 
