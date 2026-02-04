@@ -86,7 +86,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
         if (submissionResult.success) {
           setStep(4);
         } else {
-          setErrorMessage("Payment received but profile update failed. Contact support with ID: " + response.razorpay_payment_id);
+          // Pass the specific error from the API service
+          setErrorMessage(submissionResult.error || "Payment received but database sync failed.");
         }
         setIsProcessing(false);
       },
@@ -117,7 +118,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
       
       <div className="relative bg-[#080808] border border-white/10 w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[95vh] neon-border">
-        {/* Header with Mode Indicator */}
+        {/* Header */}
         <div className="p-8 border-b border-white/5 bg-white/[0.01] flex justify-between items-center">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
@@ -147,9 +148,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
           {errorMessage && (
-            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-center">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {errorMessage}
+            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-top-4">
+              <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold uppercase tracking-wider">Submission Error</span>
+                <span className="leading-relaxed">{errorMessage}</span>
+              </div>
             </div>
           )}
 
@@ -197,7 +201,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
                 <p className="text-[10px] text-gray-500 font-black uppercase mb-2 tracking-widest">Enrolling in</p>
                 <p className="font-heading font-bold text-white text-2xl mb-6">{trackData.title}</p>
                 
-                {/* Summary Table */}
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/5">
                   <div>
                     <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Full Name</span>
@@ -245,7 +248,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
                <div>
                   <h3 className="text-2xl font-bold mb-3 text-white">Secure Checkout</h3>
                   <p className="text-gray-500 text-sm max-w-xs mx-auto leading-relaxed">
-                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2">Note: You are in Test Mode. Real payments will not work.</span>}
+                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2 underline">IMPORTANT: SCANNING QR WITH GPAY/PHONEPE WILL NOT WORK IN TEST MODE. Use dummy UPI ID: success@razorpay</span>}
                   </p>
                </div>
                <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/40'}`}>
@@ -260,7 +263,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
               <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Cohort Confirmed</h3>
-              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been received successfully. Welcome to the program.</p>
+              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been saved to our industrial database. Welcome aboard.</p>
               <button onClick={onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Return to Site</button>
             </div>
           )}
@@ -271,3 +274,4 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
 };
 
 export default CheckoutModal;
+
