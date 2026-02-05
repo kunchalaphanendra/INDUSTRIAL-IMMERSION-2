@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EnrollmentState, TrackKey, UserRegistration } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
@@ -18,13 +18,17 @@ declare global {
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onComplete }) => {
-  const [step, setStep] = useState(1); // 1: Info, 2: Review, 3: Payment UI, 4: Success
+  const [step, setStep] = useState(1); 
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
+  // Get logged in user from local storage to sync email
+  const loggedInUserStr = localStorage.getItem('ii_user');
+  const loggedInUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
+
   const [formData, setFormData] = useState<UserRegistration>({
-    fullName: '',
-    email: '',
+    fullName: loggedInUser?.fullName || '',
+    email: loggedInUser?.email || '',
     phone: '',
     linkedin: '',
     currentStatus: 'Student',
@@ -69,7 +73,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
     const options = {
       key: razorpayKey,
-      amount: trackData.price * 100, // Amount in paise
+      amount: trackData.price * 100,
       currency: "INR",
       name: "Industrial Immersion",
       description: `${trackData.title} Enrollment`,
@@ -165,8 +169,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <input required name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Arnav Sharma" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Email *</label>
-                  <input required type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none" placeholder="email@example.com" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Email (Account Locked) *</label>
+                  <input disabled required type="email" name="email" value={formData.email} className="w-full bg-white/5 border border-white/20 opacity-50 cursor-not-allowed rounded-2xl px-5 py-4 text-white outline-none" placeholder="email@example.com" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Phone *</label>
@@ -248,7 +252,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                <div>
                   <h3 className="text-2xl font-bold mb-3 text-white">Secure Checkout</h3>
                   <p className="text-gray-500 text-sm max-w-xs mx-auto leading-relaxed">
-                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2 underline">IMPORTANT: SCANNING QR WITH GPAY/PHONEPE WILL NOT WORK IN TEST MODE. Use dummy UPI ID: success@razorpay</span>}
+                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2 underline">IMPORTANT: Use dummy UPI ID: success@razorpay in test mode.</span>}
                   </p>
                </div>
                <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/40'}`}>
@@ -263,8 +267,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
               <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Cohort Confirmed</h3>
-              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been saved to our industrial database. Welcome aboard.</p>
-              <button onClick={onComplete || onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Return to Site</button>
+              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been saved to your account. You can now access your dashboard.</p>
+              <button onClick={onComplete || onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Access Dashboard</button>
             </div>
           )}
         </div>
@@ -274,5 +278,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
