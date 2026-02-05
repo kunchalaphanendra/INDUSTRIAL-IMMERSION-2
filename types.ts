@@ -1,7 +1,15 @@
 
 export enum TrackKey {
-  COMPLETION = 'Completion Certificate Track',
-  EXPERIENCE = 'Experience Certificate Track'
+  EXECUTION = 'Execution Certificate Track',
+  INDUSTRIAL_EXP = 'Industrial Experience Certificate Track'
+}
+
+export enum DomainKey {
+  FASHION = 'fashion',
+  BEVERAGE = 'beverage',
+  ELECTRONICS = 'electronics',
+  GROWTH = 'growth',
+  TECH = 'tech'
 }
 
 export interface TrackData {
@@ -10,6 +18,13 @@ export interface TrackData {
   price: number;
   description: string;
   features: string[];
+}
+
+export interface DomainData {
+  title: string;
+  icon: string;
+  description: string;
+  outputs: string[];
 }
 
 export interface User {
@@ -27,6 +42,7 @@ export interface UserRegistration {
   currentStatus: 'Student' | 'Fresher' | 'Professional' | 'Entrepreneur';
   workExperience?: string;
   careerGoals: string;
+  selectedDomain?: DomainKey;
   paymentId?: string;
   orderId?: string;
   signature?: string;
@@ -34,6 +50,7 @@ export interface UserRegistration {
 
 export interface EnrollmentState {
   track: TrackKey | null;
+  domain?: DomainKey | null;
   userData?: UserRegistration;
 }
 
@@ -42,14 +59,13 @@ export interface EnrollmentRecord {
   track_key: TrackKey;
   created_at: string;
   payment_status: string;
-  progress: number; // 0 to 100
+  progress: number;
 }
 
-export enum SpecializationKey {
-  INFLUENCER = 'influencer',
-  MANAGEMENT = 'management',
-  FINANCE = 'finance',
-  CORPORATE = 'corporate'
+// Added missing types for CourseCard compatibility
+export enum BillingCycle {
+  MONTHLY = 'monthly',
+  YEARLY = 'yearly'
 }
 
 export interface CourseData {
@@ -58,9 +74,5 @@ export interface CourseData {
   outcomes: string[];
 }
 
-export enum BillingCycle {
-  MONTHLY = 'monthly',
-  YEARLY = 'yearly'
-}
+export type SpecializationKey = string;
 
-export type PaymentStatus = 'pending' | 'completed' | 'failed';
