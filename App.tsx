@@ -39,22 +39,16 @@ const GetStarted: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 text-center">
         <div className="glass-card p-12 md:p-20 rounded-[3rem] border-blue-500/20 relative overflow-hidden group">
           <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <h2 className="text-4xl md:text-6xl font-heading font-bold mb-8">Ready to <span className="text-blue-500">Scale?</span></h2>
-          <p className="text-gray-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-heading font-bold mb-8 uppercase tracking-tighter">Ready to <span className="text-blue-500">Scale?</span></h2>
+          <p className="text-gray-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
             Stop wondering if you're ready. Start building your industrial career today with our execution-first program.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <div className="flex flex-col items-center justify-center">
             <button 
               onClick={() => scrollTo('tracks')} 
-              className="w-full sm:w-auto px-12 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 text-lg"
+              className="w-full sm:w-auto px-16 py-6 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/40 text-xl uppercase tracking-widest"
             >
               Choose Your Track
-            </button>
-            <button 
-              onClick={() => scrollTo('process')} 
-              className="w-full sm:w-auto px-12 py-5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/5 transition-all text-lg"
-            >
-              Review Roadmap
             </button>
           </div>
         </div>
