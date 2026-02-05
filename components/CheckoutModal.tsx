@@ -22,7 +22,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Get logged in user from local storage to sync email
   const loggedInUserStr = localStorage.getItem('ii_user');
   const loggedInUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
 
@@ -127,10 +126,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">
-                {step === 1 && "Phase 01: Profile"}
-                {step === 2 && "Phase 02: Verification"}
-                {step === 3 && "Phase 03: Settlement"}
-                {step === 4 && "Phase 04: Confirmed"}
+                {step === 1 && "Profile Details"}
+                {step === 2 && "Final Review"}
+                {step === 3 && "Payment Settlement"}
+                {step === 4 && "Application Confirmed"}
               </p>
               {razorpayKey && (
                 <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${isTestMode ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
@@ -155,7 +154,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
             <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-top-4">
               <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <div className="flex flex-col gap-1">
-                <span className="font-bold uppercase tracking-wider">Submission Error</span>
+                <span className="font-bold uppercase tracking-wider">Error</span>
                 <span className="leading-relaxed">{errorMessage}</span>
               </div>
             </div>
@@ -169,8 +168,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <input required name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Arnav Sharma" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Email (Account Locked) *</label>
-                  <input disabled required type="email" name="email" value={formData.email} className="w-full bg-white/5 border border-white/20 opacity-50 cursor-not-allowed rounded-2xl px-5 py-4 text-white outline-none" placeholder="email@example.com" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Email (Linked) *</label>
+                  <input disabled required type="email" name="email" value={formData.email} className="w-full bg-white/5 border border-white/20 opacity-50 cursor-not-allowed rounded-2xl px-5 py-4 text-white outline-none" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Phone *</label>
@@ -193,16 +192,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Career Goals *</label>
-                <textarea required name="careerGoals" value={formData.careerGoals} onChange={handleInputChange} rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none resize-none" placeholder="What do you want to achieve?" />
+                <textarea required name="careerGoals" value={formData.careerGoals} onChange={handleInputChange} rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none resize-none" placeholder="Briefly explain your objective" />
               </div>
-              <button type="submit" className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all uppercase tracking-[0.2em] text-xs shadow-xl shadow-blue-500/20">Continue to Review</button>
+              <button type="submit" className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all uppercase tracking-[0.2em] text-xs shadow-xl shadow-blue-500/20">Review Enrollment</button>
             </form>
           )}
 
           {step === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div className="p-8 bg-blue-600/5 border border-blue-500/20 rounded-3xl relative overflow-hidden">
-                <p className="text-[10px] text-gray-500 font-black uppercase mb-2 tracking-widest">Enrolling in</p>
+                <p className="text-[10px] text-gray-500 font-black uppercase mb-2 tracking-widest">Enrolling for</p>
                 <p className="font-heading font-bold text-white text-2xl mb-6">{trackData.title}</p>
                 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/5">
@@ -219,7 +218,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <span className="text-white text-sm font-medium">{formData.phone}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Current Status</span>
+                    <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Status</span>
                     <span className="text-white text-sm font-medium">{formData.currentStatus}</span>
                   </div>
                 </div>
@@ -234,29 +233,29 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
               <div className="space-y-4">
                 <button onClick={() => setStep(3)} className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-blue-500/30 text-lg uppercase tracking-widest flex items-center justify-center gap-3">
-                  Confirm Details
+                  Confirm & Pay
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                 </button>
-                <button onClick={() => setStep(1)} className="w-full text-[10px] text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-[0.2em]">Edit Information</button>
+                <button onClick={() => setStep(1)} className="w-full text-[10px] text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-[0.2em]">Go Back</button>
               </div>
             </div>
           )}
 
           {step === 3 && (
             <div className="text-center py-6 space-y-10 animate-in zoom-in duration-300">
-               <div className="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto text-blue-500 border border-blue-500/20 shadow-[0_0_50px_rgba(37,99,235,0.1)]">
+               <div className="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto text-blue-500 border border-blue-500/20">
                   <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                </div>
                <div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Secure Checkout</h3>
-                  <p className="text-gray-500 text-sm max-w-xs mx-auto leading-relaxed">
-                    Powered by <strong>Razorpay</strong>. {isTestMode && <span className="text-yellow-500 font-bold block mt-2 underline">IMPORTANT: Use dummy UPI ID: success@razorpay in test mode.</span>}
+                  <h3 className="text-2xl font-bold mb-3 text-white">Payment Processing</h3>
+                  <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                    Secure checkout powered by <strong>Razorpay</strong>.
                   </p>
                </div>
-               <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/40'}`}>
-                  {isProcessing ? "Connecting..." : `Pay ₹${trackData.price.toLocaleString()}`}
+               <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl'}`}>
+                  {isProcessing ? "Connecting..." : `Proceed with ₹${trackData.price.toLocaleString()}`}
                </button>
             </div>
           )}
@@ -266,8 +265,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
               <div className="w-24 h-24 bg-green-500/10 border-2 border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-8 text-green-500 shadow-[0_0_80px_rgba(34,197,94,0.2)]">
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Cohort Confirmed</h3>
-              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been saved to your account. You can now access your dashboard.</p>
+              <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Plan Activated</h3>
+              <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your enrollment is confirmed. You can now manage your subscription from the dashboard.</p>
               <button onClick={onComplete || onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Access Dashboard</button>
             </div>
           )}
@@ -278,6 +277,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
