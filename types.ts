@@ -76,3 +76,4 @@ export interface CourseData {
 
 export type SpecializationKey = string;
 
+
