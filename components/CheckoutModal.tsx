@@ -7,6 +7,7 @@ import { apiService } from '../services/api';
 interface CheckoutModalProps {
   enrollment: EnrollmentState;
   onClose: () => void;
+  onComplete?: () => void;
 }
 
 // Extend Window interface for Razorpay
@@ -16,7 +17,7 @@ declare global {
   }
 }
 
-const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) => {
+const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onComplete }) => {
   const [step, setStep] = useState(1); // 1: Info, 2: Review, 3: Payment UI, 4: Success
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -86,7 +87,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
         if (submissionResult.success) {
           setStep(4);
         } else {
-          // Pass the specific error from the API service
           setErrorMessage(submissionResult.error || "Payment received but database sync failed.");
         }
         setIsProcessing(false);
@@ -264,7 +264,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
               </div>
               <h3 className="text-4xl font-heading font-bold mb-4 text-white uppercase tracking-tighter">Cohort Confirmed</h3>
               <p className="text-gray-400 mb-12 text-base max-w-sm mx-auto leading-relaxed">Your application has been saved to our industrial database. Welcome aboard.</p>
-              <button onClick={onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Return to Site</button>
+              <button onClick={onComplete || onClose} className="w-full py-6 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-xl uppercase tracking-widest shadow-2xl">Return to Site</button>
             </div>
           )}
         </div>
@@ -274,4 +274,5 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose }) =>
 };
 
 export default CheckoutModal;
+
 
