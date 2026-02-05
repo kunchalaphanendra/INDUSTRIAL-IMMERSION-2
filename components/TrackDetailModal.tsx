@@ -11,7 +11,8 @@ interface TrackDetailModalProps {
 }
 
 const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onClose, onEnroll }) => {
-  const isExp = trackKey === TrackKey.EXPERIENCE;
+  // Fix: Corrected property from EXPERIENCE to INDUSTRIAL_EXP
+  const isExp = trackKey === TrackKey.INDUSTRIAL_EXP;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -136,3 +137,4 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 };
 
 export default TrackDetailModal;
+
