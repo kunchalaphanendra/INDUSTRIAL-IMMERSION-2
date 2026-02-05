@@ -1,77 +1,117 @@
 
-import { TrackKey, TrackData } from './types';
+import { TrackKey, TrackData, DomainKey, DomainData } from './types';
 
 export const TRACKS: Record<TrackKey, TrackData> = {
-  [TrackKey.COMPLETION]: {
-    title: 'Completion Certificate Track',
+  [TrackKey.EXECUTION]: {
+    title: 'Execution Certificate',
     duration: '6 Weeks',
     price: 30000,
-    description: 'Structured practical training focusing on core execution skills.',
+    description: 'Intensive industrial training focused on core execution deliverables.',
     features: [
-      'Structured Practical Training',
-      'Core Learning Modules',
-      'Weekly Deliverables',
-      'Completion Certificate'
+      'Industrial Skill Onboarding',
+      'Portfolio Verification',
+      'Live Mentor Supervision',
+      'Official Execution Certificate'
     ]
   },
-  [TrackKey.EXPERIENCE]: {
-    title: 'Experience Certificate Track',
+  [TrackKey.INDUSTRIAL_EXP]: {
+    title: 'Industrial Experience Certificate',
     duration: '8–12 Weeks',
     price: 50000,
-    description: 'Advanced track featuring live work under professional supervision.',
+    description: 'Full immersion as a functional owner inside a live operating brand.',
     features: [
-      'Everything in Completion Track',
-      'Real-life Brand Projects',
-      'Hands-on Work Experience',
-      'Experience Letters from Companies',
-      'Recommendations from Company Founders'
+      'Everything in Execution Track',
+      'Live Brand Asset Ownership',
+      'Direct Founder Access',
+      'Verified Experience Letter',
+      'Personal Recommendations'
     ]
   }
 };
 
-export const CORE_AREAS = [
-  'Team Management',
-  'Social Media Management',
-  'Brand Building',
-  'Entrepreneurship',
-  'Customer Relationship Management'
+export const DOMAINS: Record<DomainKey, DomainData> = {
+  [DomainKey.FASHION]: {
+    title: 'Fashion & Apparel Ops',
+    icon: '👕',
+    description: 'Manage lifecycle for premium clothing brands.',
+    outputs: ['Vendor Onboarding', 'Catalog Management', 'Fulfillment Systems']
+  },
+  [DomainKey.BEVERAGE]: {
+    title: 'Beverage Brand Ops',
+    icon: '🥤',
+    description: 'Execute growth for F&B and wellness labels.',
+    outputs: ['SKU Strategy', 'B2B Sales Workflows', 'Distribution Mapping']
+  },
+  [DomainKey.ELECTRONICS]: {
+    title: 'Electronics & Wearables',
+    icon: '⌚',
+    description: 'Work inside consumer tech and wearable startups.',
+    outputs: ['Tech Specs Documentation', 'Launch Campaigns', 'Post-Sales Support']
+  },
+  [DomainKey.GROWTH]: {
+    title: 'Growth & Social Agencies',
+    icon: '🚀',
+    description: 'Scale impact for social-first digital services.',
+    outputs: ['Influencer Seeding', 'Ad Ops Management', 'Viral Loops']
+  },
+  [DomainKey.TECH]: {
+    title: 'Tech Product Operations',
+    icon: '💻',
+    description: 'Internal operations for SaaS and software platforms.',
+    outputs: ['User Onboarding', 'Feature Ops', 'Churn Analytics']
+  }
+};
+
+export const INDUSTRIES = [
+  'Fashion & Apparel', 'Food & Beverages', 'Consumer Electronics', 'SaaS & Tech', 'Growth Agencies'
 ];
 
 export const WORK_ITEMS = [
-  { title: 'Influencer Pages', icon: '📱' },
-  { title: 'Content Calendars', icon: '📅' },
-  { title: 'Analytics Dashboards', icon: '📊' },
-  { title: 'Team Workflows', icon: '⚙️' },
-  { title: 'Brand Strategies', icon: '🎯' },
-  { title: 'Ad Campaigns', icon: '🚀' }
+  { title: 'Brand Storefronts (Live)', icon: '🏪' },
+  { title: 'Product Launch Campaigns', icon: '🚀' },
+  { title: 'Vendor & Supply Docs', icon: '📝' },
+  { title: 'Growth Systems', icon: '📈' },
+  { title: 'Sales Dashboards', icon: '📊' },
+  { title: 'Operations Playbooks', icon: '📖' }
 ];
 
 export const ENROLLMENT_STEPS = [
   'Apply',
   'Screening',
+  'Domain Selection',
   'Fee Payment',
   'Onboarding'
+];
+
+export const FAQS = [
+  {
+    question: "Will I work on real revenue-generating brands?",
+    answer: "Yes. Every student is assigned to a live operational brand within their chosen domain. You produce assets for active businesses, not classroom simulations."
+  },
+  {
+    question: "Who owns the work I produce?",
+    answer: "The partner brands own the intellectual property, but you receive full credit and a verifiable proof-of-work portfolio linking your identity to those results."
+  },
+  {
+    question: "Can I continue with brands after the program?",
+    answer: "Top performers are frequently absorbed into partner brands as full-time employees or high-tier consultants based on their industrial output score."
+  },
+  {
+    question: "Is there a stipend involved?",
+    answer: "This is a training-first immersion program. However, high-performing candidates in the Experience Track may be eligible for performance-based rewards or paid extensions."
+  }
 ];
 
 export const PARTNERS = [
   'Visionary Media', 'TechFlow Inc.', 'GrowthHackers', 'BrandPulse', 'NextGen Creative', 'Alpha Agency', 'SocialScale'
 ];
 
-export const FAQS = [
-  {
-    question: "Is this a job guarantee program?",
-    answer: "No. We focus on skill immersion. We provide the experience and letters you need to be highly employable, but your job depends on your performance."
-  },
-  {
-    question: "How many hours a week is required?",
-    answer: "Completion Track requires 10-12 hours/week. Experience Track is more intense, requiring 15-20 hours/week as you handle live deliverables."
-  },
-  {
-    question: "Do I get to choose the company I work for?",
-    answer: "We match you based on your performance in the first 2 weeks of the program to ensure the best fit for both you and the brand."
-  },
-  {
-    question: "Is this program remote?",
-    answer: "Yes, the program is fully remote, using industry-standard tools like Slack, Notion, and Zoom for team collaboration."
-  }
+// Added missing CORE_AREAS constant used by syllabus modal
+export const CORE_AREAS = [
+  'Industrial Operations',
+  'Functional Execution',
+  'Brand Management',
+  'Market Outreach',
+  'Product Analytics'
 ];
+
