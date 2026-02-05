@@ -159,3 +159,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 export default AuthModal;
 
 
+
