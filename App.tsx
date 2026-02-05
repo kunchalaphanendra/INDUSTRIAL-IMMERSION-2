@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -46,7 +45,7 @@ const GetStarted: React.FC = () => {
           <div className="flex flex-col items-center justify-center">
             <button 
               onClick={() => scrollTo('tracks')} 
-              className="w-full sm:w-auto px-16 py-6 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/40 text-xl uppercase tracking-widest"
+              className="w-full sm:w-auto px-16 py-6 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/40 text-xl uppercase tracking-widest active:scale-95 transform duration-200"
             >
               Choose Your Track
             </button>
