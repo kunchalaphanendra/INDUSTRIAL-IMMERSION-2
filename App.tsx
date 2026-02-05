@@ -113,6 +113,11 @@ const App: React.FC = () => {
     setView('landing');
   };
 
+  const handleEnrollmentComplete = () => {
+    setEnrollment(null);
+    setView('dashboard');
+  };
+
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -163,6 +168,7 @@ const App: React.FC = () => {
         <CheckoutModal 
           enrollment={enrollment} 
           onClose={() => setEnrollment(null)} 
+          onComplete={handleEnrollmentComplete}
         />
       )}
 
@@ -177,4 +183,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
