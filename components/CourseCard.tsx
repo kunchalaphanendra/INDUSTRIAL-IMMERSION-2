@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { SpecializationKey, CourseData, BillingCycle } from '../types';
+import { TrackKey, TrackData, BillingType } from '../types';
 
 interface CourseCardProps {
-  id: SpecializationKey;
-  data: CourseData;
+  id: TrackKey;
+  data: TrackData;
   price: number;
-  billing: BillingCycle;
-  onEnroll: (id: SpecializationKey) => void;
+  billing: BillingType;
+  onEnroll: (id: TrackKey) => void;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnroll }) => {
@@ -20,9 +20,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnr
         <div className="space-y-4 mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Key Outcomes</p>
           <div className="flex flex-wrap gap-2">
-            {data.outcomes.map((outcome, idx) => (
+            {/* Fix: Using 'features' from TrackData instead of 'outcomes' */}
+            {data.features.map((feature, idx) => (
               <span key={idx} className="px-3 py-1 bg-white/5 text-gray-300 rounded-full text-[10px] font-medium border border-white/5">
-                {outcome}
+                {feature}
               </span>
             ))}
           </div>
@@ -35,7 +36,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnr
             <span className="text-gray-400 text-xs font-medium">Starting from</span>
             <span className="text-3xl font-heading font-bold text-white">₹{price.toLocaleString()}</span>
           </div>
-          <span className="text-gray-500 text-sm">/ {billing === BillingCycle.MONTHLY ? 'mo' : 'yr'}</span>
+          {/* Fix: Using BillingType.MONTHLY instead of BillingCycle.MONTHLY */}
+          <span className="text-gray-500 text-sm">/ {billing === BillingType.MONTHLY ? 'mo' : 'yr'}</span>
         </div>
         <button 
           onClick={() => onEnroll(id)}
@@ -49,3 +51,4 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnr
 };
 
 export default CourseCard;
+
