@@ -21,15 +21,16 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-heading font-extrabold text-white text-xl">I</div>
-            <span className="font-heading font-bold text-lg tracking-tight hidden sm:block uppercase">Industrial Immersion</span>
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-heading font-extrabold text-white text-xl">E</div>
+            <span className="font-heading font-bold text-lg tracking-tight hidden sm:block uppercase">EdTech Institutional</span>
           </div>
           
           <div className="flex items-center space-x-4 md:space-x-8 text-sm font-medium">
-            <div className="hidden md:flex items-center space-x-8 text-gray-400">
-              <button onClick={() => scrollTo('why')} className="hover:text-white transition-colors">Why Us</button>
-              <button onClick={() => scrollTo('tracks')} className="hover:text-white transition-colors">Programs</button>
-              <button onClick={() => scrollTo('process')} className="hover:text-white transition-colors">Process</button>
+            <div className="hidden lg:flex items-center space-x-8 text-gray-400">
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Home</button>
+              <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Organisations</button>
+              <button onClick={() => scrollTo('about')} className="hover:text-white transition-colors">About</button>
+              <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -50,8 +51,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
                     Login
                   </button>
                   <button 
-                    onClick={() => scrollTo('tracks')} 
-                    className="px-6 py-2.5 bg-white text-black rounded-full font-bold hover:bg-blue-600 hover:text-white transition-all text-xs uppercase tracking-widest"
+                    onClick={() => scrollTo('organisations')} 
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all text-xs uppercase tracking-widest"
                   >
                     Apply Now
                   </button>
@@ -66,4 +67,5 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
 };
 
 export default Navbar;
+
 
