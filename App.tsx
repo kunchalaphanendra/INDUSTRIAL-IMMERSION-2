@@ -10,7 +10,7 @@ import CheckoutModal from './components/CheckoutModal';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import { PARTNERS } from './constants';
-import { TrackKey, DomainKey, EnrollmentState, User } from './types';
+import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
 
 const PartnersSection: React.FC = () => (
@@ -28,7 +28,7 @@ const PartnersSection: React.FC = () => (
 
 const GetStarted: React.FC = () => {
   const scrollTo = (id: string) => {
-    const element = document.getElementById(id);
+    const element = document.getElementById('organisations');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
@@ -46,10 +46,10 @@ const GetStarted: React.FC = () => {
           </p>
           <div className="flex flex-col items-center justify-center">
             <button 
-              onClick={() => scrollTo('tracks')} 
+              onClick={() => scrollTo('organisations')} 
               className="w-full sm:w-auto px-16 py-6 bg-blue-600 text-white font-black rounded-3xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/20 text-xl uppercase tracking-[0.2em] active:scale-95 transform duration-200"
             >
-              Choose Your Domain
+              Choose Your Program
             </button>
           </div>
         </div>
@@ -62,7 +62,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
-  const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -84,21 +83,20 @@ const App: React.FC = () => {
     recoverSession();
   }, []);
 
-  const handleTrackSelect = (track: TrackKey, domain: DomainKey) => {
+  const handleTrackSelect = (track: TrackKey) => {
     setSelectedTrack(track);
-    setSelectedDomain(domain);
     if (!user) {
       setShowAuthModal(true);
     } else {
-      setEnrollment({ track, domain });
+      setEnrollment({ track });
     }
   };
 
   const handleAuthSuccess = (loggedUser: User) => {
     setUser(loggedUser);
     setShowAuthModal(false);
-    if (selectedTrack && selectedDomain) {
-      setEnrollment({ track: selectedTrack, domain: selectedDomain });
+    if (selectedTrack) {
+      setEnrollment({ track: selectedTrack });
     }
   };
 
@@ -152,7 +150,7 @@ const App: React.FC = () => {
         <PartnersSection />
         <Features />
         <ProgramSelector 
-          selected={selectedTrack} 
+          selectedTrack={selectedTrack} 
           onSelect={handleTrackSelect} 
         />
         <PricingSection />
@@ -179,6 +177,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
