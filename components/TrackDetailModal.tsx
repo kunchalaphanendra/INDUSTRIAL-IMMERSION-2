@@ -11,8 +11,7 @@ interface TrackDetailModalProps {
 }
 
 const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onClose, onEnroll }) => {
-  // Fix: Corrected property from EXPERIENCE to INDUSTRIAL_EXP
-  const isExp = trackKey === TrackKey.INDUSTRIAL_EXP;
+  const isExp = trackKey === TrackKey.COLLEGE_IMMERSION;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -27,7 +26,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
             <span className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 block ${isExp ? 'text-purple-500' : 'text-blue-500'}`}>
               Detailed Syllabus & Roadmap
             </span>
-            <h2 className="font-heading font-bold text-2xl">{data.title}</h2>
+            <h2 className="font-heading font-bold text-2xl uppercase tracking-tight">{data.title}</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,26 +39,26 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
         <div className="p-8 overflow-y-auto custom-scrollbar space-y-12 text-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="text-xl font-heading font-bold text-white">Program Structure</h3>
+              <h3 className="text-xl font-heading font-bold text-white uppercase tracking-tighter">Program Structure</h3>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Training</div>
                 <span className="text-blue-500">→</span>
-                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Execution</div>
+                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Immersion</div>
                 <span className="text-blue-500">→</span>
-                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Evaluation</div>
+                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Experience</div>
               </div>
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-gray-400 leading-relaxed text-sm">
                 This {data.duration} program is designed as a deep-dive into industry execution. 
                 {isExp 
-                  ? " You will work on real-life projects and get hands-on work experience that translates directly to the professional world. Beyond just training, you will earn Experience Letters and personal Recommendations from the companies themselves, validating your contribution to real-world brand success."
-                  : " You will focus on high-intensity practical training sessions with weekly deliverables that simulate real-world agency tasks."}
+                  ? " Phase 1 (6 Months) focuses on intensive professional training. Phase 2 (6 Months) is a guaranteed work experience stint where you work on real-life projects and get hands-on work experience that translates directly to the professional world. You will earn Experience Letters and personal Recommendations from the companies themselves."
+                  : " You will focus on high-intensity practical training sessions with weekly deliverables that simulate real-world agency tasks over 4 months."}
               </p>
             </div>
             <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
-              <h4 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Core Modules</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Core Focus Areas</h4>
               <ul className="grid grid-cols-1 gap-3">
                 {CORE_AREAS.map((area, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                  <li key={i} className="flex items-center gap-2 text-xs font-bold text-gray-300 uppercase tracking-widest">
                     <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                     {area}
                   </li>
@@ -69,18 +68,17 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
           </div>
 
           <div>
-            <h3 className="text-xl font-heading font-bold text-white mb-6">Execution Roadmap</h3>
+            <h3 className="text-xl font-heading font-bold text-white mb-6 uppercase tracking-tighter">Execution Roadmap</h3>
             <div className="space-y-4">
               {[
-                { week: 'Week 1-2', focus: 'Foundational Strategy & Tooling', detail: 'Onboarding to industry-standard project management and analytics tools.' },
-                { week: 'Week 3-4', focus: 'Creative Execution & Branding', detail: 'Developing content calendars and visual identity assets for live pilots.' },
-                { week: isExp ? 'Week 5-12' : 'Week 5-6', focus: isExp ? 'Live Project Management' : 'Performance Optimization', detail: isExp ? 'Full-scale execution of brand campaigns and direct influencer outreach on behalf of real brands.' : 'Analyzing delivery data and refining execution quality.' },
+                { week: isExp ? 'Months 1-6' : 'Week 1-2', focus: isExp ? 'Intensive Industrial Training' : 'Foundational Strategy', detail: isExp ? 'Mastering industry-standard project management, analytics, and vertical-specific tools.' : 'Onboarding to industry-standard project management and analytics tools.' },
+                { week: isExp ? 'Months 7-12' : 'Week 3-4', focus: isExp ? 'Live Work Experience' : 'Creative Execution', detail: isExp ? 'Full-time placement with partner brands to execute campaigns and handle professional deliverables.' : 'Developing content calendars and visual identity assets for live pilots.' },
               ].map((item, i) => (
-                <div key={i} className="flex gap-6 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                  <div className="shrink-0 w-24 text-blue-500 font-bold text-sm pt-1 uppercase">{item.week}</div>
+                <div key={i} className="flex gap-6 p-6 rounded-xl hover:bg-white/5 transition-colors border border-white/5">
+                  <div className="shrink-0 w-32 text-blue-500 font-black text-[10px] pt-1 uppercase tracking-[0.2em]">{item.week}</div>
                   <div>
-                    <h5 className="font-bold text-white mb-1">{item.focus}</h5>
-                    <p className="text-sm text-gray-500">{item.detail}</p>
+                    <h5 className="font-bold text-white mb-1 uppercase text-sm tracking-tight">{item.focus}</h5>
+                    <p className="text-sm text-gray-500 leading-relaxed">{item.detail}</p>
                   </div>
                 </div>
               ))}
@@ -89,10 +87,10 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
             <div>
-              <h3 className="text-lg font-heading font-bold mb-4">Evaluation Criteria</h3>
+              <h3 className="text-lg font-heading font-bold mb-4 uppercase tracking-tighter">Evaluation Criteria</h3>
               <ul className="space-y-3">
                 {['90% Attendance Requirement', 'Execution Quality Index', 'Timely Assignment Submission', 'Professional Conduct'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-gray-400">
+                  <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     <span className="text-red-500 text-xs font-bold">●</span>
                     {item}
                   </li>
@@ -100,10 +98,10 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
               </ul>
             </div>
             <div className="p-6 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl border border-white/10">
-              <h3 className="text-lg font-heading font-bold mb-4">Professional Proof</h3>
-              <div className="space-y-2 text-sm text-gray-300">
-                <p>• {isExp ? 'Official Experience Letter from Partner Brand' : 'Unique Certificate ID for Verification'}</p>
-                <p>• {isExp ? 'Personal Recommendation from Company Founder' : 'QR-based Online Profile'}</p>
+              <h3 className="text-lg font-heading font-bold mb-4 uppercase tracking-tighter text-blue-400">Professional Proof</h3>
+              <div className="space-y-2 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                <p>• {isExp ? 'Official 6-Month Experience Letter' : 'Unique Certificate ID for Verification'}</p>
+                <p>• {isExp ? 'Industry Recommendation Letter' : 'QR-based Online Profile'}</p>
                 <p>• Lifetime Digital Validity</p>
                 <p>• Issued by Registered Tech Entity</p>
               </div>
@@ -115,7 +113,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
         <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4 justify-center">
            <button 
              onClick={onClose}
-             className="px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all"
+             className="px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
            >
              Close Details
            </button>
@@ -125,7 +123,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
                  onEnroll(trackKey);
                  onClose();
                }}
-               className="px-12 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+               className="px-12 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 text-xs uppercase tracking-widest"
              >
                Apply for this Track
              </button>
@@ -137,4 +135,5 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 };
 
 export default TrackDetailModal;
+
 
