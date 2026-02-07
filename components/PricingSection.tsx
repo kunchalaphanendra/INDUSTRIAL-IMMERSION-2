@@ -60,3 +60,4 @@ const PricingSection: React.FC = () => {
 
 export default PricingSection;
 
+
