@@ -1,118 +1,136 @@
 
-import { TrackKey, TrackData, DomainKey, DomainData } from './types';
+import { TrackKey, TrackData, BillingType, DomainKey, DomainData } from './types';
 
 export const TRACKS: Record<TrackKey, TrackData> = {
-  [TrackKey.EXECUTION]: {
-    title: 'Execution Certificate',
-    duration: '6 Weeks',
-    price: 30000,
-    description: 'Intensive industrial training focused on core execution deliverables.',
+  [TrackKey.SCHOOL_TUITION]: {
+    title: 'School Tuition Program',
+    duration: 'Monthly Subscription',
+    price: 999,
+    billingType: BillingType.MONTHLY,
+    description: 'After-school academic support designed to strengthen core foundations.',
+    idealFor: 'Schools looking to enhance academic outcomes through structured learning.',
     features: [
-      'Industrial Skill Onboarding',
-      'Portfolio Verification',
-      'Live Mentor Supervision',
-      'Official Execution Certificate'
+      'Academic tuition support',
+      'Structured learning modules',
+      'Monthly progress monitoring',
+      'Reports for schools & parents',
+      'Institutional coordination'
     ]
   },
-  [TrackKey.INDUSTRIAL_EXP]: {
-    title: 'Industrial Experience Certificate',
-    duration: '8–12 Weeks',
-    price: 50000,
-    description: 'Full immersion as a functional owner inside a live operating brand.',
+  [TrackKey.SCHOOL_SKILL]: {
+    title: 'Skill & Communication Program',
+    duration: 'Monthly Subscription',
+    price: 1299,
+    billingType: BillingType.MONTHLY,
+    description: 'Preparing students for the digital world through communication and tech literacy.',
+    idealFor: 'Schools aiming to improve digital readiness and student confidence.',
     features: [
-      'Everything in Execution Track',
-      'Live Brand Asset Ownership',
-      'Direct Founder Access',
-      'Verified Experience Letter',
-      'Personal Recommendations'
+      'Digital literacy fundamentals',
+      'Spoken English & Communication',
+      'Confidence building activities',
+      'Teacher briefing sessions',
+      'Continuous progress tracking'
+    ]
+  },
+  [TrackKey.COLLEGE_PROF]: {
+    title: 'Professional Skills Certification',
+    duration: '4 Months',
+    price: 9999,
+    billingType: BillingType.ONETIME,
+    description: 'Core skill development for career readiness and professional foundation.',
+    idealFor: 'Colleges seeking structured skill curriculum for their students.',
+    features: [
+      'Skill development curriculum',
+      'Practical projects & assignments',
+      'Industry-relevant modules',
+      'Professional certificate',
+      'Career foundation'
+    ]
+  },
+  [TrackKey.COLLEGE_IMMERSION]: {
+    title: 'Industry Immersion Certification',
+    duration: '6 + 6 Months',
+    price: 14999,
+    billingType: BillingType.ONETIME,
+    description: 'Comprehensive 1-year journey: 6 months of cross-domain professional training (Fashion, Tech, FMCG, etc.) followed by 6 months of guaranteed work experience.',
+    idealFor: 'Students seeking complete industrial exposure across multiple high-growth sectors.',
+    features: [
+      '6 Months Multi-Domain Training',
+      '6 Months Guaranteed Work Experience',
+      'Experience with Fashion, Tech & FMCG',
+      'Professional Mentorship & Network',
+      'Joint Industry Experience Letter'
     ]
   }
 };
 
 export const DOMAINS: Record<DomainKey, DomainData> = {
   [DomainKey.FASHION]: {
-    title: 'Fashion & Apparel Ops',
+    title: 'Lifestyle & Fashion',
     icon: '👕',
-    description: 'Manage lifecycle for premium clothing brands.',
-    outputs: ['Vendor Onboarding', 'Catalog Management', 'Fulfillment Systems']
+    description: 'Build brand presence for apparel and luxury lifestyle brands.',
+    outputs: ['Campaign Assets', 'Influencer Strategy', 'Engagement Report']
   },
   [DomainKey.BEVERAGE]: {
-    title: 'Beverage Brand Ops',
+    title: 'FMCG & Beverages',
     icon: '🥤',
-    description: 'Execute growth for F&B and wellness labels.',
-    outputs: ['SKU Strategy', 'B2B Sales Workflows', 'Distribution Mapping']
+    description: 'Master distribution-led digital growth for food and beverage labels.',
+    outputs: ['Market Analysis', 'Visual Strategy', 'Consumer Feedback']
   },
   [DomainKey.ELECTRONICS]: {
-    title: 'Electronics & Wearables',
-    icon: '⌚',
-    description: 'Work inside consumer tech and wearable startups.',
-    outputs: ['Tech Specs Documentation', 'Launch Campaigns', 'Post-Sales Support']
+    title: 'Consumer Electronics',
+    icon: '🔌',
+    description: 'Execute technical product launches for hardware and gadget startups.',
+    outputs: ['Tech Specs Copy', 'Tutorial Assets', 'Support Roadmap']
   },
   [DomainKey.GROWTH]: {
-    title: 'Growth & Social Agencies',
-    icon: '🚀',
-    description: 'Scale impact for social-first digital services.',
-    outputs: ['Influencer Seeding', 'Ad Ops Management', 'Viral Loops']
+    title: 'B2B Growth',
+    icon: '📈',
+    description: 'High-level lead generation and professional networking for agencies.',
+    outputs: ['Pipeline Report', 'Client Persona', 'Growth Funnel']
   },
   [DomainKey.TECH]: {
-    title: 'Tech Product Operations',
+    title: 'SaaS & Tech',
     icon: '💻',
-    description: 'Internal operations for SaaS and software platforms.',
-    outputs: ['User Onboarding', 'Feature Ops', 'Churn Analytics']
+    description: 'Drive user acquisition for software products and platform services.',
+    outputs: ['User Flow Design', 'SaaS Onboarding', 'DevRel Assets']
   }
 };
 
-export const INDUSTRIES = [
-  'Fashion & Apparel', 'Food & Beverages', 'Consumer Electronics', 'SaaS & Tech', 'Growth Agencies'
-];
-
-export const WORK_ITEMS = [
-  { title: 'Brand Storefronts (Live)', icon: '🏪' },
-  { title: 'Product Launch Campaigns', icon: '🚀' },
-  { title: 'Vendor & Supply Docs', icon: '📝' },
-  { title: 'Growth Systems', icon: '📈' },
-  { title: 'Sales Dashboards', icon: '📊' },
-  { title: 'Operations Playbooks', icon: '📖' }
-];
-
 export const ENROLLMENT_STEPS = [
-  'Apply',
-  'Screening',
-  'Domain Selection',
-  'Fee Payment',
-  'Onboarding'
-];
-
-export const FAQS = [
-  {
-    question: "Will I work on real revenue-generating brands?",
-    answer: "Yes. Every student is assigned to a live operational brand within their chosen domain. You produce assets for active businesses, not classroom simulations."
-  },
-  {
-    question: "Who owns the work I produce?",
-    answer: "The partner brands own the intellectual property, but you receive full credit and a verifiable proof-of-work portfolio linking your identity to those results."
-  },
-  {
-    question: "Can I continue with brands after the program?",
-    answer: "Top performers are frequently absorbed into partner brands as full-time employees or high-tier consultants based on their industrial output score."
-  },
-  {
-    question: "Is there a stipend involved?",
-    answer: "This is a training-first immersion program. However, high-performing candidates in the Experience Track may be eligible for performance-based rewards or paid extensions."
-  }
+  'Profile Review',
+  'Skill Assessment',
+  'Multi-Domain Intro',
+  'Slot Reservation',
+  'Execution Start'
 ];
 
 export const PARTNERS = [
   'Visionary Media', 'TechFlow Inc.', 'GrowthHackers', 'BrandPulse', 'NextGen Creative', 'Alpha Agency', 'SocialScale'
 ];
 
-// Added missing CORE_AREAS constant used by syllabus modal
 export const CORE_AREAS = [
-  'Industrial Operations',
-  'Functional Execution',
-  'Brand Management',
-  'Market Outreach',
-  'Product Analytics'
+  'Academic Excellence',
+  'Digital Literacy',
+  'Communication Skills',
+  'Industry Execution',
+  'Professional Ethics'
 ];
+
+export const FAQS = [
+  {
+    question: "How do institutions partner with us?",
+    answer: "Schools and Colleges can submit an enquiry via the 'Partner With Us' section. Our institutional coordination team will then reach out to customize the rollout."
+  },
+  {
+    question: "Is the Industry Immersion certificate verified?",
+    answer: "Yes. Certificates are jointly issued by our organization and the respective partner brands, providing verifiable proof of work experience."
+  },
+  {
+    question: "Can individual students join directly?",
+    answer: "While we prioritize institutional partnerships, individual students can apply via the 'Student Application' path if their college is not yet a partner."
+  }
+];
+
 
 
