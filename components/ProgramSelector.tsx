@@ -1,61 +1,70 @@
 
 import React, { useState } from 'react';
-import { TrackKey, DomainKey } from '../types';
-import { TRACKS, DOMAINS } from '../constants';
-import TrackDetailModal from './TrackDetailModal';
+import { TrackKey, InstitutionType } from '../types';
+import { TRACKS } from '../constants';
 
 interface ProgramSelectorProps {
-  onSelect: (track: TrackKey, domain: DomainKey) => void;
-  selected: TrackKey | null;
+  onSelect: (track: TrackKey) => void;
+  selectedTrack: TrackKey | null;
 }
 
-const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selected }) => {
-  const [activeDomain, setActiveDomain] = useState<DomainKey>(DomainKey.FASHION);
-  const [viewingDetails, setViewingDetails] = useState<TrackKey | null>(null);
+const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selectedTrack }) => {
+  const [activeTab, setActiveTab] = useState<InstitutionType>(InstitutionType.SCHOOL);
+
+  const schoolTracks = [TrackKey.SCHOOL_TUITION, TrackKey.SCHOOL_SKILL];
+  const collegeTracks = [TrackKey.COLLEGE_PROF, TrackKey.COLLEGE_IMMERSION];
+
+  const currentTracks = activeTab === InstitutionType.SCHOOL ? schoolTracks : collegeTracks;
 
   return (
-    <section id="tracks" className="py-24 bg-black border-t border-white/5">
+    <section id="organisations" className="py-24 bg-black border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Step 1: Choose Your Domain */}
         <div className="text-center mb-16">
-          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Step 01</p>
-          <h2 className="text-3xl md:text-5xl font-heading font-bold mb-6 uppercase tracking-tight">Choose Your Domain</h2>
-          <p className="text-gray-500 max-w-xl mx-auto">Select the industry where you will build your execution proof-of-work.</p>
+          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Our Education Programs</p>
+          <h2 className="text-3xl md:text-6xl font-heading font-bold mb-6 uppercase tracking-tight">Organisations</h2>
+          <p className="text-gray-500 max-w-2xl mx-auto">
+            Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance.
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-24">
-          {Object.entries(DOMAINS).map(([key, domain]) => (
+        {/* Tab Switcher */}
+        <div className="flex justify-center mb-16">
+          <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex gap-2">
             <button 
-              key={key}
-              onClick={() => setActiveDomain(key as DomainKey)}
-              className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-4 text-center group ${
-                activeDomain === key 
-                ? 'bg-blue-600/10 border-blue-500/50 shadow-2xl shadow-blue-500/5' 
-                : 'bg-white/5 border-white/5 hover:border-white/10'
-              }`}
+              onClick={() => setActiveTab(InstitutionType.SCHOOL)}
+              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.SCHOOL ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
             >
-              <div className={`text-4xl transition-transform duration-500 ${activeDomain === key ? 'scale-110' : 'grayscale group-hover:grayscale-0'}`}>{domain.icon}</div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${activeDomain === key ? 'text-white' : 'text-gray-500'}`}>{domain.title}</span>
+              For School Students
             </button>
-          ))}
+            <button 
+              onClick={() => setActiveTab(InstitutionType.COLLEGE)}
+              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.COLLEGE ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
+            >
+              For College Students
+            </button>
+          </div>
         </div>
 
-        {/* Step 2: Choose Track Intensity */}
-        <div className="text-center mb-16">
-          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Step 02</p>
-          <h2 className="text-3xl md:text-5xl font-heading font-bold mb-6 uppercase tracking-tight">Select Track Intensity</h2>
+        <div className="mb-12 text-center animate-in fade-in duration-700">
+           <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed italic">
+             {activeTab === InstitutionType.SCHOOL 
+               ? "After-school programs designed to strengthen academics, communication, and digital skills while providing clear progress tracking for institutions and parents."
+               : "Industry-aligned programs that help college students build practical skills, certifications, and career readiness."
+             }
+           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {Object.entries(TRACKS).map(([key, track]) => {
-            const isExp = key === TrackKey.INDUSTRIAL_EXP;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {currentTracks.map((key) => {
+            const track = TRACKS[key];
+            const isSelected = selectedTrack === key;
             
             return (
               <div 
                 key={key}
                 className={`group relative p-1 rounded-[2.5rem] transition-all duration-500 flex flex-col ${
-                  selected === key ? 'bg-blue-500/40 scale-[1.02]' : 'bg-white/10'
+                  isSelected ? 'bg-blue-500/40 scale-[1.02]' : 'bg-white/10'
                 }`}
               >
                 <div className="bg-[#0a0a0a] rounded-[calc(2.5rem-2px)] p-8 md:p-12 h-full flex flex-col justify-between border border-white/5">
@@ -66,7 +75,9 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selected })
                       </span>
                       <div className="text-right">
                         <span className="text-2xl font-heading font-bold text-white block">₹{track.price.toLocaleString()}</span>
-                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1 italic">Industrial Grade Pricing</p>
+                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1 italic">
+                          {track.billingType === 'monthly' ? '/ Student / Month' : 'One-time fee'}
+                        </p>
                       </div>
                     </div>
                     
@@ -74,6 +85,11 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selected })
                     <p className="text-gray-500 text-sm mb-8 leading-relaxed font-medium">
                       {track.description}
                     </p>
+
+                    <div className="mb-8">
+                      <p className="text-[10px] font-black uppercase text-blue-500 mb-3 tracking-widest">Ideal For</p>
+                      <p className="text-gray-400 text-xs font-medium">{track.idealFor}</p>
+                    </div>
                     
                     <ul className="space-y-4 mb-12">
                       {track.features.map((f, i) => (
@@ -86,21 +102,14 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selected })
 
                   <div className="space-y-4">
                     <button 
-                      onClick={() => onSelect(key as TrackKey, activeDomain)}
+                      onClick={() => onSelect(key)}
                       className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${
-                        selected === key 
+                        isSelected 
                         ? 'bg-blue-600 text-white shadow-blue-500/20' 
                         : 'bg-white text-black hover:bg-blue-600 hover:text-white'
                       }`}
                     >
-                      {selected === key ? 'Track Confirmed' : 'Enroll in Track'}
-                    </button>
-                    
-                    <button 
-                      onClick={() => setViewingDetails(key as TrackKey)}
-                      className="w-full py-4 bg-transparent border border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all rounded-2xl"
-                    >
-                      View Industrial Syllabus
+                      {isSelected ? 'Selected' : 'Apply Now'}
                     </button>
                   </div>
                 </div>
@@ -109,18 +118,10 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selected })
           })}
         </div>
       </div>
-
-      {viewingDetails && (
-        <TrackDetailModal 
-          trackKey={viewingDetails}
-          data={TRACKS[viewingDetails]}
-          onClose={() => setViewingDetails(null)}
-          onEnroll={(key) => onSelect(key, activeDomain)}
-        />
-      )}
     </section>
   );
 };
 
 export default ProgramSelector;
+
 
