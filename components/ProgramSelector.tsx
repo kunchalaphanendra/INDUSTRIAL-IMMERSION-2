@@ -1,20 +1,22 @@
 
 import React, { useState } from 'react';
-import { TrackKey, InstitutionType } from '../types';
+import { TrackKey, InstitutionType, BillingType } from '../types';
 import { TRACKS } from '../constants';
 
 interface ProgramSelectorProps {
   onSelect: (track: TrackKey) => void;
+  onViewDetails?: (track: TrackKey) => void;
   selectedTrack: TrackKey | null;
 }
 
-const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selectedTrack }) => {
+const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, onViewDetails, selectedTrack }) => {
   const [activeTab, setActiveTab] = useState<InstitutionType>(InstitutionType.SCHOOL);
 
   const schoolTracks = [TrackKey.SCHOOL_TUITION, TrackKey.SCHOOL_SKILL];
   const collegeTracks = [TrackKey.COLLEGE_PROF, TrackKey.COLLEGE_IMMERSION];
 
   const currentTracks = activeTab === InstitutionType.SCHOOL ? schoolTracks : collegeTracks;
+  const isSchoolView = activeTab === InstitutionType.SCHOOL;
 
   return (
     <section id="organisations" className="py-24 bg-black border-t border-white/5">
@@ -48,7 +50,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selectedTra
 
         <div className="mb-12 text-center animate-in fade-in duration-700">
            <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed italic">
-             {activeTab === InstitutionType.SCHOOL 
+             {isSchoolView 
                ? "After-school programs designed to strengthen academics, communication, and digital skills while providing clear progress tracking for institutions and parents."
                : "Industry-aligned programs that help college students build practical skills, certifications, and career readiness."
              }
@@ -63,50 +65,65 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selectedTra
             return (
               <div 
                 key={key}
-                className={`group relative p-1 rounded-[2.5rem] transition-all duration-500 flex flex-col ${
-                  isSelected ? 'bg-blue-500/40 scale-[1.02]' : 'bg-white/10'
+                className={`group relative p-[1px] rounded-[2.5rem] transition-all duration-500 flex flex-col ${
+                  isSelected ? 'bg-blue-500/50 scale-[1.01]' : 'bg-white/10'
                 }`}
               >
-                <div className="bg-[#0a0a0a] rounded-[calc(2.5rem-2px)] p-8 md:p-12 h-full flex flex-col justify-between border border-white/5">
+                <div className="bg-[#080808] rounded-[calc(2.5rem-1px)] p-8 md:p-12 h-full flex flex-col justify-between border border-transparent">
                   <div>
-                    <div className="flex justify-between items-start mb-8">
-                      <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">
+                    {/* Header: Badge and Price */}
+                    <div className="flex justify-between items-center mb-10">
+                      <span className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[8px] font-black uppercase tracking-widest text-gray-400">
                         {track.duration}
                       </span>
                       <div className="text-right">
-                        <span className="text-2xl font-heading font-bold text-white block">₹{track.price.toLocaleString()}</span>
-                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1 italic">
-                          {track.billingType === 'monthly' ? '/ Student / Month' : 'One-time fee'}
+                        <div className="flex items-center justify-end gap-1">
+                          <span className="text-3xl font-heading font-bold text-white">₹{track.price.toLocaleString()}</span>
+                        </div>
+                        <p className="text-[8px] text-gray-600 font-black uppercase tracking-widest mt-1">
+                          {track.billingType === BillingType.MONTHLY ? '/ Student / Month' : 'One-time Enrollment'}
                         </p>
                       </div>
                     </div>
                     
-                    <h3 className="text-2xl font-heading font-bold mb-4 text-white uppercase tracking-tight">{track.title}</h3>
-                    <p className="text-gray-500 text-sm mb-8 leading-relaxed font-medium">
+                    <h3 className="text-2xl md:text-3xl font-heading font-bold mb-6 text-white uppercase tracking-tight leading-tight">{track.title}</h3>
+                    <p className="text-gray-500 text-sm mb-10 leading-relaxed font-medium">
                       {track.description}
                     </p>
 
-                    <div className="mb-8">
+                    <div className="mb-10">
                       <p className="text-[10px] font-black uppercase text-blue-500 mb-3 tracking-widest">Ideal For</p>
-                      <p className="text-gray-400 text-xs font-medium">{track.idealFor}</p>
+                      <p className="text-gray-400 text-xs font-medium leading-relaxed">{track.idealFor}</p>
                     </div>
                     
                     <ul className="space-y-4 mb-12">
-                      {track.features.map((f, i) => (
-                        <li key={i} className="flex items-center text-xs font-bold text-gray-400 group-hover:text-gray-300 transition-colors uppercase tracking-wider">
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-3 shrink-0" /> {f}
+                      {track.features.slice(0, 3).map((f, i) => (
+                        <li key={i} className="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-4 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.4)]" /> {f}
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   <div className="space-y-4">
+                    {/* Only show "View Full Syllabus" for College Tracks */}
+                    {!isSchoolView && (
+                      <button 
+                        onClick={() => onViewDetails?.(key)}
+                        className="w-full py-4 text-gray-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em]"
+                      >
+                        View Full Syllabus
+                      </button>
+                    )}
+                    
                     <button 
                       onClick={() => onSelect(key)}
-                      className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${
-                        isSelected 
+                      className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.25em] transition-all shadow-2xl active:scale-[0.98] ${
+                        isSchoolView && !isSelected
+                        ? 'bg-white text-black hover:bg-gray-200' 
+                        : isSelected 
                         ? 'bg-blue-600 text-white shadow-blue-500/20' 
-                        : 'bg-white text-black hover:bg-blue-600 hover:text-white'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10'
                       }`}
                     >
                       {isSelected ? 'Selected' : 'Apply Now'}
@@ -123,5 +140,3 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, selectedTra
 };
 
 export default ProgramSelector;
-
-
