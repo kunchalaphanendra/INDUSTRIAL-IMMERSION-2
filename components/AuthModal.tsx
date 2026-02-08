@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { User } from '../types';
 import { apiService } from '../services/api';
 
@@ -13,7 +13,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [form, setForm] = useState({ email: '', password: '', fullName: '' });
+  const [resendTimer, setResendTimer] = useState(0);
+  
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const isEmailError = error?.toLowerCase().includes('confirmation email');
 
@@ -36,6 +47,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         const result = await apiService.signUp(form.email, form.password, form.fullName);
         if (result.success) {
           setNeedsVerification(true);
+          setResendTimer(60);
         } else {
           setError(result.error || 'Signup failed');
         }
@@ -47,6 +59,60 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+
+    // Focus next
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const otpValue = otp.join('');
+    if (otpValue.length !== 6) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.verifyOtp(form.email, otpValue);
+      if (result.success && result.user && result.token) {
+        localStorage.setItem('ii_token', result.token);
+        localStorage.setItem('ii_user', JSON.stringify(result.user));
+        onSuccess(result.user);
+      } else {
+        setError(result.error || 'Incorrect OTP');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    const result = await apiService.resendOtp(form.email);
+    setLoading(false);
+    if (result.success) {
+      setResendTimer(60);
+      setOtp(['', '', '', '', '', '']);
+      setError(null);
+    } else {
+      setError(result.error || 'Failed to resend code');
+    }
+  };
+
   if (needsVerification) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -54,23 +120,58 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
           <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 shadow-[0_0_40px_rgba(37,99,235,0.1)]">
             <svg className="w-10 h-10 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight">Verify Your Identity</h2>
-          <p className="text-gray-400 mb-8 leading-relaxed font-medium">
-            We've sent a verification link to <span className="text-blue-500 font-bold">{form.email}</span>. 
-            Check your inbox to activate your STJUFENDS profile.
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight">Enter OTP Code</h2>
+          <p className="text-gray-400 mb-10 leading-relaxed font-medium text-sm">
+            We've sent a 6-digit verification code via Bravo SMTP to <span className="text-blue-500 font-bold">{form.email}</span>.
           </p>
-          <button 
-            onClick={() => {
-              setIsLogin(true);
-              setNeedsVerification(false);
-            }}
-            className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs"
-          >
-            Back to Login
-          </button>
+
+          <div className="flex justify-between gap-2 mb-10">
+            {otp.map((digit, idx) => (
+              <input
+                key={idx}
+                // Fix: ref callback must return void or a cleanup function. Implicit return of assignment returns the element.
+                ref={el => { otpRefs.current[idx] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={e => handleOtpChange(idx, e.target.value)}
+                onKeyDown={e => handleOtpKeyDown(idx, e)}
+                className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none transition-all shadow-inner"
+              />
+            ))}
+          </div>
+
+          {error && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mb-6">{error}</p>}
+
+          <div className="space-y-4">
+            <button 
+              onClick={handleVerifyOtp}
+              disabled={loading || otp.some(d => !d)}
+              className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-xl shadow-blue-500/20 uppercase tracking-[0.2em] text-xs flex items-center justify-center"
+            >
+              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirm OTP'}
+            </button>
+
+            <div className="flex flex-col gap-4 pt-4">
+              <button 
+                onClick={handleResend}
+                disabled={resendTimer > 0 || loading}
+                className="text-[10px] text-gray-500 hover:text-white font-bold uppercase tracking-widest transition-colors disabled:opacity-30"
+              >
+                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : 'Resend OTP Code'}
+              </button>
+              <button 
+                onClick={() => setNeedsVerification(false)}
+                className="text-[10px] text-blue-500 hover:text-blue-400 font-bold uppercase tracking-widest transition-colors"
+              >
+                Back to Edit Email
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -166,5 +267,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
