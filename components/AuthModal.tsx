@@ -27,7 +27,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   }, [resendTimer]);
 
   const errorLower = error?.toLowerCase() || '';
-  const isSmtpError = errorLower.includes('confirmation email') || errorLower.includes('smtp') || errorLower.includes('dispatch');
+  // Check specifically for the common SMTP rejection message from Supabase/Brevo
+  const isSmtpError = errorLower.includes('confirmation email') || errorLower.includes('smtp') || errorLower.includes('dispatch') || errorLower.includes('identity');
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +205,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {error}
               </div>
               
+              {isSmtpError && (
+                <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest">
+                  <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">URGENT: SMTP SENDER MISMATCH</span>
+                  Your screenshots show a conflict between Supabase and Brevo:<br/><br/>
+                  1. Go to <span className="text-white">Supabase > Authentication > SMTP</span><br/>
+                  2. Change <span className="text-white">Sender email address</span> to:<br/>
+                  <span className="text-white bg-blue-600 px-2 py-0.5 rounded ml-1">kunchalaphanendra2006@gmail.com</span><br/>
+                  <span className="text-[7px] text-gray-500">(It is currently info@stjufends.com which is NOT verified in Brevo)</span><br/><br/>
+                  3. Alternatively, verify <span className="text-white">info@stjufends.com</span> in Brevo as a "Sender".
+                </div>
+              )}
+
               {error === "ACCOUNT_NOT_FOUND" && (
                 <button 
                   onClick={() => { setIsLogin(false); setError(null); }}
@@ -220,17 +233,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 >
                   Switch to Secure Login
                 </button>
-              )}
-              
-              {isSmtpError && (
-                <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest">
-                  <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">Brevo SMTP Verification Required</span>
-                  1. Check Brevo: Is your sender email verified?<br/>
-                  2. Supabase Auth &gt; Providers &gt; Email &gt; SMTP Settings:<br/>
-                  - Server: <span className="text-white">smtp-relay.brevo.com</span><br/>
-                  - Port: <span className="text-white">587</span> | SSL/TLS: <span className="text-white">Enabled</span><br/>
-                  - Sender: <span className="text-white">Must match verified Brevo sender</span>
-                </div>
               )}
             </div>
           )}
@@ -294,9 +296,3 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
-
-
-
-
-
-
