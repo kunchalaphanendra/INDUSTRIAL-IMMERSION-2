@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { TrackKey, TrackData } from '../types';
-import { CORE_AREAS } from '../constants';
 
 interface TrackDetailModalProps {
   trackKey: TrackKey;
@@ -11,109 +10,150 @@ interface TrackDetailModalProps {
 }
 
 const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onClose, onEnroll }) => {
-  const isExp = trackKey === TrackKey.COLLEGE_IMMERSION;
+  const isImmersion = trackKey === TrackKey.COLLEGE_IMMERSION;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
       
       {/* Modal Content */}
-      <div className="relative bg-[#0a0a0a] border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-        {/* Sticky Header */}
-        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/50 backdrop-blur-lg">
+      <div className="relative bg-[#050505] border border-white/10 w-full max-w-4xl max-h-[92vh] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(37,99,235,0.1)] flex flex-col animate-in zoom-in duration-300">
+        
+        {/* Header Section */}
+        <div className="p-8 border-b border-white/5 flex justify-between items-start bg-black/40 backdrop-blur-xl">
           <div>
-            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 block ${isExp ? 'text-purple-500' : 'text-blue-500'}`}>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] mb-3 block text-blue-500">
               Detailed Syllabus & Roadmap
             </span>
-            <h2 className="font-heading font-bold text-2xl uppercase tracking-tight">{data.title}</h2>
+            <h2 className="font-heading font-black text-3xl md:text-5xl uppercase tracking-tighter text-white leading-none">
+              {data.title.replace(' Program', '')} <br />
+              <span className="text-blue-500">Track Details</span>
+            </h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button onClick={onClose} className="p-3 hover:bg-white/5 rounded-full transition-all text-gray-500 hover:text-white">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-8 overflow-y-auto custom-scrollbar space-y-12 text-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-heading font-bold text-white uppercase tracking-tighter">Program Structure</h3>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
-                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Training</div>
-                <span className="text-blue-500">→</span>
-                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Immersion</div>
-                <span className="text-blue-500">→</span>
-                <div className="px-3 py-1 bg-white/5 rounded-md border border-white/10 text-[10px] font-bold uppercase">Experience</div>
+        <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar space-y-16">
+          
+          {/* Top Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-7 space-y-8">
+              <div>
+                <h3 className="text-xl font-heading font-bold text-white uppercase tracking-tight mb-6">Program Structure</h3>
+                <div className="flex items-center gap-4 text-xs font-bold">
+                  <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-gray-400 uppercase tracking-widest text-[9px]">Training</div>
+                  <span className="text-blue-500 font-black">→</span>
+                  <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-gray-400 uppercase tracking-widest text-[9px]">Execution</div>
+                  <span className="text-blue-500 font-black">→</span>
+                  <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-gray-400 uppercase tracking-widest text-[9px]">Evaluation</div>
+                </div>
               </div>
-              <p className="text-gray-400 leading-relaxed text-sm">
-                This {data.duration} program is designed as a deep-dive into industry execution. 
-                {isExp 
-                  ? " Phase 1 (6 Months) focuses on intensive professional training. Phase 2 (6 Months) is a guaranteed work experience stint where you work on real-life projects and get hands-on work experience that translates directly to the professional world. You will earn Experience Letters and personal Recommendations from the companies themselves."
-                  : " You will focus on high-intensity practical training sessions with weekly deliverables that simulate real-world agency tasks over 4 months."}
+              <p className="text-gray-400 leading-relaxed text-sm md:text-base font-medium">
+                This {data.duration} program is designed as a deep-dive into industry execution. You will focus on high-intensity practical training sessions with weekly deliverables that simulate real-world agency tasks. 
+                {isImmersion && " The second half provides guaranteed work experience where you build live industrial proof-of-work alongside brand partners."}
               </p>
             </div>
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Core Focus Areas</h4>
-              <ul className="grid grid-cols-1 gap-3">
-                {CORE_AREAS.map((area, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs font-bold text-gray-300 uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                    {area}
-                  </li>
-                ))}
-              </ul>
+
+            <div className="lg:col-span-5">
+              <div className="bg-[#0a0a0a] rounded-[2rem] p-8 border border-white/5 shadow-inner">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-6">Core Modules</h4>
+                <ul className="space-y-4">
+                  {data.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-xs font-bold text-gray-300 uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
 
+          {/* Roadmap Section */}
           <div>
-            <h3 className="text-xl font-heading font-bold text-white mb-6 uppercase tracking-tighter">Execution Roadmap</h3>
-            <div className="space-y-4">
+            <h3 className="text-xl font-heading font-bold text-white mb-10 uppercase tracking-tight">Execution Roadmap</h3>
+            <div className="space-y-6">
               {[
-                { week: isExp ? 'Months 1-6' : 'Week 1-2', focus: isExp ? 'Intensive Industrial Training' : 'Foundational Strategy', detail: isExp ? 'Mastering industry-standard project management, analytics, and vertical-specific tools.' : 'Onboarding to industry-standard project management and analytics tools.' },
-                { week: isExp ? 'Months 7-12' : 'Week 3-4', focus: isExp ? 'Live Work Experience' : 'Creative Execution', detail: isExp ? 'Full-time placement with partner brands to execute campaigns and handle professional deliverables.' : 'Developing content calendars and visual identity assets for live pilots.' },
+                { 
+                  time: isImmersion ? 'Month 1-2' : 'Week 1-2', 
+                  title: 'Foundational Strategy & Tooling', 
+                  detail: 'Onboarding to industry-standard project management and analytics tools.' 
+                },
+                { 
+                  time: isImmersion ? 'Month 3-4' : 'Week 3-4', 
+                  title: 'Creative Execution & Branding', 
+                  detail: 'Developing content calendars and visual identity assets for live pilots.' 
+                },
+                { 
+                  time: isImmersion ? 'Month 5-6' : 'Week 5-6', 
+                  title: 'Performance Optimization', 
+                  detail: 'Analyzing delivery data and refining execution quality.' 
+                },
               ].map((item, i) => (
-                <div key={i} className="flex gap-6 p-6 rounded-xl hover:bg-white/5 transition-colors border border-white/5">
-                  <div className="shrink-0 w-32 text-blue-500 font-black text-[10px] pt-1 uppercase tracking-[0.2em]">{item.week}</div>
+                <div key={i} className="group flex flex-col md:flex-row gap-6 p-8 rounded-3xl hover:bg-white/[0.02] transition-all border border-transparent hover:border-white/5">
+                  <div className="shrink-0 md:w-40 text-blue-500 font-black text-xs uppercase tracking-[0.3em]">{item.time}</div>
                   <div>
-                    <h5 className="font-bold text-white mb-1 uppercase text-sm tracking-tight">{item.focus}</h5>
-                    <p className="text-sm text-gray-500 leading-relaxed">{item.detail}</p>
+                    <h5 className="font-bold text-white mb-2 uppercase text-base tracking-tight">{item.title}</h5>
+                    <p className="text-sm text-gray-500 leading-relaxed font-medium">{item.detail}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
+          {/* Bottom Grid: Evaluation & Proof */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-12 border-t border-white/5">
             <div>
-              <h3 className="text-lg font-heading font-bold mb-4 uppercase tracking-tighter">Evaluation Criteria</h3>
-              <ul className="space-y-3">
-                {['90% Attendance Requirement', 'Execution Quality Index', 'Timely Assignment Submission', 'Professional Conduct'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    <span className="text-red-500 text-xs font-bold">●</span>
+              <h3 className="text-xl font-heading font-bold mb-8 uppercase tracking-tight">Evaluation Criteria</h3>
+              <ul className="space-y-4">
+                {[
+                  '90% Attendance Requirement', 
+                  'Execution Quality Index', 
+                  'Timely Assignment Submission', 
+                  'Professional Conduct'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
+                    <span className="w-1.5 h-1.5 bg-red-500/50 rounded-full" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="p-6 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl border border-white/10">
-              <h3 className="text-lg font-heading font-bold mb-4 uppercase tracking-tighter text-blue-400">Professional Proof</h3>
-              <div className="space-y-2 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                <p>• {isExp ? 'Official 6-Month Experience Letter' : 'Unique Certificate ID for Verification'}</p>
-                <p>• {isExp ? 'Industry Recommendation Letter' : 'QR-based Online Profile'}</p>
-                <p>• Lifetime Digital Validity</p>
-                <p>• Issued by Registered Tech Entity</p>
-              </div>
+            
+            <div className="p-8 bg-gradient-to-br from-[#080808] to-[#0a0a0a] rounded-[2rem] border border-blue-500/10 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <h3 className="text-xl font-heading font-bold mb-6 uppercase tracking-tight text-blue-400">Professional Proof</h3>
+              <ul className="space-y-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+                <li className="flex items-start gap-3">
+                  <span className="text-blue-500">•</span> 
+                  {isImmersion ? 'Joint Experience Letter with Partner Brand' : 'Unique Certificate ID for Verification'}
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-blue-500">•</span> 
+                  {isImmersion ? 'Performance Recommendation from Industry Lead' : 'QR-based Online Professional Profile'}
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-blue-500">•</span> Lifetime Digital Validity
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-blue-500">•</span> Issued by Registered Tech Entity
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
-        {/* Footer Action */}
-        <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4 justify-center">
+        {/* Footer Actions */}
+        <div className="p-8 md:p-10 bg-black/40 border-t border-white/5 flex flex-col sm:flex-row gap-4 justify-center items-center">
            <button 
              onClick={onClose}
-             className="px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+             className="w-full sm:w-auto px-10 py-5 bg-white/5 border border-white/10 text-gray-300 font-black rounded-2xl hover:bg-white/10 transition-all text-[11px] uppercase tracking-[0.3em]"
            >
              Close Details
            </button>
@@ -123,7 +163,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
                  onEnroll(trackKey);
                  onClose();
                }}
-               className="px-12 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 text-xs uppercase tracking-widest"
+               className="w-full sm:w-auto px-14 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/30 text-[11px] uppercase tracking-[0.3em] active:scale-95"
              >
                Apply for this Track
              </button>
@@ -135,5 +175,3 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 };
 
 export default TrackDetailModal;
-
-
