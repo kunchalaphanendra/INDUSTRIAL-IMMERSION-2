@@ -96,7 +96,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               {isEmailError && (
                 <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl text-[10px] text-blue-400 text-center font-medium leading-relaxed uppercase tracking-wider">
                   <span className="font-black text-blue-500 block mb-1">Developer Tip:</span>
-                  Backend failed to send email. Go to Supabase Dashboard > Auth > Providers > Email and disable "Confirm email" to test without SMTP.
+                  Backend failed to send email. Go to Supabase Dashboard &gt; Auth &gt; Providers &gt; Email and disable "Confirm email" to test without SMTP.
                 </div>
               )}
             </div>
@@ -166,4 +166,5 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
