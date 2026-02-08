@@ -9,7 +9,8 @@ import Footer from './components/Footer';
 import CheckoutModal from './components/CheckoutModal';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
-import { PARTNERS } from './constants';
+import TrackDetailModal from './components/TrackDetailModal';
+import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
 
@@ -40,7 +41,7 @@ const GetStarted: React.FC = () => {
         <div className="glass-card p-12 md:p-24 rounded-[4rem] border-blue-500/10 relative overflow-hidden group">
           <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <p className="text-blue-500 font-black uppercase tracking-[0.3em] text-[10px] mb-6">Built for the future of work</p>
-          <h2 className="text-4xl md:text-7xl font-heading font-bold mb-10 uppercase tracking-tighter leading-none">Ready to <br /><span className="text-blue-500">Execution?</span></h2>
+          <h2 className="text-4xl md:text-7xl font-heading font-bold mb-10 uppercase tracking-tighter leading-none">Ready to <br /><span className="text-blue-500">Execute?</span></h2>
           <p className="text-gray-400 text-lg md:text-xl mb-12 max-w-xl mx-auto leading-relaxed font-medium">
             Stop wondering if you're ready. Start building your industrial proof-of-work today.
           </p>
@@ -62,6 +63,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
+  const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -151,12 +153,22 @@ const App: React.FC = () => {
         <Features />
         <ProgramSelector 
           selectedTrack={selectedTrack} 
-          onSelect={handleTrackSelect} 
+          onSelect={handleTrackSelect}
+          onViewDetails={(track) => setDetailTrack(track)}
         />
         <PricingSection />
         <GetStarted />
       </main>
       <Footer />
+
+      {detailTrack && (
+        <TrackDetailModal 
+          trackKey={detailTrack}
+          data={TRACKS[detailTrack]}
+          onClose={() => setDetailTrack(null)}
+          onEnroll={handleTrackSelect}
+        />
+      )}
 
       {enrollment && (
         <CheckoutModal 
@@ -177,7 +189,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-
-
-
