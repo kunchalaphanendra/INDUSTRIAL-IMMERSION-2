@@ -200,8 +200,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               {isEmailError && (
                 <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl text-[10px] text-blue-400 text-center font-bold leading-relaxed uppercase tracking-widest">
                   <span className="text-blue-500 block mb-2 underline">SMTP Integration Required</span>
-                  1. Go to Supabase Dashboard > Auth > Providers > Email<br/>
-                  2. Enable SMTP & use Brevo Relay (smtp-relay.brevo.com)<br/>
+                  1. Go to Supabase Dashboard &gt; Auth &gt; Providers &gt; Email<br/>
+                  2. Enable SMTP &amp; use Brevo Relay (smtp-relay.brevo.com)<br/>
                   3. Use your Brevo SMTP Key as Password
                 </div>
               )}
@@ -277,6 +277,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
