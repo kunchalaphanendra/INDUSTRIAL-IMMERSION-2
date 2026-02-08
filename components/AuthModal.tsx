@@ -45,11 +45,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         setResendTimer(60);
       } else {
         if (result.error === "ACCOUNT_NOT_FOUND") {
-          setError("SESSION REFUSED: THIS EMAIL IS NOT YET REGISTERED IN OUR INDUSTRIAL CYCLE.");
+          setError("SESSION REFUSED: THIS EMAIL IS NOT YET REGISTERED.");
         } else if (result.error === "ALREADY_REGISTERED") {
-          setError("AUTHORIZATION CONFLICT: THIS PROFILE ALREADY EXISTS. PLEASE USE LOGIN INSTEAD.");
+          setError("AUTHORIZATION CONFLICT: PROFILE ALREADY EXISTS.");
         } else {
-          setError(result.error || 'AUTHORIZATION SERVER IS CURRENTLY UNRESPONSIVE.');
+          setError(result.error || 'AUTHORIZATION SERVER ERROR.');
         }
       }
     } catch (err: any) {
@@ -112,7 +112,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
-  const isEmailError = error?.toLowerCase().includes('email') || error?.toLowerCase().includes('smtp') || error?.toLowerCase().includes('refused');
+  const isSmtpError = error?.toUpperCase().includes('EMAIL') || error?.toUpperCase().includes('SMTP') || error?.toUpperCase().includes('SERVER ERROR');
 
   if (needsVerification) {
     return (
@@ -145,12 +145,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             ))}
           </div>
 
-          {error && (
-            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <button 
               onClick={handleVerifyOtp}
@@ -159,22 +153,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             >
               {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirm Access'}
             </button>
-
-            <div className="flex flex-col gap-4 pt-4 border-t border-white/5 mt-6">
-              <button 
-                onClick={handleResend}
-                disabled={resendTimer > 0 || loading}
-                className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors disabled:opacity-30"
-              >
-                {resendTimer > 0 ? `Retry in ${resendTimer}s` : 'Resend Verification Code'}
-              </button>
-              <button 
-                onClick={() => setNeedsVerification(false)}
-                className="text-[9px] text-blue-500 hover:text-blue-400 font-black uppercase tracking-[0.3em] transition-colors"
-              >
-                Change Entry Details
-              </button>
-            </div>
+            <button 
+              onClick={() => setNeedsVerification(false)}
+              className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
+            >
+              Go Back
+            </button>
           </div>
         </div>
       </div>
@@ -193,53 +177,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               {isLogin ? 'Member' : 'Join'} <span className="brand-text text-blue-500">STJUFENDS</span>
             </h2>
             <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">
-              {isLogin ? 'Authorize your existing industrial profile' : 'Initialize your professional identity'}
+              {isLogin ? 'Authorize your existing profile' : 'Initialize your professional identity'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-8 space-y-4">
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] text-center font-bold uppercase tracking-widest leading-relaxed">
+            <div className="mb-8 space-y-4 animate-in slide-in-from-top-2">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] text-center font-bold uppercase tracking-widest leading-relaxed">
                 {error}
               </div>
               
-              <div className="flex flex-col gap-2">
-                {isEmailError && (
-                  <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest animate-in slide-in-from-bottom-4">
-                    <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">CRITICAL: SMTP CONFIG MISMATCH</span>
-                    Your screenshots show a "Username" mismatch in Supabase:<br/><br/>
-                    1. In <span className="text-white font-black underline">Supabase</span> SMTP Settings:<br/>
-                    2. Change <span className="text-white">Username</span> to: <span className="text-white bg-blue-600 px-2 py-0.5 rounded ml-1">a1d682001@smtp-brevo.com</span><br/>
-                    <span className="text-[7px] text-gray-500">(It is currently set to your Gmail, which is incorrect for Brevo Relay)</span><br/><br/>
-                    3. Ensure <span className="text-white">Password</span> is your <span className="text-white">API Key</span>.<br/>
-                    4. Ensure <span className="text-white">Sender Email</span> is <span className="text-blue-500">info@stjufends.com</span>.
+              {isSmtpError && (
+                <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
+                  <span className="text-white block mb-3 border-b border-blue-500/30 pb-2">FINAL SUCCESS CHECKLIST:</span>
+                  <div className="space-y-2 text-left">
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-500">1.</span>
+                      <span>Did you click <span className="text-white bg-green-900/40 px-1 rounded">Save Changes</span> in Supabase?</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-500">2.</span>
+                      <span>Is <span className="text-white underline decoration-blue-500 underline-offset-2">Username</span> set to <span className="text-white">a1d682001@smtp-brevo.com</span>?</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-500">3.</span>
+                      <span>Is <span className="text-white underline decoration-blue-500 underline-offset-2">Password</span> the <span className="text-white italic">Full</span> API Key string?</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-500">4.</span>
+                      <span><span className="text-white">Wait 60 seconds</span> for the Supabase rate limit to clear before trying again.</span>
+                    </div>
                   </div>
-                )}
-
-                {error.includes('REFUSED') && (
-                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-600 text-[9px] font-black uppercase text-center tracking-widest leading-relaxed">
-                    Tip: If you haven't signed up yet, use the "Initialize Profile" option below first.
-                  </div>
-                )}
-
-                {error === "ACCOUNT_NOT_FOUND" && (
-                  <button 
-                    onClick={() => { setIsLogin(false); setError(null); }}
-                    className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
-                  >
-                    No profile found. Initialize Now?
-                  </button>
-                )}
-
-                {error === "ALREADY_REGISTERED" && (
-                  <button 
-                    onClick={() => { setIsLogin(true); setError(null); }}
-                    className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
-                  >
-                    Switch to Secure Login
-                  </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -292,7 +262,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               onClick={() => { setIsLogin(!isLogin); setError(null); }}
               className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
             >
-              {isLogin ? "New to STJUFENDS? Initialize Profile" : "Existing Member? Secure Login"}
+              {isLogin ? "Initialize Profile" : "Secure Login"}
             </button>
           </div>
         </div>
@@ -302,6 +272,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
