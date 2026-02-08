@@ -120,7 +120,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={onClose} />
-        <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
+        <div className="relative bg-[#080808] border border-white/10 w-full max-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
           <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 shadow-[0_0_40px_rgba(37,99,235,0.1)]">
             <svg className="w-10 h-10 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
@@ -209,7 +209,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest">
                   <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">URGENT: SMTP SENDER MISMATCH</span>
                   Your screenshots show a conflict between Supabase and Brevo:<br/><br/>
-                  1. Go to <span className="text-white">Supabase > Authentication > SMTP</span><br/>
+                  1. Go to <span className="text-white">Supabase &gt; Authentication &gt; SMTP</span><br/>
                   2. Change <span className="text-white">Sender email address</span> to:<br/>
                   <span className="text-white bg-blue-600 px-2 py-0.5 rounded ml-1">kunchalaphanendra2006@gmail.com</span><br/>
                   <span className="text-[7px] text-gray-500">(It is currently info@stjufends.com which is NOT verified in Brevo)</span><br/><br/>
