@@ -51,4 +51,3 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnr
 };
 
 export default CourseCard;
-
