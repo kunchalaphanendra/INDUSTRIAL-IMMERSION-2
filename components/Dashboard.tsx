@@ -128,6 +128,3 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
-
-
-
