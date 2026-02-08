@@ -1,7 +1,4 @@
 
-
-
-
 import React from 'react';
 import { User } from '../types';
 
@@ -23,16 +20,16 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-heading font-extrabold text-white text-xl">E</div>
-            <span className="font-heading font-bold text-lg tracking-tight hidden sm:block uppercase">EdTech Institutional</span>
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-105">S</div>
+            <span className="brand-text text-2xl hidden sm:block uppercase text-white transition-colors group-hover:text-blue-500">STJUFENDS</span>
           </div>
           
           <div className="flex items-center space-x-4 md:space-x-8 text-sm font-medium">
             <div className="hidden lg:flex items-center space-x-8 text-gray-400">
               <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Home</button>
-              <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Organisations</button>
-              <button onClick={() => scrollTo('about')} className="hover:text-white transition-colors">About</button>
+              <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Programs</button>
+              <button onClick={() => scrollTo('about')} className="hover:text-white transition-colors">Mission</button>
               <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
             </div>
             
