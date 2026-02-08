@@ -26,10 +26,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   }, [resendTimer]);
 
-  const errorLower = error?.toLowerCase() || '';
-  // Check specifically for the common SMTP rejection message from Supabase/Brevo
-  const isSmtpError = errorLower.includes('confirmation email') || errorLower.includes('smtp') || errorLower.includes('dispatch') || errorLower.includes('identity');
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email) return;
@@ -53,7 +49,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         } else if (result.error === "ALREADY_REGISTERED") {
           setError("Authorization Conflict: This profile already exists. Please use Login instead.");
         } else {
-          setError(result.error || 'Failed to initiate authorization');
+          setError(result.error || 'Authorization server is currently unresponsive.');
         }
       }
     } catch (err: any) {
@@ -112,7 +108,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
     } else {
-      setError(result.error || 'Resend failed. Check SMTP configuration.');
+      setError(result.error || 'Resend failed. Try again in a moment.');
     }
   };
 
@@ -120,7 +116,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={onClose} />
-        <div className="relative bg-[#080808] border border-white/10 w-full max-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
+        <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
           <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 shadow-[0_0_40px_rgba(37,99,235,0.1)]">
             <svg className="w-10 h-10 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
@@ -205,35 +201,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {error}
               </div>
               
-              {isSmtpError && (
-                <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest">
-                  <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">URGENT: SMTP SENDER MISMATCH</span>
-                  Your screenshots show a conflict between Supabase and Brevo:<br/><br/>
-                  1. Go to <span className="text-white">Supabase &gt; Authentication &gt; SMTP</span><br/>
-                  2. Change <span className="text-white">Sender email address</span> to:<br/>
-                  <span className="text-white bg-blue-600 px-2 py-0.5 rounded ml-1">kunchalaphanendra2006@gmail.com</span><br/>
-                  <span className="text-[7px] text-gray-500">(It is currently info@stjufends.com which is NOT verified in Brevo)</span><br/><br/>
-                  3. Alternatively, verify <span className="text-white">info@stjufends.com</span> in Brevo as a "Sender".
-                </div>
-              )}
+              <div className="flex flex-col gap-2">
+                {error === "ACCOUNT_NOT_FOUND" && (
+                  <button 
+                    onClick={() => { setIsLogin(false); setError(null); }}
+                    className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
+                  >
+                    No profile found. Initialize Now?
+                  </button>
+                )}
 
-              {error === "ACCOUNT_NOT_FOUND" && (
-                <button 
-                  onClick={() => { setIsLogin(false); setError(null); }}
-                  className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
-                >
-                  No profile found. Initialize Now?
-                </button>
-              )}
+                {error === "ALREADY_REGISTERED" && (
+                  <button 
+                    onClick={() => { setIsLogin(true); setError(null); }}
+                    className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
+                  >
+                    Switch to Secure Login
+                  </button>
+                )}
 
-              {error === "ALREADY_REGISTERED" && (
-                <button 
-                  onClick={() => { setIsLogin(true); setError(null); }}
-                  className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
-                >
-                  Switch to Secure Login
-                </button>
-              )}
+                {error.toLowerCase().includes('email') && (
+                  <p className="text-[8px] text-gray-600 uppercase font-bold tracking-widest text-center">
+                    Note: Ensure your SMTP settings in Supabase match your verified Brevo sender.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -296,3 +288,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
