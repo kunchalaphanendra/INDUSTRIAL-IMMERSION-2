@@ -1,5 +1,5 @@
 
-import { TrackKey, TrackData, BillingType, DomainKey, DomainData } from './types';
+import { TrackKey, TrackData, BillingType, DomainKey, DomainData, FAQCategory } from './types';
 
 export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.SCHOOL_TUITION]: {
@@ -117,20 +117,126 @@ export const CORE_AREAS = [
   'Professional Ethics'
 ];
 
-export const FAQS = [
+export const FAQ_CATEGORIES: FAQCategory[] = [
   {
-    question: "How do institutions partner with us?",
-    answer: "Schools and Colleges can submit an enquiry via the 'Partner With Us' section. Our institutional coordination team will then reach out to customize the rollout."
+    title: "General Program",
+    items: [
+      {
+        question: "Is this a job guarantee program?",
+        answer: "No. This is not a job guarantee program. It is an industry immersion program where participants work on real business deliverables. Employment depends on individual performance, business needs, and availability of roles."
+      },
+      {
+        question: "Is this a course or training program?",
+        answer: "No. This is not a traditional course or classroom-based training. Participants are embedded into live business environments and are evaluated on execution and outcomes."
+      },
+      {
+        question: "What makes this different from internships?",
+        answer: "Traditional internships are often observational or limited in responsibility. In this program, participants are assigned real operational tasks that contribute directly to business outcomes."
+      },
+      {
+        question: "Are the projects real or simulated?",
+        answer: "All projects are real and live. There are no mock assignments, simulations, or dummy case studies."
+      },
+      {
+        question: "Who provides the projects?",
+        answer: "Projects come from: Active brands, Agencies, Product-based companies, and Internal ventures and partner organizations."
+      }
+    ]
   },
   {
-    question: "Is the Industry Immersion certificate verified?",
-    answer: "Yes. Certificates are jointly issued by our organization and the respective partner brands, providing verifiable proof of work experience."
+    title: "Execution Certificate",
+    items: [
+      {
+        question: "What is the Execution Certificate?",
+        answer: "The Execution Certificate is a short-term, execution-focused program designed to build core operational skills through structured live tasks."
+      },
+      {
+        question: "How long is the program?",
+        answer: "Typically 4–6 weeks, depending on the domain and deliverables."
+      },
+      {
+        question: "What kind of work will I do?",
+        answer: "Work may include: Business operations, Content or growth execution, Process documentation, Research & implementation, and Live task ownership."
+      },
+      {
+        question: "What will I receive at the end?",
+        answer: "You will receive an Execution Certificate, verifiable work outputs, and portfolio-ready deliverables."
+      }
+    ]
   },
   {
-    question: "Can individual students join directly?",
-    answer: "While we prioritize institutional partnerships, individual students can apply via the 'Student Application' path if their college is not yet a partner."
+    title: "Industrial Experience Certificate",
+    items: [
+      {
+        question: "What is the Industrial Experience Certificate?",
+        answer: "This is an advanced immersion program where participants work directly with live businesses under professional supervision."
+      },
+      {
+        question: "How long is the program?",
+        answer: "Typically 8–12 weeks, depending on the industry and project scope."
+      },
+      {
+        question: "Will I receive an experience letter?",
+        answer: "Participants who successfully complete the program and meet performance standards receive an Industrial Experience Certificate and, where applicable, a work verification letter."
+      }
+    ]
+  },
+  {
+    title: "Time Commitment & Format",
+    items: [
+      {
+        question: "How many hours per week are required?",
+        answer: "Execution Certificate: 10–15 hours/week. Industrial Experience Certificate: 20–30 hours/week. Actual hours depend on project complexity."
+      },
+      {
+        question: "Is the program remote or on-site?",
+        answer: "The program is primarily remote. Some projects may involve optional on-site collaboration where feasible."
+      },
+      {
+        question: "Can I do this alongside college or a job?",
+        answer: "Yes, provided you can meet the execution requirements and deadlines."
+      }
+    ]
+  },
+  {
+    title: "Domain & Placement",
+    items: [
+      {
+        question: "Can I choose the industry or domain?",
+        answer: "Participants can express preferences, but final placement depends on: Availability of projects, Skill alignment, and Performance during screening."
+      },
+      {
+        question: "What industries are included?",
+        answer: "Fashion & Apparel, Food & Beverages, Consumer Electronics & Wearables, Technology & SaaS, Social Media & Growth Agencies."
+      }
+    ]
+  },
+  {
+    title: "Payments & Policies",
+    items: [
+      {
+        question: "Is there a refund policy?",
+        answer: "Refunds are governed by program-specific terms shared before enrollment."
+      },
+      {
+        question: "Are EMI or bulk options available?",
+        answer: "Yes. EMI options may be available for individuals, and bulk pricing applies for institutions."
+      }
+    ]
+  },
+  {
+    title: "Institutions (Schools & Colleges)",
+    items: [
+      {
+        question: "Do you work directly with schools and colleges?",
+        answer: "Yes. We partner with institutions to deliver execution-based industry exposure at scale. The program complements academics by providing practical execution exposure."
+      },
+      {
+        question: "Can colleges run this for entire batches?",
+        answer: "Yes. Execution and Industrial Experience Certificates are available under bulk and campus licensing models."
+      }
+    ]
   }
 ];
 
-
-
+export const FAQS = FAQ_CATEGORIES.flatMap(cat => cat.items);
