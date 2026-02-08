@@ -31,9 +31,63 @@ export const apiService = {
       });
       const data = await response.json();
       if (!response.ok) {
-        // Handle various common error keys from Supabase/PostgREST
         const errorMsg = data.msg || data.message || data.error_description || data.error || 'Signup failed';
         throw new Error(errorMsg);
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+    const config = getApiConfig();
+    try {
+      const response = await fetch(`${config.url}/auth/v1/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.key
+        },
+        body: JSON.stringify({
+          email,
+          token,
+          type: 'signup' // or 'email' depending on Supabase config
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.message || data.msg || 'Verification failed. Please check the OTP.';
+        throw new Error(errorMsg);
+      }
+
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email,
+        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`
+      };
+
+      return { success: true, user, token: data.access_token };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async resendOtp(email: string): Promise<{ success: boolean; error?: string }> {
+    const config = getApiConfig();
+    try {
+      const response = await fetch(`${config.url}/auth/v1/otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.key
+        },
+        body: JSON.stringify({ email })
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to resend OTP');
       }
       return { success: true };
     } catch (err: any) {
@@ -93,7 +147,6 @@ export const apiService = {
     }
   },
 
-  // --- APPLICATION METHODS ---
   async submitApplication(data: any, token?: string): Promise<{ success: boolean; error?: string }> {
     const config = getApiConfig();
     const endpoint = `${config.url}/rest/v1/applications`;
@@ -153,4 +206,5 @@ export const apiService = {
     }
   }
 };
+
 
