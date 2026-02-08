@@ -30,7 +30,11 @@ export const apiService = {
         })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.msg || data.error_description || 'Signup failed');
+      if (!response.ok) {
+        // Handle various common error keys from Supabase/PostgREST
+        const errorMsg = data.msg || data.message || data.error_description || data.error || 'Signup failed';
+        throw new Error(errorMsg);
+      }
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -49,7 +53,10 @@ export const apiService = {
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+      if (!response.ok) {
+        const errorMsg = data.error_description || data.message || data.msg || 'Login failed';
+        throw new Error(errorMsg);
+      }
       
       const user: User = {
         id: data.user.id,
@@ -146,3 +153,4 @@ export const apiService = {
     }
   }
 };
+
