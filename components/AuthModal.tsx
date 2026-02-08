@@ -38,18 +38,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     setError(null);
     
     try {
-      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isSignup(isLogin));
+      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
       
       if (result.success) {
         setNeedsVerification(true);
         setResendTimer(60);
       } else {
         if (result.error === "ACCOUNT_NOT_FOUND") {
-          setError("Session Refused: This email is not yet registered in our industrial cycle.");
+          setError("SESSION REFUSED: THIS EMAIL IS NOT YET REGISTERED IN OUR INDUSTRIAL CYCLE.");
         } else if (result.error === "ALREADY_REGISTERED") {
-          setError("Authorization Conflict: This profile already exists. Please use Login instead.");
+          setError("AUTHORIZATION CONFLICT: THIS PROFILE ALREADY EXISTS. PLEASE USE LOGIN INSTEAD.");
         } else {
-          setError(result.error || 'Authorization server is currently unresponsive.');
+          setError(result.error || 'AUTHORIZATION SERVER IS CURRENTLY UNRESPONSIVE.');
         }
       }
     } catch (err: any) {
@@ -58,9 +58,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       setLoading(false);
     }
   };
-
-  // Helper to fix types in the sendOtp call logic
-  const isSignup = (loginMode: boolean) => !loginMode;
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -115,7 +112,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
-  const isEmailError = error?.toLowerCase().includes('email') || error?.toLowerCase().includes('smtp');
+  const isEmailError = error?.toLowerCase().includes('email') || error?.toLowerCase().includes('smtp') || error?.toLowerCase().includes('refused');
 
   if (needsVerification) {
     return (
@@ -209,13 +206,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <div className="flex flex-col gap-2">
                 {isEmailError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest animate-in slide-in-from-bottom-4">
-                    <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">URGENT: SMTP PASSWORD ERROR</span>
-                    Your sender is verified, but Supabase can't talk to Brevo yet:<br/><br/>
-                    1. In <span className="text-white">Brevo</span> &gt; <span className="text-white">SMTP & API</span> &gt; <span className="text-white">SMTP</span> tab.<br/>
-                    2. Copy the <span className="text-white">"SMTP Password"</span> (or create a new Key).<br/>
-                    3. In <span className="text-white">Supabase</span> &gt; <span className="text-white">Auth</span> &gt; <span className="text-white">SMTP</span> Settings:<br/>
-                    4. Paste that key into the <span className="text-white">Password</span> field.<br/>
-                    5. Ensure <span className="text-white">Sender Email</span> is exactly <span className="text-blue-500">info@stjufends.com</span>.
+                    <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">CRITICAL: SMTP CONFIG MISMATCH</span>
+                    Your screenshots show a "Username" mismatch in Supabase:<br/><br/>
+                    1. In <span className="text-white font-black underline">Supabase</span> SMTP Settings:<br/>
+                    2. Change <span className="text-white">Username</span> to: <span className="text-white bg-blue-600 px-2 py-0.5 rounded ml-1">a1d682001@smtp-brevo.com</span><br/>
+                    <span className="text-[7px] text-gray-500">(It is currently set to your Gmail, which is incorrect for Brevo Relay)</span><br/><br/>
+                    3. Ensure <span className="text-white">Password</span> is your <span className="text-white">API Key</span>.<br/>
+                    4. Ensure <span className="text-white">Sender Email</span> is <span className="text-blue-500">info@stjufends.com</span>.
+                  </div>
+                )}
+
+                {error.includes('REFUSED') && (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-600 text-[9px] font-black uppercase text-center tracking-widest leading-relaxed">
+                    Tip: If you haven't signed up yet, use the "Initialize Profile" option below first.
                   </div>
                 )}
 
@@ -299,5 +302,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
