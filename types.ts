@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 export enum TrackKey {
   SCHOOL_TUITION = 'school_tuition',
   SCHOOL_SKILL = 'school_skill',
@@ -48,8 +50,6 @@ export interface User {
   avatarUrl?: string;
 }
 
-// Fixed: Added linkedin, currentStatus, and workExperience to UserRegistration
-// Fixed: Made role optional as it's not present in the CheckoutModal form initialization
 export interface UserRegistration {
   fullName: string;
   email: string;
@@ -78,5 +78,13 @@ export interface EnrollmentRecord {
   progress: number;
 }
 
+export interface FAQItem {
+  question: string;
+  // Fix: Using React.ReactNode requires importing React to avoid 'Cannot find namespace' error
+  answer: string | React.ReactNode;
+}
 
-
+export interface FAQCategory {
+  title: string;
+  items: FAQItem[];
+}
