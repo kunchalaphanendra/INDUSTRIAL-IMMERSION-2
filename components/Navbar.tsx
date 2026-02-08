@@ -1,4 +1,7 @@
 
+
+
+
 import React from 'react';
 import { User } from '../types';
 
@@ -51,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
                     Login
                   </button>
                   <button 
-                    onClick={() => scrollTo('organisations')} 
+                    onClick={onLoginClick} 
                     className="px-6 py-2.5 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all text-xs uppercase tracking-widest"
                   >
                     Apply Now
@@ -67,5 +70,3 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick })
 };
 
 export default Navbar;
-
-
