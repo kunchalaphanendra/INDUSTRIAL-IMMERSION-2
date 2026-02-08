@@ -43,6 +43,7 @@ export const apiService = {
   async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     const config = getApiConfig();
     try {
+      // In Supabase, the 'type' for a signup confirmation code is usually 'signup'
       const response = await fetch(`${config.url}/auth/v1/verify`, {
         method: 'POST',
         headers: {
@@ -52,12 +53,12 @@ export const apiService = {
         body: JSON.stringify({
           email,
           token,
-          type: 'signup' // or 'email' depending on Supabase config
+          type: 'signup' 
         })
       });
       const data = await response.json();
       if (!response.ok) {
-        const errorMsg = data.message || data.msg || 'Verification failed. Please check the OTP.';
+        const errorMsg = data.message || data.msg || 'Verification failed. Please check the code.';
         throw new Error(errorMsg);
       }
 
@@ -87,7 +88,7 @@ export const apiService = {
       });
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to resend OTP');
+        throw new Error(data.message || 'Failed to resend code');
       }
       return { success: true };
     } catch (err: any) {
@@ -206,5 +207,6 @@ export const apiService = {
     }
   }
 };
+
 
 
