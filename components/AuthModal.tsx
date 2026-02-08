@@ -38,7 +38,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     setError(null);
     
     try {
-      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
+      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isSignup(isLogin));
       
       if (result.success) {
         setNeedsVerification(true);
@@ -58,6 +58,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       setLoading(false);
     }
   };
+
+  // Helper to fix types in the sendOtp call logic
+  const isSignup = (loginMode: boolean) => !loginMode;
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -111,6 +114,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       setError(result.error || 'Resend failed. Try again in a moment.');
     }
   };
+
+  const isEmailError = error?.toLowerCase().includes('email') || error?.toLowerCase().includes('smtp');
 
   if (needsVerification) {
     return (
@@ -202,6 +207,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
               
               <div className="flex flex-col gap-2">
+                {isEmailError && (
+                  <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest animate-in slide-in-from-bottom-4">
+                    <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">URGENT: SMTP PASSWORD ERROR</span>
+                    Your sender is verified, but Supabase can't talk to Brevo yet:<br/><br/>
+                    1. In <span className="text-white">Brevo</span> &gt; <span className="text-white">SMTP & API</span> &gt; <span className="text-white">SMTP</span> tab.<br/>
+                    2. Copy the <span className="text-white">"SMTP Password"</span> (or create a new Key).<br/>
+                    3. In <span className="text-white">Supabase</span> &gt; <span className="text-white">Auth</span> &gt; <span className="text-white">SMTP</span> Settings:<br/>
+                    4. Paste that key into the <span className="text-white">Password</span> field.<br/>
+                    5. Ensure <span className="text-white">Sender Email</span> is exactly <span className="text-blue-500">info@stjufends.com</span>.
+                  </div>
+                )}
+
                 {error === "ACCOUNT_NOT_FOUND" && (
                   <button 
                     onClick={() => { setIsLogin(false); setError(null); }}
@@ -218,12 +235,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                   >
                     Switch to Secure Login
                   </button>
-                )}
-
-                {error.toLowerCase().includes('email') && (
-                  <p className="text-[8px] text-gray-600 uppercase font-bold tracking-widest text-center">
-                    Note: Ensure your SMTP settings in Supabase match your verified Brevo sender.
-                  </p>
                 )}
               </div>
             </div>
@@ -288,4 +299,5 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
