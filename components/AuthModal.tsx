@@ -158,7 +158,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                       </div>
                       <div className="flex gap-3">
                         <span className="text-blue-500 font-black">2.</span>
-                        <p>In <span className="text-white">Brevo > Domains</span>, is <span className="text-white font-bold">stjufends.com</span> marked as <span className="text-green-500">"Authenticated"</span> with DNS verified?</p>
+                        <p>In <span className="text-white">Brevo → Domains</span>, is <span className="text-white font-bold">stjufends.com</span> marked as <span className="text-green-500">"Authenticated"</span> with DNS verified?</p>
                       </div>
                       <div className="flex gap-3">
                         <span className="text-blue-500 font-black">3.</span>
@@ -201,6 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
