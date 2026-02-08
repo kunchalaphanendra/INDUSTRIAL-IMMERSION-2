@@ -15,6 +15,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', fullName: '' });
 
+  const isEmailError = error?.toLowerCase().includes('confirmation email');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -87,8 +89,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs text-center font-bold">
-              {error}
+            <div className="mb-6 space-y-3">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs text-center font-bold">
+                {error}
+              </div>
+              {isEmailError && (
+                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl text-[10px] text-blue-400 text-center font-medium leading-relaxed uppercase tracking-wider">
+                  <span className="font-black text-blue-500 block mb-1">Developer Tip:</span>
+                  Backend failed to send email. Go to Supabase Dashboard > Auth > Providers > Email and disable "Confirm email" to test without SMTP.
+                </div>
+              )}
             </div>
           )}
 
@@ -156,3 +166,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
