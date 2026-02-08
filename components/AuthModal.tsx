@@ -14,7 +14,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [form, setForm] = useState({ email: '', password: '', fullName: '' });
+  const [formData, setFormData] = useState({ email: '', fullName: '' });
   const [resendTimer, setResendTimer] = useState(0);
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -26,30 +26,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   }, [resendTimer]);
 
-  const isEmailError = error?.toLowerCase().includes('confirmation email') || error?.toLowerCase().includes('smtp');
+  const errorLower = error?.toLowerCase() || '';
+  const isSmtpError = errorLower.includes('confirmation email') || errorLower.includes('smtp') || errorLower.includes('dispatch');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email) return;
+    if (!isLogin && !formData.fullName) {
+      setError("Please provide your full legal name.");
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
     try {
-      if (isLogin) {
-        const result = await apiService.signIn(form.email, form.password);
-        if (result.success && result.user && result.token) {
-          localStorage.setItem('ii_token', result.token);
-          localStorage.setItem('ii_user', JSON.stringify(result.user));
-          onSuccess(result.user);
-        } else {
-          setError(result.error || 'Invalid credentials');
-        }
+      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
+      
+      if (result.success) {
+        setNeedsVerification(true);
+        setResendTimer(60);
       } else {
-        const result = await apiService.signUp(form.email, form.password, form.fullName);
-        if (result.success) {
-          setNeedsVerification(true);
-          setResendTimer(60);
+        if (result.error === "ACCOUNT_NOT_FOUND") {
+          setError("Session Refused: This email is not yet registered in our industrial cycle.");
+        } else if (result.error === "ALREADY_REGISTERED") {
+          setError("Authorization Conflict: This profile already exists. Please use Login instead.");
         } else {
-          setError(result.error || 'Signup failed');
+          setError(result.error || 'Failed to initiate authorization');
         }
       }
     } catch (err: any) {
@@ -65,7 +68,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // Focus next
     if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
@@ -84,13 +86,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await apiService.verifyOtp(form.email, otpValue);
+      const result = await apiService.verifyOtp(formData.email, otpValue);
       if (result.success && result.user && result.token) {
         localStorage.setItem('ii_token', result.token);
         localStorage.setItem('ii_user', JSON.stringify(result.user));
         onSuccess(result.user);
       } else {
-        setError(result.error || 'Incorrect code. Please try again.');
+        setError(result.error || 'Incorrect code. Check your inbox.');
       }
     } catch (err: any) {
       setError(err.message);
@@ -103,13 +105,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     if (resendTimer > 0) return;
     setLoading(true);
     setError(null);
-    const result = await apiService.resendOtp(form.email);
+    const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
     setLoading(false);
     if (result.success) {
       setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
     } else {
-      setError(result.error || 'Failed to resend code');
+      setError(result.error || 'Resend failed. Check SMTP configuration.');
     }
   };
 
@@ -119,13 +121,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={onClose} />
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in duration-300">
           <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 shadow-[0_0_40px_rgba(37,99,235,0.1)]">
-            <svg className="w-10 h-10 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-10 h-10 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Identity <br/><span className="text-blue-500">Verification</span></h2>
-          <p className="text-gray-400 mb-10 leading-relaxed font-medium text-xs uppercase tracking-widest">
-            We've dispatched a 6-digit code via <span className="text-blue-400">Brevo Relay</span> to <span className="text-white font-bold">{form.email}</span>.
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Security <br/><span className="text-blue-500">Authorization</span></h2>
+          <p className="text-gray-400 mb-10 leading-relaxed font-medium text-[10px] uppercase tracking-[0.2em]">
+            Code dispatched to <span className="text-white font-bold">{formData.email}</span>.
           </p>
 
           <div className="flex justify-between gap-2 mb-8">
@@ -145,7 +147,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           </div>
 
           {error && (
-            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-bold uppercase tracking-widest">
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
               {error}
             </div>
           )}
@@ -156,7 +158,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               disabled={loading || otp.some(d => !d)}
               className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-xl shadow-blue-500/20 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center"
             >
-              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirm Authorization'}
+              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirm Access'}
             </button>
 
             <div className="flex flex-col gap-4 pt-4 border-t border-white/5 mt-6">
@@ -171,7 +173,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 onClick={() => setNeedsVerification(false)}
                 className="text-[9px] text-blue-500 hover:text-blue-400 font-black uppercase tracking-[0.3em] transition-colors"
               >
-                Back to Account Setup
+                Change Entry Details
               </button>
             </div>
           </div>
@@ -186,88 +188,103 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       
       <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
         <div className="p-10">
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-3xl mx-auto mb-6 shadow-2xl shadow-blue-500/20">S</div>
-            <h2 className="text-3xl font-heading font-bold mb-2 uppercase tracking-tight">{isLogin ? 'Member Access' : 'Join'} <span className="brand-text text-blue-500">STJUFENDS</span></h2>
-            <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">{isLogin ? 'Authorize your professional session' : 'Secure your spot in the execution cycle'}</p>
+            <h2 className="text-3xl font-heading font-bold mb-2 uppercase tracking-tight">
+              {isLogin ? 'Member' : 'Join'} <span className="brand-text text-blue-500">STJUFENDS</span>
+            </h2>
+            <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+              {isLogin ? 'Authorize your existing industrial profile' : 'Initialize your professional identity'}
+            </p>
           </div>
 
           {error && (
-            <div className="mb-6 space-y-3">
+            <div className="mb-8 space-y-4">
               <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] text-center font-bold uppercase tracking-widest leading-relaxed">
                 {error}
               </div>
-              {isEmailError && (
-                <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl text-[10px] text-blue-400 text-center font-bold leading-relaxed uppercase tracking-widest">
-                  <span className="text-blue-500 block mb-2 underline">SMTP Integration Required</span>
-                  1. Go to Supabase Dashboard &gt; Auth &gt; Providers &gt; Email<br/>
-                  2. Enable SMTP &amp; use Brevo Relay (smtp-relay.brevo.com)<br/>
-                  3. Use your Brevo SMTP Key as Password
+              
+              {error === "ACCOUNT_NOT_FOUND" && (
+                <button 
+                  onClick={() => { setIsLogin(false); setError(null); }}
+                  className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
+                >
+                  No profile found. Initialize Now?
+                </button>
+              )}
+
+              {error === "ALREADY_REGISTERED" && (
+                <button 
+                  onClick={() => { setIsLogin(true); setError(null); }}
+                  className="w-full py-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600/30 transition-all"
+                >
+                  Switch to Secure Login
+                </button>
+              )}
+              
+              {isSmtpError && (
+                <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 text-center font-bold leading-loose uppercase tracking-widest">
+                  <span className="text-blue-500 block mb-3 underline decoration-2 underline-offset-4">Brevo SMTP Verification Required</span>
+                  1. Check Brevo: Is your sender email verified?<br/>
+                  2. Supabase Auth &gt; Providers &gt; Email &gt; SMTP Settings:<br/>
+                  - Server: <span className="text-white">smtp-relay.brevo.com</span><br/>
+                  - Port: <span className="text-white">587</span> | SSL/TLS: <span className="text-white">Enabled</span><br/>
+                  - Sender: <span className="text-white">Must match verified Brevo sender</span>
                 </div>
               )}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSendOtp} className="space-y-6">
             {!isLogin && (
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Full Name</label>
+              <div className="animate-in slide-in-from-top-4 duration-300">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-3 ml-1">Full Legal Name</label>
                 <input 
                   required 
                   type="text" 
-                  value={form.fullName}
-                  onChange={e => setForm({...form, fullName: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-700" 
-                  placeholder="Legal Full Name"
+                  value={formData.fullName}
+                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-800 text-sm font-medium" 
+                  placeholder="Legal Name"
                 />
               </div>
             )}
+            
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Work Email</label>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-3 ml-1">Professional Email</label>
               <input 
                 required 
                 type="email" 
-                value={form.email}
-                onChange={e => setForm({...form, email: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-700" 
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-800 text-sm font-medium" 
                 placeholder="email@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Access Pin/Password</label>
-              <input 
-                required 
-                type="password" 
-                value={form.password}
-                onChange={e => setForm({...form, password: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all placeholder:text-gray-700" 
-                placeholder="••••••••"
               />
             </div>
 
             <button 
-              disabled={loading}
-              className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-xl shadow-blue-500/20 uppercase tracking-[0.2em] text-[10px] mt-4 flex items-center justify-center group"
+              disabled={loading || !formData.email}
+              className="w-full py-6 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow-xl shadow-blue-500/20 uppercase tracking-[0.3em] text-[10px] mt-4 flex items-center justify-center group"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
                   {isLogin ? 'Authorize Access' : 'Create Profile & Verify'}
-                  <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <svg className="w-4 h-4 ml-3 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center pt-6 border-t border-white/5">
+          <div className="mt-10 text-center pt-8 border-t border-white/5">
             <button 
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => { setIsLogin(!isLogin); setError(null); }}
               className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
             >
-              {isLogin ? "New to STJUFENDS? Build profile" : "Member already? Sign In"}
+              {isLogin ? "New to STJUFENDS? Initialize Profile" : "Existing Member? Secure Login"}
             </button>
           </div>
         </div>
@@ -277,6 +294,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
