@@ -13,25 +13,46 @@ const getApiConfig = () => {
 };
 
 export const apiService = {
-  // --- AUTH METHODS ---
-  async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+  // --- PURE OTP AUTH METHODS ---
+  
+  /**
+   * Starts the OTP flow. 
+   * @param email The user's email
+   * @param fullName Optional name for new user registration
+   * @param isSignup Whether this is a new registration (true) or login (false)
+   */
+  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string; code?: string }> {
     const config = getApiConfig();
     try {
-      const response = await fetch(`${config.url}/auth/v1/signup`, {
+      // Supabase OTP endpoint
+      // If isSignup is false, Supabase will throw error if user doesn't exist
+      const response = await fetch(`${config.url}/auth/v1/otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': config.key
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           email,
-          password,
-          data: { full_name: fullName }
+          create_user: isSignup, // If false, only allows existing users
+          options: fullName ? {
+            data: { full_name: fullName }
+          } : undefined
         })
       });
+      
       const data = await response.json();
+      
       if (!response.ok) {
-        const errorMsg = data.msg || data.message || data.error_description || data.error || 'Signup failed';
+        // Specific error handling for "Login" vs "Signup"
+        if (!isSignup && response.status === 422) {
+          throw new Error("ACCOUNT_NOT_FOUND");
+        }
+        if (isSignup && data.message?.includes('already registered')) {
+          throw new Error("ALREADY_REGISTERED");
+        }
+        
+        const errorMsg = data.msg || data.message || 'Failed to dispatch code';
         throw new Error(errorMsg);
       }
       return { success: true };
@@ -40,10 +61,12 @@ export const apiService = {
     }
   },
 
+  /**
+   * Verifies the 6-digit code and returns user session
+   */
   async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     const config = getApiConfig();
     try {
-      // In Supabase, the 'type' for a signup confirmation code is usually 'signup'
       const response = await fetch(`${config.url}/auth/v1/verify`, {
         method: 'POST',
         headers: {
@@ -53,66 +76,16 @@ export const apiService = {
         body: JSON.stringify({
           email,
           token,
-          type: 'signup' 
+          type: 'magiclink' 
         })
       });
-      const data = await response.json();
-      if (!response.ok) {
-        const errorMsg = data.message || data.msg || 'Verification failed. Please check the code.';
-        throw new Error(errorMsg);
-      }
-
-      const user: User = {
-        id: data.user.id,
-        email: data.user.email,
-        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`
-      };
-
-      return { success: true, user, token: data.access_token };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  },
-
-  async resendOtp(email: string): Promise<{ success: boolean; error?: string }> {
-    const config = getApiConfig();
-    try {
-      const response = await fetch(`${config.url}/auth/v1/otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.key
-        },
-        body: JSON.stringify({ email })
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to resend code');
-      }
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  },
-
-  async signIn(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
-    const config = getApiConfig();
-    try {
-      const response = await fetch(`${config.url}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.key
-        },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        const errorMsg = data.error_description || data.message || data.msg || 'Login failed';
-        throw new Error(errorMsg);
-      }
       
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.message || data.msg || 'Invalid or expired code.';
+        throw new Error(errorMsg);
+      }
+
       const user: User = {
         id: data.user.id,
         email: data.user.email,
@@ -207,6 +180,7 @@ export const apiService = {
     }
   }
 };
+
 
 
 
