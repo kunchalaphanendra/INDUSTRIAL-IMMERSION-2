@@ -181,39 +181,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WAIT FOR RESET" : "SMTP CONFIG CHECKLIST:"}
+                      {isRateLimitError ? "WAIT FOR RESET" : "FINAL CONFIG CHECKLIST:"}
                     </span>
                     <div className="space-y-4">
-                      {isRateLimitError ? (
-                        <>
-                          <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">1.</span>
-                            <p>Supabase Free Tier (SMTP OFF) limits emails to <span className="text-white font-bold">3 per hour</span>. You hit this limit while testing.</p>
-                          </div>
-                          <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">2.</span>
-                            <p>To bypass this, <span className="text-white font-bold">enable Custom SMTP</span> again in Supabase using the settings below.</p>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="space-y-3">
-                          <p className="text-white font-black border-l-2 border-red-500 pl-3">URGENT: USERNAME DISCREPANCY FOUND</p>
-                          <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
-                            <span className="text-gray-500 uppercase">Host:</span>
-                            <span className="text-white">smtp-relay.brevo.com</span>
-                            <span className="text-gray-500 uppercase">Port:</span>
-                            <span className="text-white">587</span>
-                            <span className="text-blue-400 uppercase font-bold">Username:</span>
-                            <span className="text-white font-black underline">MATCH "LOGIN" FROM BREVO</span>
-                            <span className="text-gray-500 uppercase">Password:</span>
-                            <span className="text-white truncate">bskY4s0SdoSmRzz</span>
-                          </div>
-                          <p className="mt-2 text-yellow-500 font-bold">Check your Brevo "SMTP & API" tab. Your username is likely <span className="text-white">a1d682001@smtp-brevo.com</span>, NOT your email address.</p>
-                          <div className="pt-2 border-t border-white/5">
-                            <p className="flex gap-2"><span className="text-blue-500 font-black">TIP:</span> Toggle SMTP OFF, Save, then ON, Save again to refresh the connection.</p>
-                          </div>
+                      <div className="space-y-3">
+                        <p className="text-white font-black border-l-2 border-green-500 pl-3">EXCELLENT PROGRESS! CHECK THESE 3:</p>
+                        <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
+                          <span className="text-gray-500 uppercase">Sender:</span>
+                          <span className="text-green-500 font-bold">social@stjufends.com</span>
+                          <span className="text-gray-500 uppercase">Username:</span>
+                          <span className="text-green-500 font-bold">a1d682001@smtp-brevo.com</span>
+                          <span className="text-gray-500 uppercase">Password:</span>
+                          <span className="text-white">bskY4s0SdoSmRzz</span>
                         </div>
-                      )}
+                        <div className="space-y-2 mt-4 text-white font-medium">
+                          <p className="flex gap-2">
+                            <span className="text-blue-500 font-black">1.</span>
+                            <span>Verify there are <span className="text-red-500 font-black underline">NO SPACES</span> before or after your password in Supabase.</span>
+                          </p>
+                          <p className="flex gap-2">
+                            <span className="text-blue-500 font-black">2.</span>
+                            <span>Click <span className="text-blue-500 font-bold uppercase">"Save Changes"</span> at the bottom of the Supabase screen.</span>
+                          </p>
+                          <p className="flex gap-2">
+                            <span className="text-blue-500 font-black">3.</span>
+                            <span><span className="text-blue-500 font-bold uppercase">Toggle Reset:</span> Switch SMTP OFF, Save, then ON, Save again. This is essential!</span>
+                          </p>
+                        </div>
+                        <div className="pt-4 border-t border-white/5 mt-4">
+                          <p className="text-[8px] text-gray-500 italic">Wait 60 seconds after saving before trying to "Create Profile" again.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -251,6 +249,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
