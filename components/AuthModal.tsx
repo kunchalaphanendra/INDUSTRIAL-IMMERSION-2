@@ -49,11 +49,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         } else if (result.error === "ALREADY_REGISTERED") {
           setError("CONFLICT: PROFILE ALREADY EXISTS.");
         } else {
-          setError(result.error || 'SMTP GATEWAY TIMEOUT.');
+          setError(result.error?.toUpperCase() || 'SMTP GATEWAY TIMEOUT.');
         }
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message.toUpperCase());
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
-  const isSmtpError = error?.toUpperCase().includes('EMAIL') || error?.toUpperCase().includes('SMTP') || error?.toUpperCase().includes('TIMEOUT');
+  const isSmtpError = error?.includes('CONFIRMATION') || error?.includes('SMTP') || error?.includes('MAIL');
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -111,8 +111,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Authorization</h2>
-          <p className="text-gray-400 mb-10 text-[10px] uppercase tracking-[0.2em]">Check {formData.email}</p>
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Security Access</h2>
+          <p className="text-gray-400 mb-10 text-[10px] uppercase tracking-[0.2em]">Authenticating {formData.email}</p>
 
           <div className="flex justify-between gap-2 mb-8">
             {otp.map((digit, idx) => (
@@ -130,7 +130,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             ))}
           </div>
 
-          <button onClick={handleVerifyOtp} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px]">Verify Code</button>
+          <button onClick={handleVerifyOtp} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px]">Confirm Code</button>
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
@@ -150,19 +150,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
-                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center">3 FINAL REASONS FOR FAILURE:</span>
+                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4">CRITICAL SYSTEM CHECKLIST:</span>
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">1.</span>
-                        <p>In <span className="text-white">Brevo</span>, did you click <span className="text-white">"Generate new SMTP key"</span> and copy the code immediately? <span className="text-red-400 underline">(You cannot copy it from the list later!)</span></p>
+                        <span className="text-blue-500 font-black">A.</span>
+                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white italic">SMTP & API</span>. You MUST be in the <span className="text-white underline">SMTP tab</span> (not API keys tab) to get the correct password.</p>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">2.</span>
-                        <p>In <span className="text-white">Brevo → Domains</span>, is <span className="text-white font-bold">stjufends.com</span> marked as <span className="text-green-500">"Authenticated"</span> with DNS verified?</p>
+                        <span className="text-blue-500 font-black">B.</span>
+                        <p>Is <span className="text-white italic">SMTP Relay</span> activated? Check your Brevo Dashboard. New accounts often require manual activation by Brevo support.</p>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">3.</span>
-                        <p><span className="text-white">Wait 60 Seconds</span> before clicking again. Your last screenshot showed a 60s cooldown limit.</p>
+                        <span className="text-blue-500 font-black">C.</span>
+                        <p>In <span className="text-white">Supabase Auth Settings</span>, does the <span className="text-white italic">"Sender Email"</span> match your verified Brevo email exactly?</p>
                       </div>
                     </div>
                   </div>
@@ -179,18 +179,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               )}
               
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Email</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Professional Email</label>
                 <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all" />
               </div>
 
               <button disabled={loading} className="w-full py-6 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-                {loading ? "Syncing..." : (isLogin ? 'Authorize Access' : 'Create Profile & Verify')}
+                {loading ? "Initializing..." : (isLogin ? 'Authorize Access' : 'Initialize Profile')}
               </button>
             </form>
 
             <div className="mt-10 text-center pt-8 border-t border-white/5">
               <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em]">
-                {isLogin ? "New here? Initialize Profile" : "Existing Member? Secure Login"}
+                {isLogin ? "Request New Profile" : "Existing Member? Login"}
               </button>
             </div>
           </div>
@@ -201,6 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
