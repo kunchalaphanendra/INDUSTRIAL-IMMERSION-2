@@ -163,8 +163,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           </button>
         </div>
       ) : (
-        <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-          <div className="p-10">
+        <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
+          <div className="p-10 overflow-y-auto custom-scrollbar">
             <div className="text-center mb-10">
               <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-3xl mx-auto mb-6 shadow-2xl shadow-blue-500/20">S</div>
               <h2 className="text-3xl font-heading font-bold mb-2 uppercase tracking-tight">
@@ -181,35 +181,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WAIT FOR RESET" : "FINAL CONFIG CHECKLIST:"}
+                      {isRateLimitError ? "WAIT FOR RESET" : "CRITICAL STATUS CHECK:"}
                     </span>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                      {/* DNS / Hostinger Warning */}
                       <div className="space-y-3">
-                        <p className="text-white font-black border-l-2 border-green-500 pl-3">EXCELLENT PROGRESS! CHECK THESE 3:</p>
+                        <p className="text-red-400 font-black border-l-2 border-red-500 pl-3">DOMAIN PARKED? (HOSTINGER)</p>
+                        <p className="text-white normal-case font-medium leading-relaxed">If your domain shows a "Parked" page, you likely deleted your <span className="text-blue-500">A Record</span> while adding MX records.</p>
+                        <div className="bg-black/40 p-3 rounded-xl border border-white/5 text-[8px]">
+                          <p><span className="text-gray-500">FIX:</span> Go to Hostinger DNS Editor</p>
+                          <p><span className="text-gray-500">ADD:</span> Type <span className="text-white">A</span>, Name <span className="text-white">@</span>, Points to <span className="text-white">76.76.21.21</span> (Vercel IP)</p>
+                        </div>
+                      </div>
+
+                      {/* SMTP Credentials */}
+                      <div className="space-y-3">
+                        <p className="text-white font-black border-l-2 border-green-500 pl-3">SUPABASE SMTP CHECKLIST</p>
                         <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
-                          <span className="text-gray-500 uppercase">Sender:</span>
-                          <span className="text-green-500 font-bold">social@stjufends.com</span>
+                          <span className="text-gray-500 uppercase">Host:</span>
+                          <span className="text-white">smtp-relay.brevo.com</span>
                           <span className="text-gray-500 uppercase">Username:</span>
                           <span className="text-green-500 font-bold">a1d682001@smtp-brevo.com</span>
-                          <span className="text-gray-500 uppercase">Password:</span>
-                          <span className="text-white">bskY4s0SdoSmRzz</span>
+                          <span className="text-gray-500 uppercase">Sender:</span>
+                          <span className="text-white">social@stjufends.com</span>
                         </div>
                         <div className="space-y-2 mt-4 text-white font-medium">
-                          <p className="flex gap-2">
-                            <span className="text-blue-500 font-black">1.</span>
-                            <span>Verify there are <span className="text-red-500 font-black underline">NO SPACES</span> before or after your password in Supabase.</span>
-                          </p>
-                          <p className="flex gap-2">
-                            <span className="text-blue-500 font-black">2.</span>
-                            <span>Click <span className="text-blue-500 font-bold uppercase">"Save Changes"</span> at the bottom of the Supabase screen.</span>
-                          </p>
-                          <p className="flex gap-2">
-                            <span className="text-blue-500 font-black">3.</span>
-                            <span><span className="text-blue-500 font-bold uppercase">Toggle Reset:</span> Switch SMTP OFF, Save, then ON, Save again. This is essential!</span>
-                          </p>
-                        </div>
-                        <div className="pt-4 border-t border-white/5 mt-4">
-                          <p className="text-[8px] text-gray-500 italic">Wait 60 seconds after saving before trying to "Create Profile" again.</p>
+                          <p className="flex gap-2"><span className="text-blue-500 font-black">1.</span> <span>Verify <span className="text-red-500 underline">NO SPACES</span> in Password.</span></p>
+                          <p className="flex gap-2"><span className="text-blue-500 font-black">2.</span> <span>Toggle SMTP <span className="text-blue-500">OFF & ON</span> to refresh.</span></p>
                         </div>
                       </div>
                     </div>
@@ -249,6 +247,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
