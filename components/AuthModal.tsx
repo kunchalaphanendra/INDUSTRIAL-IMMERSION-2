@@ -181,33 +181,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WHY IS THIS HAPPENING?" : "SMTP AUTHENTICATION GUIDE:"}
+                      {isRateLimitError ? "WAIT FOR RESET" : "FINAL SMTP SYNC STEPS:"}
                     </span>
                     <div className="space-y-4">
                       {isRateLimitError ? (
                         <>
                           <div className="flex gap-3">
                             <span className="text-blue-500 font-black">1.</span>
-                            <p>Supabase's <span className="text-white">Built-in Mailer</span> (Custom SMTP OFF) only allows <span className="text-white font-bold">3 emails per hour</span> for free users.</p>
+                            <p>Supabase Free Tier (SMTP OFF) limits emails to <span className="text-white font-bold">3 per hour</span>. You hit this limit while testing.</p>
                           </div>
                           <div className="flex gap-3">
                             <span className="text-blue-500 font-black">2.</span>
-                            <p>You must <span className="text-white font-bold">Wait 60 Minutes</span> for this limit to reset, OR enable <span className="text-blue-500 font-bold">Brevo SMTP</span> to bypass it.</p>
-                          </div>
-                          <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">3.</span>
-                            <p>If you use Brevo, make sure <span className="text-white font-bold underline">info@stjufends.com</span> is verified in their <span className="text-white">"Senders"</span> tab!</p>
+                            <p>To bypass this, <span className="text-white font-bold">enable Custom SMTP</span> again in Supabase. Since your Brevo sender is verified, it will now work perfectly.</p>
                           </div>
                         </>
                       ) : (
                         <>
                           <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">1.</span>
-                            <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. Click <span className="text-white font-bold">"Add a sender"</span> and verify <span className="text-blue-500 underline font-black">info@stjufends.com</span>.</p>
+                            <span className="text-green-500 font-black">✓</span>
+                            <p><span className="text-green-500 font-bold">BREVO SUCCESS:</span> Your sender <span className="text-white">info@stjufends.com</span> is verified. Excellent!</p>
                           </div>
                           <div className="flex gap-3">
                             <span className="text-blue-500 font-black">2.</span>
-                            <p>In <span className="text-white">Supabase</span>, toggle <span className="text-white">"Enable custom SMTP"</span> to <span className="text-red-500">OFF</span>, Save, then back to <span className="text-green-500">ON</span>.</p>
+                            <p><span className="text-white font-bold italic">IMPORTANT:</span> Toggle the <span className="text-white">"Enable custom SMTP"</span> switch in Supabase to <span className="text-red-500">OFF</span>, Save, then <span className="text-green-500">ON</span>, Save again. This refreshes the link.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">3.</span>
+                            <p><span className="text-white font-bold italic">60s COOLDOWN:</span> Wait one minute before retrying. Clicking too fast causes a false "failed" error.</p>
                           </div>
                         </>
                       )}
@@ -248,6 +248,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
