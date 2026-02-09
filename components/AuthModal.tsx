@@ -197,20 +197,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                         </>
                       ) : (
                         <div className="space-y-3">
-                          <p className="text-white font-black border-l-2 border-blue-500 pl-3">MATCH THESE IN SUPABASE:</p>
+                          <p className="text-white font-black border-l-2 border-red-500 pl-3">URGENT: USERNAME DISCREPANCY FOUND</p>
                           <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
                             <span className="text-gray-500 uppercase">Host:</span>
                             <span className="text-white">smtp-relay.brevo.com</span>
                             <span className="text-gray-500 uppercase">Port:</span>
                             <span className="text-white">587</span>
-                            <span className="text-gray-500 uppercase">User:</span>
-                            <span className="text-white truncate">info@stjufends.com</span>
-                            <span className="text-gray-500 uppercase">Pass:</span>
-                            <span className="text-blue-400 font-black underline">USE BREVO SMTP KEY</span>
+                            <span className="text-blue-400 uppercase font-bold">Username:</span>
+                            <span className="text-white font-black underline">MATCH "LOGIN" FROM BREVO</span>
+                            <span className="text-gray-500 uppercase">Password:</span>
+                            <span className="text-white truncate">bskY4s0SdoSmRzz</span>
                           </div>
-                          <p className="mt-2 text-red-400">DO NOT use your Brevo login password. Use the <span className="text-white">"Master Password"</span> or <span className="text-white">"SMTP Key"</span> found in Brevo SMTP & API tab.</p>
+                          <p className="mt-2 text-yellow-500 font-bold">Check your Brevo "SMTP & API" tab. Your username is likely <span className="text-white">a1d682001@smtp-brevo.com</span>, NOT your email address.</p>
                           <div className="pt-2 border-t border-white/5">
-                            <p className="flex gap-2"><span className="text-blue-500 font-black">TIP:</span> Toggle SMTP OFF, Save, then ON, Save again to refresh.</p>
+                            <p className="flex gap-2"><span className="text-blue-500 font-black">TIP:</span> Toggle SMTP OFF, Save, then ON, Save again to refresh the connection.</p>
                           </div>
                         </div>
                       )}
@@ -251,6 +251,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
