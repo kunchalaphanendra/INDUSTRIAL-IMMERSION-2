@@ -68,6 +68,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
+    
+    // Auto-verify if last digit entered
+    if (index === 5 && value) {
+      const finalOtp = newOtp.join('');
+      if (finalOtp.length === 6) {
+        setTimeout(() => performVerification(finalOtp), 100);
+      }
+    }
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -76,10 +84,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) return;
-    
+  const performVerification = async (otpValue: string) => {
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -89,12 +95,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         localStorage.setItem('ii_user', JSON.stringify(result.user));
         onSuccess(result.user);
       } else {
-        setError(result.error || 'Invalid Code.');
+        setError(result.error || 'The code entered is invalid or has expired.');
       }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyClick = () => {
+    const otpValue = otp.join('');
+    if (otpValue.length === 6) {
+      performVerification(otpValue);
+    } else {
+      setError("Please enter the full 6-digit code.");
     }
   };
 
@@ -111,10 +126,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Authorization</h2>
-          <p className="text-gray-400 mb-10 text-[10px] uppercase tracking-[0.2em]">Check {formData.email}</p>
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Security Access</h2>
+          <p className="text-gray-400 mb-8 text-[10px] uppercase tracking-[0.2em]">Authenticating {formData.email}</p>
 
-          <div className="flex justify-between gap-2 mb-8">
+          {error && (
+            <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-bold uppercase tracking-widest animate-in slide-in-from-top-2">
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-between gap-2 mb-10">
             {otp.map((digit, idx) => (
               <input
                 key={idx}
@@ -125,12 +146,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 value={digit}
                 onChange={e => handleOtpChange(idx, e.target.value)}
                 onKeyDown={e => handleOtpKeyDown(idx, e)}
-                className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none transition-all"
+                disabled={loading}
+                className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none transition-all disabled:opacity-50"
               />
             ))}
           </div>
 
-          <button onClick={handleVerifyOtp} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px]">Verify Code</button>
+          <button 
+            onClick={handleVerifyClick} 
+            disabled={loading}
+            className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-600/50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Verifying..." : "Confirm Access Code"}
+          </button>
+          
+          <div className="mt-8">
+            <button 
+              onClick={() => { setNeedsVerification(false); setError(null); }}
+              className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors"
+            >
+              Wait, go back to email
+            </button>
+          </div>
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
@@ -201,6 +238,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
