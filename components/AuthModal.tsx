@@ -49,7 +49,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         } else if (result.error === "ALREADY_REGISTERED") {
           setError("CONFLICT: PROFILE ALREADY EXISTS.");
         } else {
-          // Display the raw error for better debugging
           setError(result.error?.toUpperCase() || 'SMTP GATEWAY TIMEOUT.');
         }
       }
@@ -151,19 +150,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
-                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black">THE FINAL 3 FIXES:</span>
+                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">SMTP AUTHENTICATION GUIDE:</span>
                     <div className="space-y-4">
                       <div className="flex gap-3">
                         <span className="text-blue-500 font-black">1.</span>
-                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. You MUST add <span className="text-blue-500 underline font-black">info@stjufends.com</span> and verify it first!</p>
+                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. Click <span className="text-white font-bold">"Add a sender"</span> and verify <span className="text-blue-500 underline font-black">info@stjufends.com</span>. Brevo blocks all unverified senders.</p>
                       </div>
                       <div className="flex gap-3">
                         <span className="text-blue-500 font-black">2.</span>
-                        <p>In <span className="text-white">Supabase</span>, re-type the password <span className="text-white font-mono bg-white/5 px-2 py-0.5 rounded">R3HqOD6USAI4MWVt</span> and hit <span className="text-white font-bold">Save Changes</span>. Supabase clears this field often.</p>
+                        <p>In <span className="text-white">Supabase</span>, toggle <span className="text-white">"Enable custom SMTP"</span> to <span className="text-red-500">OFF</span>, Save, then back to <span className="text-green-500">ON</span>. This force-refreshes the connection.</p>
                       </div>
                       <div className="flex gap-3">
                         <span className="text-blue-500 font-black">3.</span>
-                        <p><span className="text-white font-bold">Wait 60 Seconds</span> between attempts. Your Supabase settings have a 60s hard limit per user.</p>
+                        <p><span className="text-white font-bold italic">Wait for the 60s cooldown</span>. If you click too fast, Supabase returns the SMTP error even if you fixed the settings!</p>
                       </div>
                     </div>
                   </div>
@@ -202,6 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
