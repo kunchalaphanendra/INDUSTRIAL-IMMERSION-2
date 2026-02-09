@@ -48,6 +48,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           setError("SESSION REFUSED: EMAIL NOT REGISTERED.");
         } else if (result.error === "ALREADY_REGISTERED") {
           setError("CONFLICT: PROFILE ALREADY EXISTS.");
+        } else if (result.error?.includes("rate limit") || result.error?.includes("limit exceeded")) {
+          setError("EMAIL RATE LIMIT EXCEEDED");
         } else {
           setError(result.error?.toUpperCase() || 'SMTP GATEWAY TIMEOUT.');
         }
@@ -69,7 +71,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       otpRefs.current[index + 1]?.focus();
     }
     
-    // Auto-verify if last digit entered
     if (index === 5 && value) {
       const finalOtp = newOtp.join('');
       if (finalOtp.length === 6) {
@@ -113,7 +114,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
-  const isSmtpError = error?.includes('CONFIRMATION') || error?.includes('SMTP') || error?.includes('MAIL');
+  const isRateLimitError = error === "EMAIL RATE LIMIT EXCEEDED";
+  const isSmtpError = error?.includes('CONFIRMATION') || error?.includes('SMTP') || error?.includes('MAIL') || isRateLimitError;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -159,15 +161,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           >
             {loading ? "Verifying..." : "Confirm Access Code"}
           </button>
-          
-          <div className="mt-8">
-            <button 
-              onClick={() => { setNeedsVerification(false); setError(null); }}
-              className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors"
-            >
-              Wait, go back to email
-            </button>
-          </div>
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
@@ -187,20 +180,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
-                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">SMTP AUTHENTICATION GUIDE:</span>
+                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
+                      {isRateLimitError ? "WHY IS THIS HAPPENING?" : "SMTP AUTHENTICATION GUIDE:"}
+                    </span>
                     <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">1.</span>
-                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. Click <span className="text-white font-bold">"Add a sender"</span> and verify <span className="text-blue-500 underline font-black">info@stjufends.com</span>. Brevo blocks all unverified senders.</p>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">2.</span>
-                        <p>In <span className="text-white">Supabase</span>, toggle <span className="text-white">"Enable custom SMTP"</span> to <span className="text-red-500">OFF</span>, Save, then back to <span className="text-green-500">ON</span>. This force-refreshes the connection.</p>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">3.</span>
-                        <p><span className="text-white font-bold italic">Wait for the 60s cooldown</span>. If you click too fast, Supabase returns the SMTP error even if you fixed the settings!</p>
-                      </div>
+                      {isRateLimitError ? (
+                        <>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">1.</span>
+                            <p>Supabase's <span className="text-white">Built-in Mailer</span> (Custom SMTP OFF) only allows <span className="text-white font-bold">3 emails per hour</span> for free users.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">2.</span>
+                            <p>You must <span className="text-white font-bold">Wait 60 Minutes</span> for this limit to reset, OR enable <span className="text-blue-500 font-bold">Brevo SMTP</span> to bypass it.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">3.</span>
+                            <p>If you use Brevo, make sure <span className="text-white font-bold underline">info@stjufends.com</span> is verified in their <span className="text-white">"Senders"</span> tab!</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">1.</span>
+                            <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. Click <span className="text-white font-bold">"Add a sender"</span> and verify <span className="text-blue-500 underline font-black">info@stjufends.com</span>.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-blue-500 font-black">2.</span>
+                            <p>In <span className="text-white">Supabase</span>, toggle <span className="text-white">"Enable custom SMTP"</span> to <span className="text-red-500">OFF</span>, Save, then back to <span className="text-green-500">ON</span>.</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -238,6 +248,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
