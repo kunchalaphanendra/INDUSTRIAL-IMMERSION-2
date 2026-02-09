@@ -49,6 +49,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         } else if (result.error === "ALREADY_REGISTERED") {
           setError("CONFLICT: PROFILE ALREADY EXISTS.");
         } else {
+          // Display the raw error for better debugging
           setError(result.error?.toUpperCase() || 'SMTP GATEWAY TIMEOUT.');
         }
       }
@@ -111,8 +112,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Security Access</h2>
-          <p className="text-gray-400 mb-10 text-[10px] uppercase tracking-[0.2em]">Authenticating {formData.email}</p>
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Authorization</h2>
+          <p className="text-gray-400 mb-10 text-[10px] uppercase tracking-[0.2em]">Check {formData.email}</p>
 
           <div className="flex justify-between gap-2 mb-8">
             {otp.map((digit, idx) => (
@@ -130,7 +131,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             ))}
           </div>
 
-          <button onClick={handleVerifyOtp} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px]">Confirm Code</button>
+          <button onClick={handleVerifyOtp} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px]">Verify Code</button>
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
@@ -150,19 +151,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
-                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4">CRITICAL SYSTEM CHECKLIST:</span>
+                    <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black">THE FINAL 3 FIXES:</span>
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">A.</span>
-                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white italic">SMTP & API</span>. You MUST be in the <span className="text-white underline">SMTP tab</span> (not API keys tab) to get the correct password.</p>
+                        <span className="text-blue-500 font-black">1.</span>
+                        <p>In <span className="text-white">Brevo</span>, go to <span className="text-white">Senders, Domains & IPs</span> → <span className="text-white">Senders</span>. You MUST add <span className="text-blue-500 underline font-black">info@stjufends.com</span> and verify it first!</p>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">B.</span>
-                        <p>Is <span className="text-white italic">SMTP Relay</span> activated? Check your Brevo Dashboard. New accounts often require manual activation by Brevo support.</p>
+                        <span className="text-blue-500 font-black">2.</span>
+                        <p>In <span className="text-white">Supabase</span>, re-type the password <span className="text-white font-mono bg-white/5 px-2 py-0.5 rounded">R3HqOD6USAI4MWVt</span> and hit <span className="text-white font-bold">Save Changes</span>. Supabase clears this field often.</p>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-blue-500 font-black">C.</span>
-                        <p>In <span className="text-white">Supabase Auth Settings</span>, does the <span className="text-white italic">"Sender Email"</span> match your verified Brevo email exactly?</p>
+                        <span className="text-blue-500 font-black">3.</span>
+                        <p><span className="text-white font-bold">Wait 60 Seconds</span> between attempts. Your Supabase settings have a 60s hard limit per user.</p>
                       </div>
                     </div>
                   </div>
@@ -184,7 +185,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
 
               <button disabled={loading} className="w-full py-6 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-                {loading ? "Initializing..." : (isLogin ? 'Authorize Access' : 'Initialize Profile')}
+                {loading ? "Initializing..." : (isLogin ? 'Authorize Access' : 'Create Profile')}
               </button>
             </form>
 
@@ -201,6 +202,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
