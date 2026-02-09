@@ -51,7 +51,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         } else if (result.error?.includes("rate limit") || result.error?.includes("limit exceeded")) {
           setError("EMAIL RATE LIMIT EXCEEDED");
         } else {
-          setError(result.error?.toUpperCase() || 'SMTP GATEWAY TIMEOUT.');
+          setError(result.error?.toUpperCase() || 'ERROR SENDING CONFIRMATION EMAIL');
         }
       }
     } catch (err: any) {
@@ -181,7 +181,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WAIT FOR RESET" : "FINAL SMTP SYNC STEPS:"}
+                      {isRateLimitError ? "WAIT FOR RESET" : "SMTP CONFIG CHECKLIST:"}
                     </span>
                     <div className="space-y-4">
                       {isRateLimitError ? (
@@ -192,24 +192,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                           </div>
                           <div className="flex gap-3">
                             <span className="text-blue-500 font-black">2.</span>
-                            <p>To bypass this, <span className="text-white font-bold">enable Custom SMTP</span> again in Supabase. Since your Brevo sender is verified, it will now work perfectly.</p>
+                            <p>To bypass this, <span className="text-white font-bold">enable Custom SMTP</span> again in Supabase using the settings below.</p>
                           </div>
                         </>
                       ) : (
-                        <>
-                          <div className="flex gap-3">
-                            <span className="text-green-500 font-black">✓</span>
-                            <p><span className="text-green-500 font-bold">BREVO SUCCESS:</span> Your sender <span className="text-white">info@stjufends.com</span> is verified. Excellent!</p>
+                        <div className="space-y-3">
+                          <p className="text-white font-black border-l-2 border-blue-500 pl-3">MATCH THESE IN SUPABASE:</p>
+                          <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span className="text-gray-500 uppercase">Host:</span>
+                            <span className="text-white">smtp-relay.brevo.com</span>
+                            <span className="text-gray-500 uppercase">Port:</span>
+                            <span className="text-white">587</span>
+                            <span className="text-gray-500 uppercase">User:</span>
+                            <span className="text-white truncate">info@stjufends.com</span>
+                            <span className="text-gray-500 uppercase">Pass:</span>
+                            <span className="text-blue-400 font-black underline">USE BREVO SMTP KEY</span>
                           </div>
-                          <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">2.</span>
-                            <p><span className="text-white font-bold italic">IMPORTANT:</span> Toggle the <span className="text-white">"Enable custom SMTP"</span> switch in Supabase to <span className="text-red-500">OFF</span>, Save, then <span className="text-green-500">ON</span>, Save again. This refreshes the link.</p>
+                          <p className="mt-2 text-red-400">DO NOT use your Brevo login password. Use the <span className="text-white">"Master Password"</span> or <span className="text-white">"SMTP Key"</span> found in Brevo SMTP & API tab.</p>
+                          <div className="pt-2 border-t border-white/5">
+                            <p className="flex gap-2"><span className="text-blue-500 font-black">TIP:</span> Toggle SMTP OFF, Save, then ON, Save again to refresh.</p>
                           </div>
-                          <div className="flex gap-3">
-                            <span className="text-blue-500 font-black">3.</span>
-                            <p><span className="text-white font-bold italic">60s COOLDOWN:</span> Wait one minute before retrying. Clicking too fast causes a false "failed" error.</p>
-                          </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -248,6 +251,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
