@@ -181,34 +181,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WAIT FOR RESET" : "CRITICAL STATUS CHECK:"}
+                      {isRateLimitError ? "WAIT FOR RESET" : "RESOLVING DNS CONFLICT:"}
                     </span>
                     <div className="space-y-6">
-                      {/* DNS / Hostinger Warning */}
+                      {/* Vercel IP Guide */}
                       <div className="space-y-3">
-                        <p className="text-red-400 font-black border-l-2 border-red-500 pl-3">DOMAIN PARKED? (HOSTINGER)</p>
-                        <p className="text-white normal-case font-medium leading-relaxed">If your domain shows a "Parked" page, you likely deleted your <span className="text-blue-500">A Record</span> while adding MX records.</p>
-                        <div className="bg-black/40 p-3 rounded-xl border border-white/5 text-[8px]">
-                          <p><span className="text-gray-500">FIX:</span> Go to Hostinger DNS Editor</p>
-                          <p><span className="text-gray-500">ADD:</span> Type <span className="text-white">A</span>, Name <span className="text-white">@</span>, Points to <span className="text-white">76.76.21.21</span> (Vercel IP)</p>
+                        <p className="text-blue-400 font-black border-l-2 border-blue-500 pl-3 uppercase">IP Decoder (Vercel vs Hostinger)</p>
+                        <p className="text-white normal-case font-medium leading-relaxed italic">Vercel shows 'Expected' vs 'Current'. Here is how to read it:</p>
+                        <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-3">
+                          <div className="flex flex-col">
+                            <span className="text-gray-500 uppercase text-[7px] mb-1">Expected (The Goal):</span>
+                            <span className="text-green-500 font-black text-[10px]">76.76.21.21</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-gray-500 uppercase text-[7px] mb-1">Current (The Problem):</span>
+                            <span className="text-red-500 font-black text-[10px]">216.198.79.1</span>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-blue-600/10 rounded-xl border border-blue-500/20 text-white font-bold leading-normal">
+                          <p className="flex gap-2"><span className="text-blue-500">→</span> <span>Do not use the 216.x number. That is the Hostinger "Parked" page address.</span></p>
                         </div>
                       </div>
 
-                      {/* SMTP Credentials */}
-                      <div className="space-y-3">
-                        <p className="text-white font-black border-l-2 border-green-500 pl-3">SUPABASE SMTP CHECKLIST</p>
-                        <div className="grid grid-cols-2 gap-2 text-[8px] bg-black/40 p-3 rounded-xl border border-white/5">
-                          <span className="text-gray-500 uppercase">Host:</span>
-                          <span className="text-white">smtp-relay.brevo.com</span>
-                          <span className="text-gray-500 uppercase">Username:</span>
-                          <span className="text-green-500 font-bold">a1d682001@smtp-brevo.com</span>
-                          <span className="text-gray-500 uppercase">Sender:</span>
-                          <span className="text-white">social@stjufends.com</span>
-                        </div>
-                        <div className="space-y-2 mt-4 text-white font-medium">
-                          <p className="flex gap-2"><span className="text-blue-500 font-black">1.</span> <span>Verify <span className="text-red-500 underline">NO SPACES</span> in Password.</span></p>
-                          <p className="flex gap-2"><span className="text-blue-500 font-black">2.</span> <span>Toggle SMTP <span className="text-blue-500">OFF & ON</span> to refresh.</span></p>
-                        </div>
+                      {/* Final Steps */}
+                      <div className="space-y-3 pt-4 border-t border-white/5">
+                        <p className="text-white font-black border-l-2 border-green-500 pl-3">SUPABASE REFRESH</p>
+                        <p className="text-gray-400 normal-case font-medium">Once DNS is fixed, ensure Supabase SMTP is toggled <span className="text-white">OFF</span> then <span className="text-white">ON</span> to clear any old connection errors.</p>
                       </div>
                     </div>
                   </div>
@@ -247,6 +245,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
