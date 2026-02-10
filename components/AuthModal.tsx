@@ -181,32 +181,41 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      {isRateLimitError ? "WAIT FOR RESET" : "RESOLVING DNS CONFLICT:"}
+                      CRITICAL ACTION REQUIRED
                     </span>
                     <div className="space-y-6">
-                      {/* Vercel IP Guide */}
+                      {/* DNS Bridge Guide */}
                       <div className="space-y-3">
-                        <p className="text-blue-400 font-black border-l-2 border-blue-500 pl-3 uppercase">IP Decoder (Vercel vs Hostinger)</p>
-                        <p className="text-white normal-case font-medium leading-relaxed italic">Vercel shows 'Expected' vs 'Current'. Here is how to read it:</p>
-                        <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-3">
-                          <div className="flex flex-col">
-                            <span className="text-gray-500 uppercase text-[7px] mb-1">Expected (The Goal):</span>
-                            <span className="text-green-500 font-black text-[10px]">76.76.21.21</span>
+                        <p className="text-red-400 font-black border-l-2 border-red-500 pl-3 uppercase">Vercel is waiting for Hostinger</p>
+                        <p className="text-white normal-case font-medium leading-relaxed italic">Your Vercel screenshot is correct, but Hostinger is still the boss. You must link them:</p>
+                        
+                        <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-4">
+                          <div className="space-y-1">
+                            <span className="text-blue-500 uppercase text-[7px] font-black">Option 1: Recommended</span>
+                            <p className="text-white normal-case text-[9px]">Go to <span className="font-bold">Hostinger</span> and change <span className="underline">Nameservers</span> to:</p>
+                            <div className="bg-white/5 p-2 rounded border border-white/5 font-mono text-green-500 text-[8px]">
+                              ns1.vercel-dns.com<br/>ns2.vercel-dns.com
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-gray-500 uppercase text-[7px] mb-1">Current (The Problem):</span>
-                            <span className="text-red-500 font-black text-[10px]">216.198.79.1</span>
+                          
+                          <div className="space-y-1">
+                            <span className="text-gray-500 uppercase text-[7px] font-black">Option 2: Manual</span>
+                            <p className="text-white normal-case text-[9px]">Go to <span className="font-bold">Hostinger DNS Editor</span> and update the A Record:</p>
+                            <div className="bg-white/5 p-2 rounded border border-white/5 font-mono text-red-500 text-[8px]">
+                              Type A | Name @ | Points to: 76.76.21.21
+                            </div>
                           </div>
                         </div>
-                        <div className="p-3 bg-blue-600/10 rounded-xl border border-blue-500/20 text-white font-bold leading-normal">
-                          <p className="flex gap-2"><span className="text-blue-500">→</span> <span>Do not use the 216.x number. That is the Hostinger "Parked" page address.</span></p>
-                        </div>
+                        
+                        <p className="text-[8px] text-yellow-500 uppercase font-bold tracking-widest mt-2 animate-pulse">
+                          ⚠️ Site will stay "Parked" until Hostinger is updated.
+                        </p>
                       </div>
 
-                      {/* Final Steps */}
+                      {/* SMTP Refresh */}
                       <div className="space-y-3 pt-4 border-t border-white/5">
-                        <p className="text-white font-black border-l-2 border-green-500 pl-3">SUPABASE REFRESH</p>
-                        <p className="text-gray-400 normal-case font-medium">Once DNS is fixed, ensure Supabase SMTP is toggled <span className="text-white">OFF</span> then <span className="text-white">ON</span> to clear any old connection errors.</p>
+                        <p className="text-white font-black border-l-2 border-green-500 pl-3 uppercase">Supabase Cleanup</p>
+                        <p className="text-gray-400 normal-case font-medium">After fixing DNS, toggle Supabase SMTP <span className="text-white">OFF/ON</span> once. This clears the "Rate Limit" and old connection errors.</p>
                       </div>
                     </div>
                   </div>
@@ -245,6 +254,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
