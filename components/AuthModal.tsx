@@ -181,41 +181,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 {isSmtpError && (
                   <div className="p-6 bg-blue-600/5 border border-blue-500/20 rounded-[2rem] text-[9px] text-blue-400 font-bold leading-loose uppercase tracking-widest">
                     <span className="text-white block mb-3 border-b border-blue-500/30 pb-2 text-center underline decoration-blue-500 decoration-2 underline-offset-4 font-black tracking-[0.2em]">
-                      CRITICAL ACTION REQUIRED
+                      MISMATCH DETECTED
                     </span>
                     <div className="space-y-6">
-                      {/* DNS Bridge Guide */}
+                      {/* SMTP Error Fix */}
                       <div className="space-y-3">
-                        <p className="text-red-400 font-black border-l-2 border-red-500 pl-3 uppercase">Vercel is waiting for Hostinger</p>
-                        <p className="text-white normal-case font-medium leading-relaxed italic">Your Vercel screenshot is correct, but Hostinger is still the boss. You must link them:</p>
+                        <p className="text-red-400 font-black border-l-2 border-red-500 pl-3 uppercase">Supabase Configuration Error</p>
+                        <p className="text-white normal-case font-medium leading-relaxed italic">Your screenshot shows a major mismatch. Brevo will block your emails if this isn't fixed:</p>
                         
                         <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-4">
                           <div className="space-y-1">
-                            <span className="text-blue-500 uppercase text-[7px] font-black">Option 1: Recommended</span>
-                            <p className="text-white normal-case text-[9px]">Go to <span className="font-bold">Hostinger</span> and change <span className="underline">Nameservers</span> to:</p>
-                            <div className="bg-white/5 p-2 rounded border border-white/5 font-mono text-green-500 text-[8px]">
-                              ns1.vercel-dns.com<br/>ns2.vercel-dns.com
+                            <span className="text-gray-500 uppercase text-[7px] font-black">Current Setting (Wrong):</span>
+                            <div className="bg-red-500/10 p-2 rounded border border-red-500/20 font-mono text-red-500 text-[8px]">
+                              Sender: stjufends@gmail.com
                             </div>
                           </div>
                           
                           <div className="space-y-1">
-                            <span className="text-gray-500 uppercase text-[7px] font-black">Option 2: Manual</span>
-                            <p className="text-white normal-case text-[9px]">Go to <span className="font-bold">Hostinger DNS Editor</span> and update the A Record:</p>
-                            <div className="bg-white/5 p-2 rounded border border-white/5 font-mono text-red-500 text-[8px]">
-                              Type A | Name @ | Points to: 76.76.21.21
+                            <span className="text-green-500 uppercase text-[7px] font-black">Change To (Correct):</span>
+                            <div className="bg-green-500/10 p-2 rounded border border-green-500/20 font-mono text-green-500 text-[8px]">
+                              Sender: social@stjufends.com
                             </div>
+                            <p className="text-[7px] text-gray-500 normal-case mt-1">※ This must match your verified Brevo sender exactly.</p>
                           </div>
                         </div>
-                        
-                        <p className="text-[8px] text-yellow-500 uppercase font-bold tracking-widest mt-2 animate-pulse">
-                          ⚠️ Site will stay "Parked" until Hostinger is updated.
-                        </p>
                       </div>
 
-                      {/* SMTP Refresh */}
+                      {/* Domain Status */}
                       <div className="space-y-3 pt-4 border-t border-white/5">
-                        <p className="text-white font-black border-l-2 border-green-500 pl-3 uppercase">Supabase Cleanup</p>
-                        <p className="text-gray-400 normal-case font-medium">After fixing DNS, toggle Supabase SMTP <span className="text-white">OFF/ON</span> once. This clears the "Rate Limit" and old connection errors.</p>
+                        <p className="text-blue-400 font-black border-l-2 border-blue-500 pl-3 uppercase">Domain Propagation</p>
+                        <p className="text-gray-400 normal-case font-medium">I see you've switched Nameservers to Vercel. <span className="text-white">This is correct!</span></p>
+                        <p className="text-white normal-case text-[8px] italic leading-relaxed">It is currently in "Propagation". It can take 2-12 hours for the "Invalid Configuration" to turn green. You just need to wait for the world to update.</p>
                       </div>
                     </div>
                   </div>
@@ -254,6 +250,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
