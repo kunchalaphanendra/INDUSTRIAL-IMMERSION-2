@@ -65,6 +65,7 @@ export const apiService = {
    */
   async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     const config = getApiConfig();
+
     try {
       const response = await fetch(`${config.url}/auth/v1/verify`, {
         method: 'POST',
@@ -73,15 +74,16 @@ export const apiService = {
           'apikey': config.key
         },
         body: JSON.stringify({
-          email,
-          token,
-          type: 'magiclink' 
+          email: email,
+          token: token,
+          type: 'email'
         })
       });
-      
+
       const data = await response.json();
+
       if (!response.ok) {
-        const errorMsg = data.message || data.msg || 'Invalid or expired code.';
+        const errorMsg = data.error_description || data.error || data.message || 'Invalid or expired code.';
         throw new Error(errorMsg);
       }
 
@@ -93,6 +95,7 @@ export const apiService = {
       };
 
       return { success: true, user, token: data.access_token };
+
     } catch (err: any) {
       return { success: false, error: err.message };
     }
