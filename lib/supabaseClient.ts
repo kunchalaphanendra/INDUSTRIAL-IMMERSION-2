@@ -1,11 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Fix: Cast import.meta to any to access environment variables in Vite
-const supabaseUrl = (import.meta as any).env.VITE_BACKEND_API_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_BACKEND_API_KEY;
+/**
+ * Robust helper to fetch environment variables from common sources.
+ * In production/environments without Vite, import.meta.env might be undefined.
+ */
+const getEnvVar = (key: string): string => {
+  // 1. Try Vite's import.meta.env
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      const val = (import.meta as any).env[key];
+      if (val) return val;
+    }
+  } catch (e) {}
+
+  // 2. Try Node-style process.env (common in CI and some preview runtimes)
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      const val = process.env[key];
+      if (val) return val;
+    }
+  } catch (e) {}
+
+  return '';
+};
+
+const supabaseUrl = getEnvVar('VITE_BACKEND_API_URL');
+const supabaseAnonKey = getEnvVar('VITE_BACKEND_API_KEY');
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase configuration missing. Ensure VITE_BACKEND_API_URL and VITE_BACKEND_API_KEY are set.");
+  console.warn("Supabase configuration missing. Ensure VITE_BACKEND_API_URL and VITE_BACKEND_API_KEY are set in the environment.");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Ensure the URL is valid before creating the client to avoid secondary errors
+const validUrl = supabaseUrl || 'https://placeholder-project.supabase.co';
+const validKey = supabaseAnonKey || 'placeholder-key';
+
+export const supabase = createClient(validUrl, validKey);
