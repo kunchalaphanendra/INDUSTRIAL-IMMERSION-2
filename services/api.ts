@@ -1,4 +1,3 @@
-
 import { UserRegistration, TrackKey, User, EnrollmentRecord } from '../types';
 
 const getApiConfig = () => {
@@ -21,42 +20,41 @@ export const apiService = {
    * @param fullName Optional name for new user registration
    * @param isSignup Whether this is a new registration (true) or login (false)
    */
-  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string; code?: string }> {
+  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     const config = getApiConfig();
+
     try {
-      // Supabase OTP endpoint
-      // Including email_redirect_to is mandatory for production magic links to work correctly.
       const response = await fetch(`${config.url}/auth/v1/otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': config.key
         },
-        body: JSON.stringify({ 
-          email,
-          create_user: isSignup, // If false, only allows existing users
-          options: {
-            email_redirect_to: "https://www.stjufends.com",
-            data: fullName ? { full_name: fullName } : undefined
-          }
+        body: JSON.stringify({
+          email: email,
+          create_user: isSignup,
+          email_redirect_to: "https://www.stjufends.com",
+          data: fullName ? { full_name: fullName } : undefined
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        // Specific error handling for "Login" vs "Signup"
+        // Handle specific error codes for the UI logic in AuthModal
         if (!isSignup && response.status === 422) {
           throw new Error("ACCOUNT_NOT_FOUND");
         }
-        if (isSignup && data.message?.includes('already registered')) {
+        if (isSignup && (data.message?.includes('already registered') || data.error_description?.includes('already registered'))) {
           throw new Error("ALREADY_REGISTERED");
         }
-        
-        const errorMsg = data.msg || data.message || 'Failed to dispatch code';
+
+        const errorMsg = data.error_description || data.error || data.message || 'Failed to send OTP';
         throw new Error(errorMsg);
       }
+
       return { success: true };
+
     } catch (err: any) {
       return { success: false, error: err.message };
     }
