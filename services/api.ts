@@ -1,132 +1,108 @@
+
 import { UserRegistration, TrackKey, User, EnrollmentRecord } from '../types';
-
-const getApiConfig = () => {
-  const env = (import.meta as any).env || {};
-  const baseUrl = (env.VITE_BACKEND_API_URL || '').trim();
-  const key = (env.VITE_BACKEND_API_KEY || '').trim();
-
-  return { 
-    url: baseUrl ? baseUrl.replace(/\/$/, '') : '', 
-    key 
-  };
-};
+import { supabase } from '../lib/supabaseClient';
 
 export const apiService = {
-  // --- PURE OTP AUTH METHODS ---
-  
   /**
-   * Starts the OTP flow. 
+   * Starts the OTP flow using Supabase Auth SDK.
    * @param email The user's email
    * @param fullName Optional name for new user registration
-   * @param isSignup Whether this is a new registration (true) or login (false)
+   * @param isSignup Whether this is a new registration
    */
   async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
-    const config = getApiConfig();
-
     try {
-      const response = await fetch(`${config.url}/auth/v1/otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.key
-        },
-        body: JSON.stringify({
-          email: email,
-          create_user: isSignup,
-          email_redirect_to: "https://www.stjufends.com",
-          data: fullName ? { full_name: fullName } : undefined
-        })
-      });
+      let result;
+      
+      if (isSignup) {
+        // For new users, we use signUp to pass the full_name metadata
+        result = await supabase.auth.signUp({
+          email,
+          password: Math.random().toString(36).slice(-12), // Dummy password for OTP flow
+          options: {
+            emailRedirectTo: "https://www.stjufends.com",
+            data: fullName ? { full_name: fullName } : undefined
+          }
+        });
+      } else {
+        // For existing users, we use signInWithOtp
+        result = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: "https://www.stjufends.com"
+          }
+        });
+      }
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle specific error codes for the UI logic in AuthModal
-        if (!isSignup && response.status === 422) {
+      if (result.error) {
+        // Handle specific error logic expected by AuthModal
+        if (!isSignup && result.error.status === 422) {
           throw new Error("ACCOUNT_NOT_FOUND");
         }
-        if (isSignup && (data.message?.includes('already registered') || data.error_description?.includes('already registered'))) {
+        if (isSignup && result.error.message.includes('already registered')) {
           throw new Error("ALREADY_REGISTERED");
         }
-
-        const errorMsg = data.error_description || data.error || data.message || 'Failed to send OTP';
-        throw new Error(errorMsg);
+        throw result.error;
       }
 
       return { success: true };
-
     } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Failed to send OTP' };
     }
   },
 
   /**
-   * Verifies the 6-digit code and returns user session
+   * Verifies the 6-digit code using Supabase Auth SDK.
    */
   async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
-    const config = getApiConfig();
-
     try {
-      const response = await fetch(`${config.url}/auth/v1/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.key
-        },
-        body: JSON.stringify({
-          email: email,
-          token: token,
-          type: 'email'
-        })
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email'
       });
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (!response.ok) {
-        const errorMsg = data.error_description || data.error || data.message || 'Invalid or expired code.';
-        throw new Error(errorMsg);
+      if (!data.user || !data.session) {
+        throw new Error("Verification failed: session not found");
       }
 
       const user: User = {
         id: data.user.id,
-        email: data.user.email,
+        email: data.user.email || email,
         fullName: data.user.user_metadata?.full_name || email.split('@')[0],
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`
       };
 
-      return { success: true, user, token: data.access_token };
-
+      return { success: true, user, token: data.session.access_token };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Invalid or expired code.' };
     }
   },
 
+  /**
+   * Recovers the user session using the token.
+   */
   async getCurrentUser(token: string): Promise<User | null> {
-    const config = getApiConfig();
     try {
-      const response = await fetch(`${config.url}/auth/v1/user`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (!response.ok) return null;
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) return null;
+      
       return {
-        id: data.id,
-        email: data.email,
-        fullName: data.user_metadata?.full_name || data.email.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`
+        id: user.id,
+        email: user.email || '',
+        fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`
       };
     } catch {
       return null;
     }
   },
 
+  /**
+   * Submits an application to the database using Supabase Client.
+   */
   async submitApplication(data: any, token?: string): Promise<{ success: boolean; error?: string }> {
-    const config = getApiConfig();
-    const endpoint = `${config.url}/rest/v1/applications`;
-
     try {
       const payload = {
         full_name: data.fullName,
@@ -142,35 +118,30 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.key,
-          'Authorization': token ? `Bearer ${token}` : `Bearer ${config.key}`,
-          'Prefer': 'return=minimal' 
-        },
-        body: JSON.stringify(payload),
-      });
+      const { error } = await supabase
+        .from('applications')
+        .insert(payload);
 
-      return { success: response.ok };
-    } catch (error) {
-      return { success: false, error: "Network error" };
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || "Database sync failed" };
     }
   },
 
+  /**
+   * Fetches enrollments for a specific user email.
+   */
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    const config = getApiConfig();
     try {
-      const response = await fetch(`${config.url}/rest/v1/applications?email=eq.${email}&select=*`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`
-        }
-      });
-      if (!response.ok) return [];
-      const data = await response.json();
-      return data.map((item: any) => ({
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('email', email);
+
+      if (error) throw error;
+      
+      return (data || []).map((item: any) => ({
         id: item.id,
         track_key: item.track_key,
         created_at: item.created_at,
@@ -182,6 +153,7 @@ export const apiService = {
     }
   }
 };
+
 
 
 
