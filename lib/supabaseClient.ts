@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
 /**
  * Robust helper to fetch environment variables from common sources.
