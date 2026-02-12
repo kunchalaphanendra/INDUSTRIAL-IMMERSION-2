@@ -25,7 +25,7 @@ export const apiService = {
     const config = getApiConfig();
     try {
       // Supabase OTP endpoint
-      // If isSignup is false, Supabase will throw error if user doesn't exist
+      // Including email_redirect_to is mandatory for production magic links to work correctly.
       const response = await fetch(`${config.url}/auth/v1/otp`, {
         method: 'POST',
         headers: {
@@ -35,9 +35,10 @@ export const apiService = {
         body: JSON.stringify({ 
           email,
           create_user: isSignup, // If false, only allows existing users
-          options: fullName ? {
-            data: { full_name: fullName }
-          } : undefined
+          options: {
+            email_redirect_to: "https://www.stjufends.com",
+            data: fullName ? { full_name: fullName } : undefined
+          }
         })
       });
       
@@ -180,6 +181,7 @@ export const apiService = {
     }
   }
 };
+
 
 
 
