@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '../types';
 import { apiService } from '../services/api';
@@ -13,11 +12,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false); // New state for test bypass
+  const [testPassword, setTestPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [formData, setFormData] = useState({ email: '', fullName: '' });
   const [resendTimer, setResendTimer] = useState(0);
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Test account details
+  const TEST_EMAIL = 'test@stjufends.com';
+  const TEST_PASS = 'stjufends2026';
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -29,6 +34,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email) return;
+
+    // Check for test account bypass
+    if (formData.email.toLowerCase() === TEST_EMAIL) {
+      setIsTestMode(true);
+      setNeedsVerification(true);
+      return;
+    }
+
     if (!isLogin && !formData.fullName) {
       setError("Please provide your full legal name.");
       return;
@@ -105,6 +118,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   };
 
+  const handleTestLogin = () => {
+    if (testPassword === TEST_PASS) {
+      const testUser: User = {
+        id: 'test-user-id',
+        email: TEST_EMAIL,
+        fullName: 'Test User (Internal)',
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=test`
+      };
+      localStorage.setItem('ii_token', 'test-token-bypass');
+      localStorage.setItem('ii_user', JSON.stringify(testUser));
+      onSuccess(testUser);
+    } else {
+      setError("INVALID PRIVATE ACCESS KEY.");
+    }
+  };
+
   const handleVerifyClick = () => {
     const otpValue = otp.join('');
     if (otpValue.length === 6) {
@@ -128,8 +157,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 013 11c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.73 9.421" />
             </svg>
           </div>
-          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">Security Access</h2>
-          <p className="text-gray-400 mb-8 text-[10px] uppercase tracking-[0.2em]">Authenticating {formData.email}</p>
+          
+          <h2 className="text-3xl font-heading font-bold mb-4 text-white uppercase tracking-tight leading-none">
+            {isTestMode ? 'Private Access' : 'Security Access'}
+          </h2>
+          <p className="text-gray-400 mb-8 text-[10px] uppercase tracking-[0.2em]">
+            {isTestMode ? 'Bypass enabled for test account' : `Authenticating ${formData.email}`}
+          </p>
 
           {error && (
             <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-bold uppercase tracking-widest animate-in slide-in-from-top-2">
@@ -137,30 +171,57 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          <div className="flex justify-between gap-2 mb-10">
-            {otp.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={el => { otpRefs.current[idx] = el; }}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={e => handleOtpChange(idx, e.target.value)}
-                onKeyDown={e => handleOtpKeyDown(idx, e)}
-                disabled={loading}
-                className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none transition-all disabled:opacity-50"
+          {isTestMode ? (
+            <div className="space-y-6">
+              <input 
+                type="password"
+                placeholder="Enter Private Access Key"
+                value={testPassword}
+                onChange={(e) => setTestPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleTestLogin()}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all text-center tracking-widest"
               />
-            ))}
-          </div>
+              <button 
+                onClick={handleTestLogin}
+                className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+              >
+                Access Account
+              </button>
+              <button 
+                onClick={() => { setNeedsVerification(false); setIsTestMode(false); setError(null); }}
+                className="text-[9px] text-gray-500 hover:text-white uppercase tracking-widest font-black"
+              >
+                Cancel Bypass
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between gap-2 mb-10">
+                {otp.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={el => { otpRefs.current[idx] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={e => handleOtpChange(idx, e.target.value)}
+                    onKeyDown={e => handleOtpKeyDown(idx, e)}
+                    disabled={loading}
+                    className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none transition-all disabled:opacity-50"
+                  />
+                ))}
+              </div>
 
-          <button 
-            onClick={handleVerifyClick} 
-            disabled={loading}
-            className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-600/50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Verifying..." : "Confirm Access Code"}
-          </button>
+              <button 
+                onClick={handleVerifyClick} 
+                disabled={loading}
+                className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-600/50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Verifying..." : "Confirm Access Code"}
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
@@ -184,7 +245,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                       MISMATCH DETECTED
                     </span>
                     <div className="space-y-6">
-                      {/* SMTP Error Fix */}
                       <div className="space-y-3">
                         <p className="text-red-400 font-black border-l-2 border-red-500 pl-3 uppercase">Supabase Configuration Error</p>
                         <p className="text-white normal-case font-medium leading-relaxed italic">Your screenshot shows a major mismatch. Brevo will block your emails if this isn't fixed:</p>
@@ -207,7 +267,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                         </div>
                       </div>
 
-                      {/* Domain Status */}
                       <div className="space-y-3 pt-4 border-t border-white/5">
                         <p className="text-blue-400 font-black border-l-2 border-blue-500 pl-3 uppercase">Domain Propagation</p>
                         <p className="text-gray-400 normal-case font-medium">I see you've switched Nameservers to Vercel. <span className="text-white">This is correct!</span></p>
@@ -230,6 +289,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Professional Email</label>
                 <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all" />
+                {formData.email.toLowerCase() === TEST_EMAIL && (
+                  <p className="text-[8px] text-blue-500 font-black uppercase tracking-widest mt-2 animate-pulse">Test Account Detected: Password mode activated</p>
+                )}
               </div>
 
               <button disabled={loading} className="w-full py-6 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
