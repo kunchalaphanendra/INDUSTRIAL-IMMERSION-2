@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { EnrollmentState, TrackKey, UserRegistration } from '../types';
 import { TRACKS } from '../constants';
@@ -16,6 +15,25 @@ declare global {
     Razorpay: any;
   }
 }
+
+/**
+ * Robust helper to fetch environment variables from common sources.
+ */
+const getEnvVar = (key: string): string => {
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      const val = (import.meta as any).env[key];
+      if (val) return val;
+    }
+  } catch (e) {}
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      const val = process.env[key];
+      if (val) return val;
+    }
+  } catch (e) {}
+  return '';
+};
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onComplete }) => {
   const [step, setStep] = useState(1); 
@@ -37,8 +55,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
   if (!enrollment.track) return null;
   const trackData = TRACKS[enrollment.track];
-  const razorpayKey = (import.meta as any).env?.VITE_RAZORPAY_KEY || '';
+  
+  // Robust Key Retrieval
+  const razorpayKey = getEnvVar('VITE_RAZORPAY_KEY');
   const isTestMode = razorpayKey.startsWith('rzp_test_');
+  const isKeyMissing = !razorpayKey;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,8 +78,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   };
 
   const handlePayment = () => {
-    if (!razorpayKey) {
-      setErrorMessage("Configuration Error: Payment Key (VITE_RAZORPAY_KEY) is missing.");
+    if (isKeyMissing) {
+      setErrorMessage("Configuration Error: Razorpay API Key (VITE_RAZORPAY_KEY) is missing in environment.");
       return;
     }
 
@@ -72,7 +93,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
     const options = {
       key: razorpayKey,
-      amount: trackData.price * 100,
+      amount: trackData.price * 100, // Amount is in paise
       currency: "INR",
       name: "STJUFENDS",
       description: `${trackData.title} Activation`,
@@ -100,7 +121,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
         contact: formData.phone
       },
       theme: { color: "#2563eb" },
-      modal: { ondismiss: () => setIsProcessing(false) }
+      modal: { 
+        ondismiss: () => setIsProcessing(false),
+        escape: false,
+        backdropclose: false
+      }
     };
 
     try {
@@ -131,9 +156,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                 {step === 3 && "Payment Settlement"}
                 {step === 4 && "Application Confirmed"}
               </p>
-              {razorpayKey && (
-                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${isTestMode ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
-                  {isTestMode ? 'Test Mode' : 'Live Mode'}
+              {!isKeyMissing && (
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${isTestMode ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]'}`}>
+                  {isTestMode ? 'Test Mode' : 'Live Secure Mode'}
                 </span>
               )}
             </div>
@@ -249,9 +274,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </svg>
                </div>
                <div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Secure Checkout</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-white">{isTestMode ? 'Test Checkout' : 'Secure Checkout'}</h3>
                   <p className="text-gray-500 text-sm max-w-xs mx-auto">
-                    STJUFENDS uses <strong>Razorpay</strong> for encrypted payment processing.
+                    STJUFENDS uses <strong>Razorpay</strong> for encrypted {isTestMode ? 'test' : 'live'} payment processing.
                   </p>
                </div>
                <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl'}`}>
