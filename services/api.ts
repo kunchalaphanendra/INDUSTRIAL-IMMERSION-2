@@ -1,4 +1,3 @@
-
 import { UserRegistration, TrackKey, User, EnrollmentRecord } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -34,14 +33,22 @@ export const apiService = {
       }
 
       if (result.error) {
+        const errMsg = result.error.message.toLowerCase();
         // Handle specific error logic expected by AuthModal
         if (!isSignup && result.error.status === 422) {
           throw new Error("ACCOUNT_NOT_FOUND");
         }
-        if (isSignup && result.error.message.includes('already registered')) {
+        if (isSignup && (errMsg.includes('already registered') || errMsg.includes('already exists'))) {
           throw new Error("ALREADY_REGISTERED");
         }
         throw result.error;
+      }
+
+      // Supabase sometimes returns a user but no session for signup if email confirmation is on
+      // or if the user already exists (depending on site settings).
+      // We check if it's a silent "user already exists" success
+      if (isSignup && result.data?.user && result.data.user.identities?.length === 0) {
+        throw new Error("ALREADY_REGISTERED");
       }
 
       return { success: true };
