@@ -106,7 +106,7 @@ export const ENROLLMENT_STEPS = [
 ];
 
 export const PARTNERS = [
-  'Visionary Media', 'TechFlow Inc.', 'GrowthHackers', 'BrandPulse', 'NextGen Creative', 'Alpha Agency', 'SocialScale'
+  'Baufmineur', 
 ];
 
 export const CORE_AREAS = [
