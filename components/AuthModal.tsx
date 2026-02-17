@@ -31,8 +31,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   }, [resendTimer]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!formData.email) return;
 
     // Check for test account bypass
@@ -56,11 +56,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       if (result.success) {
         setNeedsVerification(true);
         setResendTimer(60);
+        // Clear OTP fields on resend
+        setOtp(['', '', '', '', '', '']);
       } else {
         if (result.error === "ACCOUNT_NOT_FOUND") {
           setError("SESSION REFUSED: EMAIL NOT REGISTERED.");
         } else if (result.error === "ALREADY_REGISTERED") {
-          setError("ALREADY_REGISTERED"); // Trigger specific conflict UI
+          setError("ALREADY_REGISTERED"); 
         } else if (result.error?.includes("rate limit") || result.error?.includes("limit exceeded")) {
           setError("EMAIL RATE LIMIT EXCEEDED");
         } else {
@@ -214,13 +216,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 ))}
               </div>
 
-              <button 
-                onClick={handleVerifyClick} 
-                disabled={loading}
-                className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-600/50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Verifying..." : "Confirm Access Code"}
-              </button>
+              <div className="space-y-6">
+                <button 
+                  onClick={handleVerifyClick} 
+                  disabled={loading}
+                  className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-600/50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Verifying..." : "Confirm Access Code"}
+                </button>
+
+                <div className="flex flex-col items-center gap-4">
+                  {resendTimer > 0 ? (
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
+                      Resend available in <span className="text-blue-500">{resendTimer}s</span>
+                    </p>
+                  ) : (
+                    <button 
+                      onClick={() => handleSendOtp()}
+                      disabled={loading}
+                      className="text-[10px] text-blue-500 hover:text-blue-400 font-black uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                  
+                  <button 
+                    onClick={() => { setNeedsVerification(false); setError(null); }}
+                    className="text-[9px] text-gray-500 hover:text-white uppercase tracking-widest font-black"
+                  >
+                    Change Email Address
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
