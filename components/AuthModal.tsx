@@ -10,6 +10,8 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
@@ -31,7 +33,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     }
   }, [resendTimer]);
 
-  const handleSendOtp = async (e?: React.FormEvent) => {
+  const handleSendOtp = async (e?: React.FormEvent, isResend: boolean = false) => {
     if (e) e.preventDefault();
     if (!formData.email) return;
 
@@ -47,17 +49,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       return;
     }
     
-    setLoading(true);
+    if (isResend) {
+      setResending(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
+    setResendSuccess(false);
     
     try {
-      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
+      // If resending, we treat it as a sign-in to be safe if signup already "half-created" the user
+      const useSignup = isResend ? false : !isLogin;
+      const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, useSignup);
       
       if (result.success) {
         setNeedsVerification(true);
         setResendTimer(60);
-        // Clear OTP fields on resend
         setOtp(['', '', '', '', '', '']);
+        if (isResend) {
+          setResendSuccess(true);
+          setTimeout(() => setResendSuccess(false), 5000);
+        }
       } else {
         if (result.error === "ACCOUNT_NOT_FOUND") {
           setError("SESSION REFUSED: EMAIL NOT REGISTERED.");
@@ -73,6 +85,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       setError(err.message.toUpperCase());
     } finally {
       setLoading(false);
+      setResending(false);
     }
   };
 
@@ -174,6 +187,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             </div>
           )}
 
+          {resendSuccess && (
+            <div className="mb-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-500 text-[10px] font-bold uppercase tracking-widest animate-in slide-in-from-top-2">
+              New Access Code Sent Successfully
+            </div>
+          )}
+
           {isTestMode ? (
             <div className="space-y-6">
               <input 
@@ -216,7 +235,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                 ))}
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <button 
                   onClick={handleVerifyClick} 
                   disabled={loading}
@@ -225,27 +244,34 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                   {loading ? "Verifying..." : "Confirm Access Code"}
                 </button>
 
-                <div className="flex flex-col items-center gap-4">
-                  {resendTimer > 0 ? (
-                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
-                      Resend available in <span className="text-blue-500">{resendTimer}s</span>
-                    </p>
-                  ) : (
+                <div className="pt-8 border-t border-white/5 space-y-5">
+                  <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
+                    Didn't receive the email? Check spam or resend below.
+                  </p>
+                  <div className="flex flex-col items-center gap-4">
+                    {resendTimer > 0 ? (
+                      <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                          Resend in <span className="text-blue-500">{resendTimer}s</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => handleSendOtp(undefined, true)}
+                        disabled={loading || resending}
+                        className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-blue-500 hover:text-blue-400 font-black rounded-xl uppercase tracking-[0.2em] transition-all disabled:opacity-50"
+                      >
+                        {resending ? "Sending New Code..." : "Resend Code Now"}
+                      </button>
+                    )}
+                    
                     <button 
-                      onClick={() => handleSendOtp()}
-                      disabled={loading}
-                      className="text-[10px] text-blue-500 hover:text-blue-400 font-black uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                      onClick={() => { setNeedsVerification(false); setError(null); }}
+                      className="text-[9px] text-gray-500 hover:text-white uppercase tracking-widest font-black transition-colors"
                     >
-                      Resend Code
+                      Change Email Address
                     </button>
-                  )}
-                  
-                  <button 
-                    onClick={() => { setNeedsVerification(false); setError(null); }}
-                    className="text-[9px] text-gray-500 hover:text-white uppercase tracking-widest font-black"
-                  >
-                    Change Email Address
-                  </button>
+                  </div>
                 </div>
               </div>
             </>
@@ -333,7 +359,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
             )}
 
-            <form onSubmit={handleSendOtp} className="space-y-6">
+            <form onSubmit={(e) => handleSendOtp(e)} className="space-y-6">
               {!isLogin && (
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Full Legal Name</label>
