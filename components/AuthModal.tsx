@@ -12,7 +12,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false); // New state for test bypass
+  const [isTestMode, setIsTestMode] = useState(false);
   const [testPassword, setTestPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [formData, setFormData] = useState({ email: '', fullName: '' });
@@ -60,7 +60,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         if (result.error === "ACCOUNT_NOT_FOUND") {
           setError("SESSION REFUSED: EMAIL NOT REGISTERED.");
         } else if (result.error === "ALREADY_REGISTERED") {
-          setError("CONFLICT: PROFILE ALREADY EXISTS.");
+          setError("ALREADY_REGISTERED"); // Trigger specific conflict UI
         } else if (result.error?.includes("rate limit") || result.error?.includes("limit exceeded")) {
           setError("EMAIL RATE LIMIT EXCEEDED");
         } else {
@@ -145,6 +145,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
   const isRateLimitError = error === "EMAIL RATE LIMIT EXCEEDED";
   const isSmtpError = error?.includes('CONFIRMATION') || error?.includes('SMTP') || error?.includes('MAIL') || isRateLimitError;
+  const isAlreadyRegistered = error === "ALREADY_REGISTERED";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -165,7 +166,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             {isTestMode ? 'Bypass enabled for test account' : `Authenticating ${formData.email}`}
           </p>
 
-          {error && (
+          {error && !isAlreadyRegistered && (
             <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-bold uppercase tracking-widest animate-in slide-in-from-top-2">
               {error}
             </div>
@@ -225,6 +226,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         </div>
       ) : (
         <div className="relative bg-[#080808] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
+          {/* Email Already Registered Popup Overlay */}
+          {isAlreadyRegistered && (
+            <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md p-10 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
+               <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mb-8 text-red-500 border border-red-500/20">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+               </div>
+               <h3 className="text-2xl font-heading font-black text-white mb-4 uppercase tracking-tighter">Identity Conflict</h3>
+               <p className="text-gray-400 text-xs font-bold uppercase tracking-widest leading-relaxed mb-10 max-w-xs mx-auto">
+                 The email <span className="text-white">{formData.email}</span> is already tied to an existing STJUFENDS profile.
+               </p>
+               <div className="space-y-4 w-full">
+                  <button 
+                    onClick={() => { setIsLogin(true); setError(null); }}
+                    className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-blue-500/20 active:scale-95 transition-all"
+                  >
+                    Continue to Login
+                  </button>
+                  <button 
+                    onClick={() => setError(null)}
+                    className="w-full py-4 text-gray-500 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-colors"
+                  >
+                    Use different email
+                  </button>
+               </div>
+            </div>
+          )}
+
           <div className="p-10 overflow-y-auto custom-scrollbar">
             <div className="text-center mb-10">
               <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-3xl mx-auto mb-6 shadow-2xl shadow-blue-500/20">S</div>
@@ -233,7 +261,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </h2>
             </div>
 
-            {error && (
+            {error && !isAlreadyRegistered && (
               <div className="mb-8 space-y-4 animate-in slide-in-from-top-2">
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] text-center font-bold uppercase tracking-widest leading-relaxed">
                   {error}
