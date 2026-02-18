@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ApplicationRecord, CourseStatus } from '../types';
 import { apiService } from '../services/api';
@@ -8,6 +7,7 @@ const AdminStudents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState<ApplicationRecord | null>(null);
 
   useEffect(() => {
     load();
@@ -28,7 +28,7 @@ const AdminStudents: React.FC = () => {
   };
 
   const exportCSV = () => {
-    const headers = ['App ID', 'Name', 'Email', 'Phone', 'Track', 'Type', 'Status', 'Payment', 'Date'];
+    const headers = ['App ID', 'Name', 'Email', 'Phone', 'Track', 'Type', 'Status', 'Payment', 'Amount', 'Date'];
     const rows = filteredApps.map(a => [
       a.application_id,
       a.fullName,
@@ -38,6 +38,7 @@ const AdminStudents: React.FC = () => {
       a.program_type,
       a.course_status,
       a.payment_status,
+      a.amount_paid,
       new Date(a.created_at).toLocaleDateString()
     ]);
 
@@ -89,13 +90,13 @@ const AdminStudents: React.FC = () => {
         <select 
           value={filterCourse}
           onChange={e => setFilterCourse(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500"
+          className="bg-[#080808] border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500"
         >
-          <option value="all">All Tracks</option>
-          <option value="college_immersion">Immersion Track</option>
-          <option value="college_prof">Professional Track</option>
-          <option value="school_skill">School Skill</option>
-          <option value="school_tuition">School Tuition</option>
+          <option value="all" className="bg-[#080808] text-white">All Tracks</option>
+          <option value="college_immersion" className="bg-[#080808] text-white">Immersion Track</option>
+          <option value="college_prof" className="bg-[#080808] text-white">Professional Track</option>
+          <option value="school_skill" className="bg-[#080808] text-white">School Skill</option>
+          <option value="school_tuition" className="bg-[#080808] text-white">School Tuition</option>
         </select>
       </div>
 
@@ -134,12 +135,12 @@ const AdminStudents: React.FC = () => {
                     <select 
                       value={a.course_status || 'pending'} 
                       onChange={(e) => handleStatusChange(a.id, e.target.value as CourseStatus)}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-widest outline-none group-hover:bg-white/10 transition-all cursor-pointer"
+                      className="bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-widest outline-none group-hover:border-blue-500/50 transition-all cursor-pointer text-white"
                     >
-                      <option value="pending">Pending</option>
-                      <option value="ongoing">Ongoing</option>
-                      <option value="completed">Completed</option>
-                      <option value="dropout">Dropout</option>
+                      <option value="pending" className="bg-[#080808] text-white">Pending</option>
+                      <option value="ongoing" className="bg-[#080808] text-white">Ongoing</option>
+                      <option value="completed" className="bg-[#080808] text-white">Completed</option>
+                      <option value="dropout" className="bg-[#080808] text-white">Dropout</option>
                     </select>
                   </td>
                   <td className="px-8 py-6">
@@ -148,7 +149,12 @@ const AdminStudents: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <button className="text-gray-600 hover:text-white transition-all text-[8px] uppercase tracking-widest font-black">View Profile</button>
+                    <button 
+                      onClick={() => setSelectedStudent(a)}
+                      className="text-blue-500 hover:text-white transition-all text-[8px] uppercase tracking-widest font-black border border-blue-500/20 px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      View Profile
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -156,6 +162,61 @@ const AdminStudents: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Student Profile Modal */}
+      {selectedStudent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setSelectedStudent(null)} />
+           <div className="relative bg-[#080808] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in duration-300">
+              <div className="flex justify-between items-start mb-8">
+                 <h2 className="text-3xl font-heading font-black text-white uppercase tracking-tighter">Profile Details</h2>
+                 <button onClick={() => setSelectedStudent(null)} className="text-gray-500 hover:text-white">✕</button>
+              </div>
+              
+              <div className="space-y-8">
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Full Name</p>
+                       <p className="text-white text-lg font-bold">{selectedStudent.fullName}</p>
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Email</p>
+                       <p className="text-white text-xs font-bold">{selectedStudent.email}</p>
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Phone</p>
+                       <p className="text-white text-xs font-bold">{selectedStudent.phone || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">App ID</p>
+                       <p className="text-blue-500 text-xs font-black uppercase">{selectedStudent.application_id}</p>
+                    </div>
+                 </div>
+
+                 <div className="space-y-1">
+                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">LinkedIn Profile</p>
+                    <a href={selectedStudent.linkedin} target="_blank" rel="noreferrer" className="text-blue-400 text-xs hover:underline block truncate">
+                       {selectedStudent.linkedin || 'Not Provided'}
+                    </a>
+                 </div>
+
+                 <div className="space-y-1">
+                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Career Goals</p>
+                    <p className="text-gray-400 text-xs leading-relaxed italic">
+                       "{selectedStudent.careerGoals || 'No statement provided'}"
+                    </p>
+                 </div>
+
+                 <button 
+                   onClick={() => setSelectedStudent(null)}
+                   className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all"
+                 >
+                   Close Quick Look
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
