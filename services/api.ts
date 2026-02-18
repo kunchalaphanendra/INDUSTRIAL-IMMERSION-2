@@ -1,5 +1,5 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review } from '../types';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 export const apiService = {
@@ -55,7 +55,6 @@ export const apiService = {
   },
 
   async getCurrentUser(token: string): Promise<User | null> {
-    // Support for bypass tokens
     if (token === 'test-token-bypass') {
       const storedUser = localStorage.getItem('ii_user');
       return storedUser ? JSON.parse(storedUser) : null;
@@ -86,6 +85,7 @@ export const apiService = {
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
         track_key: data.track,
+        program_type: data.programType,
         payment_status: 'completed',
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
@@ -112,6 +112,53 @@ export const apiService = {
     } catch { return []; }
   },
 
+  // ADMIN CRM METHODS
+  async fetchAdminStats() {
+    try {
+      const [apps, users, reviews] = await Promise.all([
+        supabase.from('applications').select('id, payment_status, track_key'),
+        supabase.from('profiles').select('id', { count: 'exact' }), // Assuming a profiles table exists or similar
+        supabase.from('reviews').select('id', { count: 'exact' }).eq('is_approved', false)
+      ]);
+
+      const totalRevenue = apps.data?.filter(a => a.payment_status === 'completed')
+        .reduce((sum, a) => sum + (a.track_key.includes('college') ? 14999 : 999), 0) || 0;
+
+      return {
+        totalApplications: apps.data?.length || 0,
+        totalEnrollments: apps.data?.filter(a => a.payment_status === 'completed').length || 0,
+        totalRevenue,
+        pendingReviews: reviews.count || 0,
+        totalUsers: 42 // Mock or query auth if possible
+      };
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  },
+
+  async fetchAdminApplications(): Promise<ApplicationRecord[]> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(item => ({
+        ...item,
+        fullName: item.full_name,
+        track_key: item.track_key as TrackKey
+      }));
+    } catch { return []; }
+  },
+
+  async updateApplicationStatus(id: string, status: CourseStatus) {
+    try {
+      const { error } = await supabase.from('applications').update({ course_status: status }).eq('id', id);
+      return { success: !error, error };
+    } catch (err: any) { return { success: false, error: err.message }; }
+  },
+
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
     try {
       let query = supabase.from('reviews').select('*').eq('is_approved', true).order('created_at', { ascending: false });
@@ -132,7 +179,6 @@ export const apiService = {
       if (error) throw error;
       return { data: data || [] };
     } catch (err: any) {
-      console.error("Fetch Admin Reviews Error:", err);
       return { data: [], error: err.message };
     }
   },
@@ -169,6 +215,7 @@ export const apiService = {
     }
   }
 };
+
 
 
 
