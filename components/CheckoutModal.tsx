@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { EnrollmentState, TrackKey, UserRegistration, InstitutionType } from '../types';
 import { TRACKS } from '../constants';
@@ -102,6 +101,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           ...formData,
           track: enrollment.track,
           programType,
+          amountPaid: trackData.price, // Save exact price from trackData
           paymentId: response.razorpay_payment_id,
           orderId: response.razorpay_order_id,
           signature: response.razorpay_signature
