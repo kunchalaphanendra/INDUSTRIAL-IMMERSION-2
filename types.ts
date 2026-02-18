@@ -26,6 +26,9 @@ export enum DomainKey {
   TECH = 'tech'
 }
 
+export type CourseStatus = 'pending' | 'ongoing' | 'completed' | 'dropout';
+export type ProgramType = 'school_program' | 'college_program';
+
 export interface TrackData {
   title: string;
   duration: string;
@@ -77,6 +80,18 @@ export interface UserRegistration {
   selectedDomain?: DomainKey;
 }
 
+export interface ApplicationRecord extends UserRegistration {
+  id: string;
+  application_id: string;
+  track_key: TrackKey;
+  program_type: ProgramType;
+  course_status: CourseStatus;
+  payment_status: string;
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  created_at: string;
+}
+
 export interface EnrollmentState {
   track: TrackKey | null;
   domain?: DomainKey | null;
@@ -100,4 +115,5 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
