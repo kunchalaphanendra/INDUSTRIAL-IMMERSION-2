@@ -70,9 +70,11 @@ export const apiService = {
 
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
+      // 1. Generate the unique STJ ID
       const appId = await generateApplicationId();
       
-      const { error } = await supabase.from('applications').insert({
+      // 2. Prepare the payload
+      const payload = {
         application_id: appId,
         full_name: data.fullName,
         email: data.email,
@@ -82,16 +84,27 @@ export const apiService = {
         career_goals: data.careerGoals,
         track_key: data.track,
         program_type: data.programType,
-        student_type: data.studentType,
+        student_type: data.studentType || 'college',
         payment_status: 'completed',
-        amount_paid: data.amountPaid || 0,
+        amount_paid: Number(data.amountPaid) || 0,
         // Rules: College gets pending status, School gets NULL
         course_status: data.studentType === 'college' ? 'pending' : null,
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
-      });
-      if (error) throw error;
+      };
+
+      const { error } = await supabase.from('applications').insert(payload);
+      
+      if (error) {
+        console.error("Supabase Insert Error:", error);
+        // Specifically catch the "column missing" error to warn the user
+        if (error.message.includes("amount_paid") || error.message.includes("column")) {
+          throw new Error("DATABASE_SCHEMA_ERROR: The 'amount_paid' or other new columns are missing in Supabase. Please run the SQL migration provided in the instructions.");
+        }
+        throw error;
+      }
+      
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -124,12 +137,28 @@ export const apiService = {
       const { data: apps } = await supabase.from('applications').select('*');
       const { count: pendingReviews } = await supabase.from('reviews').select('id', { count: 'exact' }).eq('is_approved', false);
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
+      
+      // Calculate real distribution
+      const counts: Record<string, number> = {
+        college_immersion: 0,
+        college_prof: 0,
+        school_skill: 0,
+        school_tuition: 0
+      };
+      apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
+      const totalCount = apps?.length || 1;
+      const distribution = Object.entries(counts).map(([key, val]) => ({
+        name: key.replace(/_/g, ' '),
+        count: Math.round((val / totalCount) * 100),
+        raw: val
+      }));
+
       return {
         totalApplications: apps?.length || 0,
         totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
         totalRevenue,
         pendingReviews: pendingReviews || 0,
-        distribution: [],
+        distribution,
         totalUsers: new Set(apps?.map(a => a.email)).size || 0
       };
     } catch { return null; }
@@ -137,8 +166,8 @@ export const apiService = {
 
   async fetchRecentActivity() {
     try {
-      const { data: apps } = await supabase.from('applications').select('full_name, created_at').order('created_at', { ascending: false }).limit(3);
-      return (apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at }));
+      const { data: apps } = await supabase.from('applications').select('full_name, created_at').order('created_at', { ascending: false }).limit(5);
+      return (apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at, type: 'app' }));
     } catch { return []; }
   },
 
@@ -180,6 +209,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
