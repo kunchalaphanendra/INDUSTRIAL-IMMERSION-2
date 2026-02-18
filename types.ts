@@ -48,6 +48,19 @@ export interface User {
   email: string;
   fullName: string;
   avatarUrl?: string;
+  isAdmin?: boolean;
+}
+
+export interface Review {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
+  course: string;
+  rating: number;
+  review_text: string;
+  is_approved: boolean;
+  created_at: string;
 }
 
 export interface UserRegistration {
@@ -80,7 +93,6 @@ export interface EnrollmentRecord {
 
 export interface FAQItem {
   question: string;
-  // Fix: Using React.ReactNode requires importing React to avoid 'Cannot find namespace' error
   answer: string | React.ReactNode;
 }
 
@@ -88,3 +100,4 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
