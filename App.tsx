@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -130,60 +129,43 @@ const App: React.FC = () => {
     );
   }
 
-  if (view === 'admin' && user?.isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#030303]">
-        <Navbar 
-          user={user} 
-          onLoginClick={() => setShowAuthModal(true)} 
-          onDashboardClick={() => setView('dashboard')} 
-        />
-        <AdminReviews />
-        <div className="max-w-7xl mx-auto px-4 pb-20 text-center">
-           <button onClick={() => setView('dashboard')} className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 hover:text-white uppercase tracking-widest text-[10px] font-black transition-all">Exit Management Suite</button>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (view === 'dashboard' && user) {
-    return (
-      <div className="min-h-screen bg-[#030303]">
-        <Navbar 
-          user={user} 
-          onLoginClick={() => setShowAuthModal(true)} 
-          onDashboardClick={() => setView('dashboard')} 
-        />
-        <Dashboard 
-          user={user} 
-          onLogout={handleLogout} 
-          onBackToLanding={() => setView('landing')} 
-        />
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#030303] selection:bg-blue-500/30">
       <Navbar 
         user={user} 
         onLoginClick={() => setShowAuthModal(true)} 
         onDashboardClick={() => setView('dashboard')} 
+        onAdminClick={() => setView('admin')}
       />
       <main>
-        <Hero />
-        <PartnersSection />
-        <Features />
-        <Testimonials />
-        <ProgramSelector 
-          selectedTrack={selectedTrack} 
-          onSelect={handleTrackSelect}
-          onViewDetails={(track) => setDetailTrack(track)}
-        />
-        <PricingSection />
-        <GetStarted />
+        {view === 'admin' && user?.isAdmin ? (
+          <>
+            <AdminReviews />
+            <div className="max-w-7xl mx-auto px-4 pb-20 text-center">
+              <button onClick={() => setView('dashboard')} className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 hover:text-white uppercase tracking-widest text-[10px] font-black transition-all">Exit Management Suite</button>
+            </div>
+          </>
+        ) : view === 'dashboard' && user ? (
+          <Dashboard 
+            user={user} 
+            onLogout={handleLogout} 
+            onBackToLanding={() => setView('landing')} 
+          />
+        ) : (
+          <>
+            <Hero />
+            <PartnersSection />
+            <Features />
+            <Testimonials />
+            <ProgramSelector 
+              selectedTrack={selectedTrack} 
+              onSelect={handleTrackSelect}
+              onViewDetails={(track) => setDetailTrack(track)}
+            />
+            <PricingSection />
+            <GetStarted />
+          </>
+        )}
       </main>
       <Footer />
 
@@ -215,3 +197,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
