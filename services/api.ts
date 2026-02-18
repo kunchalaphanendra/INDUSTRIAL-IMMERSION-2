@@ -3,8 +3,6 @@ import { UserRegistration, TrackKey, User, EnrollmentRecord, Review } from '../t
 import { supabase } from '../lib/supabaseClient';
 
 export const apiService = {
-  // ... existing methods (sendOtp, verifyOtp, etc.) ...
-
   async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     try {
       let result;
@@ -13,14 +11,14 @@ export const apiService = {
           email,
           password: Math.random().toString(36).slice(-12),
           options: {
-            emailRedirectTo: "https://www.stjufends.com",
+            emailRedirectTo: window.location.origin,
             data: fullName ? { full_name: fullName } : undefined
           }
         });
       } else {
         result = await supabase.auth.signInWithOtp({
           email,
-          options: { emailRedirectTo: "https://www.stjufends.com" }
+          options: { emailRedirectTo: window.location.origin }
         });
       }
       if (result.error) {
@@ -41,12 +39,14 @@ export const apiService = {
       const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
       if (error) throw error;
       if (!data.user || !data.session) throw new Error("Verification failed: session not found");
+      
+      const adminEmail = 'admin@stjufends.com';
       const user: User = {
         id: data.user.id,
         email: data.user.email || email,
         fullName: data.user.user_metadata?.full_name || email.split('@')[0],
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
-        isAdmin: data.user.email === 'admin@stjufends.com' // Simple admin check example
+        isAdmin: data.user.email === adminEmail
       };
       return { success: true, user, token: data.session.access_token };
     } catch (err: any) {
@@ -58,12 +58,14 @@ export const apiService = {
     try {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return null;
+      
+      const adminEmail = 'admin@stjufends.com';
       return {
         id: user.id,
         email: user.email || '',
         fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-        isAdmin: user.email === 'admin@stjufends.com'
+        isAdmin: user.email === adminEmail
       };
     } catch { return null; }
   },
@@ -96,15 +98,13 @@ export const apiService = {
       if (error) throw error;
       return (data || []).map((item: any) => ({
         id: item.id,
-        track_key: item.track_key,
+        track_key: item.track_key as TrackKey,
         created_at: item.created_at,
         payment_status: item.payment_status,
         progress: Math.floor(Math.random() * 40)
       }));
     } catch { return []; }
   },
-
-  // --- NEW REVIEW METHODS ---
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
     try {
@@ -138,6 +138,7 @@ export const apiService = {
         ...reviewData,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,course' });
+      
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
@@ -155,6 +156,7 @@ export const apiService = {
     }
   }
 };
+
 
 
 
