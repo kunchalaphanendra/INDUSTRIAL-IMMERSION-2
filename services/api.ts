@@ -1,4 +1,3 @@
-
 import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -87,6 +86,7 @@ export const apiService = {
         track_key: data.track,
         program_type: data.programType,
         payment_status: 'completed',
+        amount_paid: data.amountPaid || 0,
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
@@ -115,26 +115,55 @@ export const apiService = {
   // ADMIN CRM METHODS
   async fetchAdminStats() {
     try {
-      const [apps, users, reviews] = await Promise.all([
-        supabase.from('applications').select('id, payment_status, track_key'),
-        supabase.from('profiles').select('id', { count: 'exact' }), // Assuming a profiles table exists or similar
-        supabase.from('reviews').select('id', { count: 'exact' }).eq('is_approved', false)
-      ]);
+      const { data: apps, error: appErr } = await supabase.from('applications').select('*');
+      const { count: pendingReviewsCount } = await supabase.from('reviews').select('id', { count: 'exact' }).eq('is_approved', false);
+      
+      if (appErr) throw appErr;
 
-      const totalRevenue = apps.data?.filter(a => a.payment_status === 'completed')
-        .reduce((sum, a) => sum + (a.track_key.includes('college') ? 14999 : 999), 0) || 0;
+      const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
+      
+      // Calculate real distribution
+      const counts: Record<string, number> = {
+        college_immersion: 0,
+        college_prof: 0,
+        school_skill: 0,
+        school_tuition: 0
+      };
+      apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
+      
+      const totalCount = apps?.length || 1;
+      const distribution = Object.entries(counts).map(([key, val]) => ({
+        name: key.replace(/_/g, ' '),
+        count: Math.round((val / totalCount) * 100),
+        raw: val
+      }));
 
       return {
-        totalApplications: apps.data?.length || 0,
-        totalEnrollments: apps.data?.filter(a => a.payment_status === 'completed').length || 0,
+        totalApplications: apps?.length || 0,
+        totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
         totalRevenue,
-        pendingReviews: reviews.count || 0,
-        totalUsers: 42 // Mock or query auth if possible
+        pendingReviews: pendingReviewsCount || 0,
+        distribution,
+        totalUsers: apps ? new Set(apps.map(a => a.email)).size : 0
       };
     } catch (err) {
       console.error(err);
       return null;
     }
+  },
+
+  async fetchRecentActivity() {
+    try {
+      const { data: apps } = await supabase.from('applications').select('full_name, created_at').order('created_at', { ascending: false }).limit(5);
+      const { data: reviews } = await supabase.from('reviews').select('user_name, created_at, is_approved').order('created_at', { ascending: false }).limit(5);
+      
+      const activity = [
+        ...(apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at, type: 'app' })),
+        ...(reviews || []).map(r => ({ msg: r.is_approved ? 'Review Approved' : 'New Review Pending', user: r.user_name, time: r.created_at, type: 'rev' }))
+      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
+
+      return activity;
+    } catch { return []; }
   },
 
   async fetchAdminApplications(): Promise<ApplicationRecord[]> {
@@ -147,7 +176,8 @@ export const apiService = {
       return (data || []).map(item => ({
         ...item,
         fullName: item.full_name,
-        track_key: item.track_key as TrackKey
+        track_key: item.track_key as TrackKey,
+        amount_paid: item.amount_paid // Pass through real amount
       }));
     } catch { return []; }
   },
