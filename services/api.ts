@@ -1,117 +1,76 @@
-import { UserRegistration, TrackKey, User, EnrollmentRecord } from '../types';
+
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 export const apiService = {
-  /**
-   * Starts the OTP flow using Supabase Auth SDK.
-   * @param email The user's email
-   * @param fullName Optional name for new user registration
-   * @param isSignup Whether this is a new registration
-   */
+  // ... existing methods (sendOtp, verifyOtp, etc.) ...
+
   async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     try {
       let result;
-      
       if (isSignup) {
-        // For new users, we use signUp to pass the full_name metadata
         result = await supabase.auth.signUp({
           email,
-          password: Math.random().toString(36).slice(-12), // Dummy password for OTP flow
+          password: Math.random().toString(36).slice(-12),
           options: {
             emailRedirectTo: "https://www.stjufends.com",
             data: fullName ? { full_name: fullName } : undefined
           }
         });
       } else {
-        // For existing users, we use signInWithOtp
         result = await supabase.auth.signInWithOtp({
           email,
-          options: {
-            emailRedirectTo: "https://www.stjufends.com"
-          }
+          options: { emailRedirectTo: "https://www.stjufends.com" }
         });
       }
-
       if (result.error) {
         const errMsg = result.error.message.toLowerCase();
-        // Handle specific error logic expected by AuthModal
-        if (!isSignup && result.error.status === 422) {
-          throw new Error("ACCOUNT_NOT_FOUND");
-        }
-        if (isSignup && (errMsg.includes('already registered') || errMsg.includes('already exists'))) {
-          throw new Error("ALREADY_REGISTERED");
-        }
+        if (!isSignup && result.error.status === 422) throw new Error("ACCOUNT_NOT_FOUND");
+        if (isSignup && (errMsg.includes('already registered') || errMsg.includes('already exists'))) throw new Error("ALREADY_REGISTERED");
         throw result.error;
       }
-
-      // Supabase sometimes returns a user but no session for signup if email confirmation is on
-      // or if the user already exists (depending on site settings).
-      // We check if it's a silent "user already exists" success
-      if (isSignup && result.data?.user && result.data.user.identities?.length === 0) {
-        throw new Error("ALREADY_REGISTERED");
-      }
-
+      if (isSignup && result.data?.user && result.data.user.identities?.length === 0) throw new Error("ALREADY_REGISTERED");
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to send OTP' };
     }
   },
 
-  /**
-   * Verifies the 6-digit code using Supabase Auth SDK.
-   */
   async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email'
-      });
-
+      const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
       if (error) throw error;
-
-      if (!data.user || !data.session) {
-        throw new Error("Verification failed: session not found");
-      }
-
+      if (!data.user || !data.session) throw new Error("Verification failed: session not found");
       const user: User = {
         id: data.user.id,
         email: data.user.email || email,
         fullName: data.user.user_metadata?.full_name || email.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
+        isAdmin: data.user.email === 'admin@stjufends.com' // Simple admin check example
       };
-
       return { success: true, user, token: data.session.access_token };
     } catch (err: any) {
       return { success: false, error: err.message || 'Invalid or expired code.' };
     }
   },
 
-  /**
-   * Recovers the user session using the token.
-   */
   async getCurrentUser(token: string): Promise<User | null> {
     try {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return null;
-      
       return {
         id: user.id,
         email: user.email || '',
         fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+        isAdmin: user.email === 'admin@stjufends.com'
       };
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   },
 
-  /**
-   * Submits an application to the database using Supabase Client.
-   */
-  async submitApplication(data: any, token?: string): Promise<{ success: boolean; error?: string }> {
+  async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
-      const payload = {
+      const { error } = await supabase.from('applications').insert({
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
@@ -123,12 +82,7 @@ export const apiService = {
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
-      };
-
-      const { error } = await supabase
-        .from('applications')
-        .insert(payload);
-
+      });
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
@@ -136,18 +90,10 @@ export const apiService = {
     }
   },
 
-  /**
-   * Fetches enrollments for a specific user email.
-   */
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
     try {
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('email', email);
-
+      const { data, error } = await supabase.from('applications').select('*').eq('email', email);
       if (error) throw error;
-      
       return (data || []).map((item: any) => ({
         id: item.id,
         track_key: item.track_key,
@@ -155,11 +101,61 @@ export const apiService = {
         payment_status: item.payment_status,
         progress: Math.floor(Math.random() * 40)
       }));
-    } catch {
-      return [];
+    } catch { return []; }
+  },
+
+  // --- NEW REVIEW METHODS ---
+
+  async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
+    try {
+      let query = supabase.from('reviews').select('*').eq('is_approved', true).order('created_at', { ascending: false });
+      if (courseKey) query = query.eq('course', courseKey);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    } catch { return []; }
+  },
+
+  async fetchAllReviewsForAdmin(): Promise<Review[]> {
+    try {
+      const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch { return []; }
+  },
+
+  async fetchUserReview(userId: string, courseKey: string): Promise<Review | null> {
+    try {
+      const { data, error } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).maybeSingle();
+      if (error) throw error;
+      return data;
+    } catch { return null; }
+  },
+
+  async upsertReview(reviewData: Partial<Review>): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.from('reviews').upsert({
+        ...reviewData,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,course' });
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async toggleReviewApproval(reviewId: string, isApproved: boolean): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.from('reviews').update({ is_approved: isApproved }).eq('id', reviewId);
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
     }
   }
 };
+
 
 
 
