@@ -1,23 +1,19 @@
 
 import React from 'react';
 
-export enum TrackKey {
-  SCHOOL_TUITION = 'school_tuition',
-  SCHOOL_SKILL = 'school_skill',
-  COLLEGE_PROF = 'college_prof',
-  COLLEGE_IMMERSION = 'college_immersion'
+// Added BillingType enum for subscription and one-time payments
+export enum BillingType {
+  MONTHLY = 'monthly',
+  ONETIME = 'onetime'
 }
 
+// Added InstitutionType enum for program categorization in the UI
 export enum InstitutionType {
   SCHOOL = 'school',
   COLLEGE = 'college'
 }
 
-export enum BillingType {
-  MONTHLY = 'monthly',
-  ONETIME = 'one-time'
-}
-
+// Added DomainKey enum for defining different industrial tracks
 export enum DomainKey {
   FASHION = 'fashion',
   BEVERAGE = 'beverage',
@@ -26,24 +22,58 @@ export enum DomainKey {
   TECH = 'tech'
 }
 
-export type CourseStatus = 'pending' | 'ongoing' | 'completed' | 'dropout';
-export type ProgramType = 'school_program' | 'college_program';
+export enum TrackKey {
+  SCHOOL_TUITION = 'school_tuition',
+  SCHOOL_SKILL = 'school_skill',
+  COLLEGE_PROF = 'college_prof',
+  COLLEGE_IMMERSION = 'college_immersion'
+}
 
+// Added TrackData interface to describe program structures
 export interface TrackData {
   title: string;
   duration: string;
   price: number;
   billingType: BillingType;
   description: string;
-  features: string[];
   idealFor: string;
+  features: string[];
 }
 
+// Added DomainData interface to describe specific industry domain deliverables
 export interface DomainData {
   title: string;
   icon: string;
   description: string;
   outputs: string[];
+}
+
+export type CourseStatus = 'pending' | 'on_going' | 'completed' | 'drop_out' | null;
+export type StudentType = 'school' | 'college';
+export type ProgramType = 'school_program' | 'college_program';
+
+export interface UserRegistration {
+  fullName: string;
+  email: string;
+  phone: string;
+  linkedin?: string;
+  currentStatus?: string;
+  careerGoals: string;
+  studentType?: StudentType; // New field
+}
+
+export interface ApplicationRecord extends UserRegistration {
+  id: string;
+  application_id: string;
+  track_key: TrackKey;
+  program_type: ProgramType;
+  student_type: StudentType; // New field
+  course_status: CourseStatus;
+  payment_status: string;
+  amount_paid: number;
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  created_at: string;
 }
 
 export interface User {
@@ -66,43 +96,13 @@ export interface Review {
   created_at: string;
 }
 
-export interface UserRegistration {
-  fullName: string;
-  email: string;
-  phone: string;
-  linkedin?: string;
-  currentStatus?: string;
-  workExperience?: string;
-  institutionName?: string;
-  role?: 'Student' | 'School' | 'College' | 'Parent';
-  careerGoals: string;
-  selectedTrack?: TrackKey;
-  selectedDomain?: DomainKey;
-}
-
-export interface ApplicationRecord extends UserRegistration {
-  id: string;
-  application_id: string;
-  track_key: TrackKey;
-  program_type: ProgramType;
-  course_status: CourseStatus;
-  payment_status: string;
-  // Added amount_paid to resolve property missing errors in admin components
-  amount_paid: number;
-  razorpay_payment_id?: string;
-  razorpay_order_id?: string;
-  created_at: string;
-}
-
 export interface EnrollmentState {
   track: TrackKey | null;
-  domain?: DomainKey | null;
 }
 
 export interface EnrollmentRecord {
   id: string;
   track_key: TrackKey;
-  domain_key?: DomainKey;
   created_at: string;
   payment_status: string;
   progress: number;
@@ -117,6 +117,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
