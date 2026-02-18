@@ -5,7 +5,7 @@ export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.SCHOOL_TUITION]: {
     title: 'School Tuition Program',
     duration: 'Monthly Subscription',
-    price: 1,
+    price: 0,
     billingType: BillingType.MONTHLY,
     description: 'After-school academic support designed to strengthen core foundations.',
     idealFor: 'Schools looking to enhance academic outcomes through structured learning.',
