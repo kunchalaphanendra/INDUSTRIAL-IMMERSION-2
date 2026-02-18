@@ -25,14 +25,15 @@ export async function generateApplicationId(): Promise<string> {
   while (!isUnique && attempts < 10) {
     uniqueId = `STJ${YY}${MM}${generatePart()}`;
     
-    // Check Supabase for duplicates
-    const { data } = await supabase
+    // Using select with limit(1) instead of maybeSingle() to prevent
+    // internal PostgREST header/aggregation issues like MAX(UUID)
+    const { data, error } = await supabase
       .from('applications')
       .select('application_id')
       .eq('application_id', uniqueId)
-      .maybeSingle();
+      .limit(1);
 
-    if (!data) {
+    if (!error && (!data || data.length === 0)) {
       isUnique = true;
     }
     attempts++;
@@ -40,3 +41,4 @@ export async function generateApplicationId(): Promise<string> {
 
   return uniqueId;
 }
+
