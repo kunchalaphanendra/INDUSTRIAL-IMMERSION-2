@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ApplicationRecord, CourseStatus } from '../types';
+import { ApplicationRecord, CourseStatus, StudentType, TrackKey } from '../types';
 import { apiService } from '../services/api';
 
 const AdminStudents: React.FC = () => {
@@ -7,6 +8,7 @@ const AdminStudents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('all');
+  const [filterType, setFilterType] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<ApplicationRecord | null>(null);
 
   useEffect(() => {
@@ -27,38 +29,13 @@ const AdminStudents: React.FC = () => {
     }
   };
 
-  const exportCSV = () => {
-    const headers = ['App ID', 'Name', 'Email', 'Phone', 'Track', 'Type', 'Status', 'Payment', 'Amount', 'Date'];
-    const rows = filteredApps.map(a => [
-      a.application_id,
-      a.fullName,
-      a.email,
-      a.phone,
-      a.track_key,
-      a.program_type,
-      a.course_status,
-      a.payment_status,
-      a.amount_paid,
-      new Date(a.created_at).toLocaleDateString()
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers, ...rows].map(e => e.join(",")).join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `STJUFENDS_Students_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-  };
-
   const filteredApps = apps.filter(a => {
     const matchesSearch = a.fullName.toLowerCase().includes(search.toLowerCase()) || 
                           a.email.toLowerCase().includes(search.toLowerCase()) ||
                           (a.application_id && a.application_id.toLowerCase().includes(search.toLowerCase()));
     const matchesCourse = filterCourse === 'all' || a.track_key === filterCourse;
-    return matchesSearch && matchesCourse;
+    const matchesType = filterType === 'all' || a.student_type === filterType;
+    return matchesSearch && matchesCourse && matchesType;
   });
 
   return (
@@ -68,35 +45,39 @@ const AdminStudents: React.FC = () => {
           <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter">Student CRM</h1>
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2">Manage all active and historical enrollments</p>
         </div>
-        <button 
-          onClick={exportCSV}
-          className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 transition-all"
-        >
-          Export CSV Ledger
-        </button>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center bg-[#080808] p-6 rounded-[2rem] border border-white/5">
-        <div className="flex-1 min-w-[240px] relative">
+      {/* Combined Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#080808] p-6 rounded-[2rem] border border-white/5">
+        <div className="relative">
            <input 
              type="text" 
-             placeholder="Search Name, Email or App ID..." 
+             placeholder="Search Identity..." 
              value={search}
              onChange={e => setSearch(e.target.value)}
              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs focus:border-blue-500 outline-none placeholder:text-gray-700 transition-all"
            />
-           <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20">🔍</div>
         </div>
+        
+        <select 
+          value={filterType}
+          onChange={e => setFilterType(e.target.value)}
+          className="bg-[#080808] border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500"
+        >
+          <option value="all">All Students</option>
+          <option value="school">School Students</option>
+          <option value="college">College Students</option>
+        </select>
+
         <select 
           value={filterCourse}
           onChange={e => setFilterCourse(e.target.value)}
           className="bg-[#080808] border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500"
         >
-          <option value="all" className="bg-[#080808] text-white">All Tracks</option>
-          <option value="college_immersion" className="bg-[#080808] text-white">Immersion Track</option>
-          <option value="college_prof" className="bg-[#080808] text-white">Professional Track</option>
-          <option value="school_skill" className="bg-[#080808] text-white">School Skill</option>
-          <option value="school_tuition" className="bg-[#080808] text-white">School Tuition</option>
+          <option value="all">All Tracks</option>
+          {Object.entries(TrackKey).map(([key, val]) => (
+            <option key={val} value={val}>{val.replace(/_/g, ' ')}</option>
+          ))}
         </select>
       </div>
 
@@ -105,8 +86,9 @@ const AdminStudents: React.FC = () => {
           <table className="w-full text-left">
             <thead className="bg-white/[0.03] text-[9px] font-black uppercase tracking-[0.3em] text-gray-500 border-b border-white/5">
               <tr>
+                <th className="px-8 py-6">ID</th>
                 <th className="px-8 py-6">Identity</th>
-                <th className="px-8 py-6">App ID</th>
+                <th className="px-8 py-6">Student Type</th>
                 <th className="px-8 py-6">Program</th>
                 <th className="px-8 py-6">Course Status</th>
                 <th className="px-8 py-6">Payment</th>
@@ -115,33 +97,39 @@ const AdminStudents: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-white/5 text-[11px] font-bold">
               {loading ? (
-                <tr><td colSpan={6} className="px-8 py-20 text-center text-gray-600 uppercase tracking-widest">Accessing Registry...</td></tr>
+                <tr><td colSpan={7} className="px-8 py-20 text-center text-gray-600 uppercase tracking-widest">Accessing Registry...</td></tr>
               ) : filteredApps.map(a => (
                 <tr key={a.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <td className="px-8 py-6 text-blue-500 font-black tracking-widest">{a.application_id || '---'}</td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="text-white">{a.fullName}</span>
                       <span className="text-[9px] text-gray-600 uppercase tracking-widest font-black mt-1">{a.email}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-blue-500 font-black tracking-[0.1em]">{a.application_id || '---'}</td>
                   <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 uppercase text-[9px] tracking-widest">{a.track_key.replace(/_/g, ' ')}</span>
-                      <span className="text-[8px] text-gray-700 uppercase tracking-widest mt-0.5">{a.program_type?.replace(/_/g, ' ') || 'Self-Enroll'}</span>
-                    </div>
+                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${a.student_type === 'college' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-purple-500/10 text-purple-400'}`}>
+                      {a.student_type}
+                    </span>
                   </td>
                   <td className="px-8 py-6">
-                    <select 
-                      value={a.course_status || 'pending'} 
-                      onChange={(e) => handleStatusChange(a.id, e.target.value as CourseStatus)}
-                      className="bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-widest outline-none group-hover:border-blue-500/50 transition-all cursor-pointer text-white"
-                    >
-                      <option value="pending" className="bg-[#080808] text-white">Pending</option>
-                      <option value="ongoing" className="bg-[#080808] text-white">Ongoing</option>
-                      <option value="completed" className="bg-[#080808] text-white">Completed</option>
-                      <option value="dropout" className="bg-[#080808] text-white">Dropout</option>
-                    </select>
+                    <span className="text-gray-400 uppercase text-[9px] tracking-widest">{a.track_key.replace(/_/g, ' ')}</span>
+                  </td>
+                  <td className="px-8 py-6">
+                    {a.student_type === 'college' ? (
+                      <select 
+                        value={a.course_status || 'pending'} 
+                        onChange={(e) => handleStatusChange(a.id, e.target.value as CourseStatus)}
+                        className="bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-widest outline-none group-hover:border-blue-500/50 transition-all cursor-pointer text-white"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="on_going">On Going</option>
+                        <option value="completed">Completed</option>
+                        <option value="drop_out">Drop Out</option>
+                      </select>
+                    ) : (
+                      <span className="text-gray-700 tracking-widest">—</span>
+                    )}
                   </td>
                   <td className="px-8 py-6">
                     <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${a.payment_status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
@@ -162,63 +150,9 @@ const AdminStudents: React.FC = () => {
           </table>
         </div>
       </div>
-
-      {/* Student Profile Modal */}
-      {selectedStudent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-           <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setSelectedStudent(null)} />
-           <div className="relative bg-[#080808] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in duration-300">
-              <div className="flex justify-between items-start mb-8">
-                 <h2 className="text-3xl font-heading font-black text-white uppercase tracking-tighter">Profile Details</h2>
-                 <button onClick={() => setSelectedStudent(null)} className="text-gray-500 hover:text-white">✕</button>
-              </div>
-              
-              <div className="space-y-8">
-                 <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Full Name</p>
-                       <p className="text-white text-lg font-bold">{selectedStudent.fullName}</p>
-                    </div>
-                    <div className="space-y-1">
-                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Email</p>
-                       <p className="text-white text-xs font-bold">{selectedStudent.email}</p>
-                    </div>
-                    <div className="space-y-1">
-                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Phone</p>
-                       <p className="text-white text-xs font-bold">{selectedStudent.phone || 'N/A'}</p>
-                    </div>
-                    <div className="space-y-1">
-                       <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">App ID</p>
-                       <p className="text-blue-500 text-xs font-black uppercase">{selectedStudent.application_id}</p>
-                    </div>
-                 </div>
-
-                 <div className="space-y-1">
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">LinkedIn Profile</p>
-                    <a href={selectedStudent.linkedin} target="_blank" rel="noreferrer" className="text-blue-400 text-xs hover:underline block truncate">
-                       {selectedStudent.linkedin || 'Not Provided'}
-                    </a>
-                 </div>
-
-                 <div className="space-y-1">
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Career Goals</p>
-                    <p className="text-gray-400 text-xs leading-relaxed italic">
-                       "{selectedStudent.careerGoals || 'No statement provided'}"
-                    </p>
-                 </div>
-
-                 <button 
-                   onClick={() => setSelectedStudent(null)}
-                   className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all"
-                 >
-                   Close Quick Look
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
     </div>
   );
 };
 
 export default AdminStudents;
+
