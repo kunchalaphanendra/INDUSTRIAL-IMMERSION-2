@@ -87,6 +87,8 @@ export interface ApplicationRecord extends UserRegistration {
   program_type: ProgramType;
   course_status: CourseStatus;
   payment_status: string;
+  // Added amount_paid to resolve property missing errors in admin components
+  amount_paid: number;
   razorpay_payment_id?: string;
   razorpay_order_id?: string;
   created_at: string;
@@ -115,5 +117,6 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
