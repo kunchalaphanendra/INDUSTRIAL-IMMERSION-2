@@ -24,6 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
   // Test account details
   const TEST_EMAIL = 'test@stjufends.com';
+  const ADMIN_EMAIL = 'admin@stjufends.com';
   const TEST_PASS = 'stjufends2026';
 
   useEffect(() => {
@@ -37,8 +38,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     if (e) e.preventDefault();
     if (!formData.email) return;
 
-    // Check for test account bypass
-    if (formData.email.toLowerCase() === TEST_EMAIL) {
+    const lowerEmail = formData.email.toLowerCase();
+    
+    // Check for test or admin account bypass
+    if (lowerEmail === TEST_EMAIL || lowerEmail === ADMIN_EMAIL) {
       setIsTestMode(true);
       setNeedsVerification(true);
       return;
@@ -58,7 +61,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     setResendSuccess(false);
     
     try {
-      // If resending, we treat it as a sign-in to be safe if signup already "half-created" the user
       const useSignup = isResend ? false : !isLogin;
       const result = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, useSignup);
       
@@ -135,12 +137,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
   const handleTestLogin = () => {
     if (testPassword === TEST_PASS) {
+      const lowerEmail = formData.email.toLowerCase();
+      const isAdmin = lowerEmail === ADMIN_EMAIL;
+      
       const testUser: User = {
-        id: 'test-user-id',
-        email: TEST_EMAIL,
-        fullName: 'Test User (Internal)',
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=test`
+        id: isAdmin ? 'admin-bypass-id' : 'test-user-id',
+        email: lowerEmail,
+        fullName: isAdmin ? 'System Administrator' : 'Test User (Internal)',
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${isAdmin ? 'admin' : 'test'}`,
+        isAdmin: isAdmin
       };
+      
       localStorage.setItem('ii_token', 'test-token-bypass');
       localStorage.setItem('ii_user', JSON.stringify(testUser));
       onSuccess(testUser);
@@ -178,7 +185,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             {isTestMode ? 'Private Access' : 'Security Access'}
           </h2>
           <p className="text-gray-400 mb-8 text-[10px] uppercase tracking-[0.2em]">
-            {isTestMode ? 'Bypass enabled for test account' : `Authenticating ${formData.email}`}
+            {isTestMode ? 'Bypass enabled for sensitive accounts' : `Authenticating ${formData.email}`}
           </p>
 
           {error && !isAlreadyRegistered && (
@@ -370,8 +377,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Professional Email</label>
                 <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all" />
-                {formData.email.toLowerCase() === TEST_EMAIL && (
-                  <p className="text-[8px] text-blue-500 font-black uppercase tracking-widest mt-2 animate-pulse">Test Account Detected: Password mode activated</p>
+                {(formData.email.toLowerCase() === TEST_EMAIL || formData.email.toLowerCase() === ADMIN_EMAIL) && (
+                  <p className="text-[8px] text-blue-500 font-black uppercase tracking-widest mt-2 animate-pulse">Special Account Detected: Private Key mode activated</p>
                 )}
               </div>
 
