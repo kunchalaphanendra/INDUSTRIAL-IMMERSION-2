@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ApplicationRecord } from '../types';
 import { apiService } from '../services/api';
@@ -18,7 +17,7 @@ const AdminPayments: React.FC = () => {
     setLoading(false);
   };
 
-  const totalRevenue = payments.reduce((sum, a) => sum + (a.track_key.includes('college') ? 14999 : 999), 0);
+  const totalRevenue = payments.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-6 duration-500">
@@ -66,7 +65,7 @@ const AdminPayments: React.FC = () => {
                     </code>
                   </td>
                   <td className="px-8 py-6 text-green-500">
-                    ₹{(p.track_key.includes('college') ? 14999 : 999).toLocaleString()}
+                    ₹{(Number(p.amount_paid) || 0).toLocaleString()}
                   </td>
                   <td className="px-8 py-6 text-[9px] uppercase text-gray-400 tracking-widest">
                     {p.track_key.replace(/_/g, ' ')}
