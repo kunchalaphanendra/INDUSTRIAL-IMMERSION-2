@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { TrackKey, TrackData } from '../types';
+import ReviewSection from './ReviewSection';
 
 interface TrackDetailModalProps {
   trackKey: TrackKey;
@@ -39,7 +40,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar space-y-16">
+        <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar space-y-20">
           
           {/* Top Info Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -75,8 +76,13 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
             </div>
           </div>
 
+          {/* New Review Section Integration */}
+          <div className="pt-12 border-t border-white/5">
+            <ReviewSection courseKey={trackKey} />
+          </div>
+
           {/* Roadmap Section */}
-          <div>
+          <div className="pt-12 border-t border-white/5">
             <h3 className="text-xl font-heading font-bold text-white mb-10 uppercase tracking-tight">Execution Roadmap</h3>
             <div className="space-y-6">
               {[
@@ -104,47 +110,6 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Bottom Grid: Evaluation & Proof */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-12 border-t border-white/5">
-            <div>
-              <h3 className="text-xl font-heading font-bold mb-8 uppercase tracking-tight">Evaluation Criteria</h3>
-              <ul className="space-y-4">
-                {[
-                  '90% Attendance Requirement', 
-                  'Execution Quality Index', 
-                  'Timely Assignment Submission', 
-                  'Professional Conduct'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
-                    <span className="w-1.5 h-1.5 bg-red-500/50 rounded-full" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="p-8 bg-gradient-to-br from-[#080808] to-[#0a0a0a] rounded-[2rem] border border-blue-500/10 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h3 className="text-xl font-heading font-bold mb-6 uppercase tracking-tight text-blue-400">Professional Proof</h3>
-              <ul className="space-y-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
-                <li className="flex items-start gap-3">
-                  <span className="text-blue-500">•</span> 
-                  {isImmersion ? 'Joint Experience Letter with Partner Brand' : 'Unique Certificate ID for Verification'}
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-blue-500">•</span> 
-                  {isImmersion ? 'Performance Recommendation from Industry Lead' : 'QR-based Online Professional Profile'}
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-blue-500">•</span> Lifetime Digital Validity
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-blue-500">•</span> Issued by Registered Tech Entity
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -175,3 +140,4 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 };
 
 export default TrackDetailModal;
+
