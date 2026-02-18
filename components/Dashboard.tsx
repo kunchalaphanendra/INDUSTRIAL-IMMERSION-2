@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { User, EnrollmentRecord, TrackKey } from '../types';
 import { apiService } from '../services/api';
 import { TRACKS } from '../constants';
+import ReviewForm from './ReviewForm';
 
 interface DashboardProps {
   user: User;
@@ -49,14 +51,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
             </div>
           </div>
           
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
+            {user.isAdmin && (
+              <a href="/admin/reviews" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-admin')); }} className="px-6 py-3 bg-blue-600/10 border border-blue-500/20 text-blue-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Admin Control</a>
+            )}
             <button onClick={onBackToLanding} className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10 uppercase tracking-widest text-[10px]">Home</button>
             <button onClick={onLogout} className="px-6 py-3 bg-red-600/5 hover:bg-red-600/10 text-red-500 font-bold rounded-xl transition-all border border-red-500/10 uppercase tracking-widest text-[10px]">Logout</button>
           </div>
         </div>
 
         {/* Active Plans Feed */}
-        <div className="space-y-8">
+        <div className="space-y-12">
           <div className="flex items-center justify-between px-4">
              <div className="flex items-center gap-3">
                <h2 className="text-sm font-heading font-black tracking-[0.3em] uppercase text-gray-400">Active Subscriptions</h2>
@@ -77,45 +82,45 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
               <button onClick={onBackToLanding} className="px-8 py-4 bg-blue-600 text-white font-black rounded-xl shadow-xl uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all">Browse Programs</button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-12">
               {enrollments.map(record => {
                 const track = TRACKS[record.track_key];
                 return (
-                  <div key={record.id} className="bg-[#080808] p-10 rounded-[2.5rem] border border-white/5 hover:border-blue-500/20 transition-all group relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-[2px] h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
-                    
-                    <div className="space-y-6">
-                      <div className="flex flex-wrap items-center gap-4">
-                        <span className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg border border-green-500/20">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                          Active Plan
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">
-                          ID: {record.id.slice(-8).toUpperCase()}
-                        </span>
-                      </div>
+                  <div key={record.id} className="space-y-6 animate-in slide-in-from-bottom-4">
+                    <div className="bg-[#080808] p-10 rounded-[2.5rem] border border-white/5 hover:border-blue-500/20 transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-[2px] h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
+                      
+                      <div className="space-y-6">
+                        <div className="flex flex-wrap items-center gap-4">
+                          <span className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg border border-green-500/20">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            Active Plan
+                          </span>
+                        </div>
 
-                      <div>
-                        <h3 className="text-3xl md:text-5xl font-heading font-black mb-4 uppercase tracking-tighter text-white group-hover:text-blue-500 transition-colors">
-                          {track?.title || record.track_key}
-                        </h3>
-                        
-                        <div className="flex flex-wrap gap-x-10 gap-y-4 pt-6 border-t border-white/[0.03]">
-                           <div className="flex items-center gap-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
-                             <svg className="w-4 h-4 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                             Registered: {new Date(record.created_at).toLocaleDateString()}
-                           </div>
-                           <div className="flex items-center gap-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
-                             <svg className="w-4 h-4 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                             Status: Operational
-                           </div>
-                           <div className="flex items-center gap-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
-                             <svg className="w-4 h-4 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                             Access: Full
-                           </div>
+                        <div>
+                          <h3 className="text-3xl md:text-5xl font-heading font-black mb-4 uppercase tracking-tighter text-white group-hover:text-blue-500 transition-colors">
+                            {track?.title || record.track_key}
+                          </h3>
+                          
+                          <div className="flex flex-wrap gap-x-10 gap-y-4 pt-6 border-t border-white/[0.03]">
+                             <div className="flex items-center gap-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
+                               Registered: {new Date(record.created_at).toLocaleDateString()}
+                             </div>
+                             <div className="flex items-center gap-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
+                               Status: Operational
+                             </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Review Form below each plan */}
+                    <ReviewForm 
+                      user={user} 
+                      courseKey={record.track_key} 
+                      courseTitle={track?.title || record.track_key} 
+                    />
                   </div>
                 )
               })}
@@ -128,3 +133,4 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
+
