@@ -70,10 +70,8 @@ export const apiService = {
 
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
-      // 1. Generate the unique STJ ID
       const appId = await generateApplicationId();
       
-      // 2. Prepare the payload
       const payload = {
         application_id: appId,
         full_name: data.fullName,
@@ -87,22 +85,18 @@ export const apiService = {
         student_type: data.studentType || 'college',
         payment_status: 'completed',
         amount_paid: Number(data.amountPaid) || 0,
-        // Rules: College gets pending status, School gets NULL
         course_status: data.studentType === 'college' ? 'pending' : null,
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
       };
 
+      // Explicitly insert without requesting data back to minimize PostgREST complexity
       const { error } = await supabase.from('applications').insert(payload);
       
       if (error) {
-        console.error("Supabase Insert Error:", error);
-        // Specifically catch the "column missing" error to warn the user
-        if (error.message.includes("amount_paid") || error.message.includes("column")) {
-          throw new Error("DATABASE_SCHEMA_ERROR: The 'amount_paid' or other new columns are missing in Supabase. Please run the SQL migration provided in the instructions.");
-        }
-        throw error;
+        console.error("Database Insert Error:", error);
+        return { success: false, error: error.message };
       }
       
       return { success: true };
@@ -135,10 +129,10 @@ export const apiService = {
   async fetchAdminStats() {
     try {
       const { data: apps } = await supabase.from('applications').select('*');
-      const { count: pendingReviews } = await supabase.from('reviews').select('id', { count: 'exact' }).eq('is_approved', false);
+      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
+      const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
       
-      // Calculate real distribution
       const counts: Record<string, number> = {
         college_immersion: 0,
         college_prof: 0,
@@ -157,7 +151,7 @@ export const apiService = {
         totalApplications: apps?.length || 0,
         totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
         totalRevenue,
-        pendingReviews: pendingReviews || 0,
+        pendingReviews,
         distribution,
         totalUsers: new Set(apps?.map(a => a.email)).size || 0
       };
@@ -189,8 +183,9 @@ export const apiService = {
   },
 
   async fetchUserReview(userId: string, courseKey: string) {
-    const { data } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).maybeSingle();
-    return data;
+    // Avoid maybeSingle()
+    const { data } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).limit(1);
+    return data && data.length > 0 ? data[0] : null;
   },
 
   async upsertReview(review: any) {
@@ -209,6 +204,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
