@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { EnrollmentState, TrackKey, UserRegistration } from '../types';
+import { EnrollmentState, TrackKey, UserRegistration, InstitutionType } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 
@@ -9,16 +10,12 @@ interface CheckoutModalProps {
   onComplete?: () => void;
 }
 
-// Extend Window interface for Razorpay
 declare global {
   interface Window {
     Razorpay: any;
   }
 }
 
-/**
- * Robust helper to fetch environment variables from common sources.
- */
 const getEnvVar = (key: string): string => {
   try {
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
@@ -56,7 +53,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   if (!enrollment.track) return null;
   const trackData = TRACKS[enrollment.track];
   
-  // Robust Key Retrieval
   const razorpayKey = getEnvVar('VITE_RAZORPAY_KEY');
   const isTestMode = razorpayKey.startsWith('rzp_test_');
   const isKeyMissing = !razorpayKey;
@@ -91,9 +87,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     setIsProcessing(true);
     setErrorMessage(null);
 
+    const programType = enrollment.track?.includes('school') ? 'school_program' : 'college_program';
+
     const options = {
       key: razorpayKey,
-      amount: trackData.price * 100, // Amount is in paise
+      amount: trackData.price * 100,
       currency: "INR",
       name: "STJUFENDS",
       description: `${trackData.title} Activation`,
@@ -103,6 +101,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
         const submissionResult = await apiService.submitApplication({
           ...formData,
           track: enrollment.track,
+          programType,
           paymentId: response.razorpay_payment_id,
           orderId: response.razorpay_order_id,
           signature: response.razorpay_signature
@@ -146,7 +145,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
       
       <div className="relative bg-[#080808] border border-white/10 w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[95vh] neon-border">
-        {/* Header */}
         <div className="p-8 border-b border-white/5 bg-white/[0.01] flex justify-between items-center">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
@@ -173,7 +171,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
           {errorMessage && (
             <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-top-4">
@@ -228,7 +225,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
               <div className="p-8 bg-blue-600/5 border border-blue-500/20 rounded-3xl relative overflow-hidden">
                 <p className="text-[10px] text-gray-500 font-black uppercase mb-2 tracking-widest">STJUFENDS Enrollment</p>
                 <p className="font-heading font-bold text-white text-2xl mb-6">{trackData.title}</p>
-                
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/5">
                   <div>
                     <span className="text-gray-600 text-[9px] uppercase font-bold tracking-widest block mb-1">Full Name</span>
@@ -247,7 +243,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <span className="text-white text-sm font-medium">{formData.currentStatus}</span>
                   </div>
                 </div>
-
                 <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/5">
                    <div className="flex flex-col">
                       <span className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Total Fee</span>
@@ -255,7 +250,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                    </div>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <button onClick={() => setStep(3)} className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-blue-500/30 text-lg uppercase tracking-widest flex items-center justify-center gap-3">
                   Confirm & Pay
@@ -276,7 +270,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                <div>
                   <h3 className="text-2xl font-bold mb-3 text-white">{isTestMode ? 'Test Checkout' : 'Secure Checkout'}</h3>
                   <p className="text-gray-500 text-sm max-w-xs mx-auto">
-                    STJUFENDS uses <strong>Razorpay</strong> for encrypted {isTestMode ? 'test' : 'live'} payment processing.
+                    STJUFENDS uses <strong>Razorpay</strong> for encrypted payment processing.
                   </p>
                </div>
                <button onClick={handlePayment} disabled={isProcessing} className={`w-full py-6 rounded-2xl font-black text-lg flex items-center justify-center gap-4 transition-all ${isProcessing ? 'bg-blue-600/20 cursor-not-allowed text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl'}`}>
@@ -302,3 +296,4 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
