@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -10,6 +11,8 @@ import CheckoutModal from './components/CheckoutModal';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import TrackDetailModal from './components/TrackDetailModal';
+import Testimonials from './components/Testimonials';
+import AdminReviews from './components/AdminReviews';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
@@ -61,7 +64,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
@@ -83,6 +86,11 @@ const App: React.FC = () => {
       setIsInitializing(false);
     };
     recoverSession();
+
+    // Listen for custom admin navigation event from Dashboard
+    const handleAdminNav = () => setView('admin');
+    window.addEventListener('nav-admin', handleAdminNav);
+    return () => window.removeEventListener('nav-admin', handleAdminNav);
   }, []);
 
   const handleTrackSelect = (track: TrackKey) => {
@@ -122,6 +130,23 @@ const App: React.FC = () => {
     );
   }
 
+  if (view === 'admin' && user?.isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#030303]">
+        <Navbar 
+          user={user} 
+          onLoginClick={() => setShowAuthModal(true)} 
+          onDashboardClick={() => setView('dashboard')} 
+        />
+        <AdminReviews />
+        <div className="max-w-7xl mx-auto px-4 pb-20 text-center">
+           <button onClick={() => setView('dashboard')} className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 hover:text-white uppercase tracking-widest text-[10px] font-black transition-all">Exit Management Suite</button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (view === 'dashboard' && user) {
     return (
       <div className="min-h-screen bg-[#030303]">
@@ -151,6 +176,7 @@ const App: React.FC = () => {
         <Hero />
         <PartnersSection />
         <Features />
+        <Testimonials />
         <ProgramSelector 
           selectedTrack={selectedTrack} 
           onSelect={handleTrackSelect}
