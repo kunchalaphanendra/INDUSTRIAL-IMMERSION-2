@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Review, TrackKey } from '../types';
 import { apiService } from '../services/api';
@@ -18,6 +17,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
 
   useEffect(() => {
     const checkExisting = async () => {
+      // Bypass account check (test-user-id is hardcoded in AuthModal test bypass)
+      if (user.id === 'test-user-id') return;
+      
       const review = await apiService.fetchUserReview(user.id, courseKey);
       if (review) {
         setExistingReview(review);
@@ -30,6 +32,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submissions from the manual bypass account
+    if (user.id === 'test-user-id') {
+      setMessage({ 
+        type: 'error', 
+        text: 'TEST ACCOUNT RESTRICTION: You must login with a real email (OTP) to save reviews to the industrial database.' 
+      });
+      return;
+    }
+
     if (reviewText.length < 10) {
       setMessage({ type: 'error', text: 'Please provide a more detailed review (min 10 chars).' });
       return;
@@ -51,7 +63,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
     if (result.success) {
       setMessage({ type: 'success', text: 'Review submitted for moderation. Thank you!' });
     } else {
-      setMessage({ type: 'error', text: result.error || 'Failed to submit review.' });
+      // Map RLS error to something more user friendly
+      const errorText = result.error?.includes('row-level security') 
+        ? 'AUTHENTICATION SYNC ERROR: Database refused entry. Try logging out and in again with a fresh code.'
+        : result.error || 'Failed to submit review.';
+        
+      setMessage({ type: 'error', text: errorText });
     }
     setIsSubmitting(false);
   };
@@ -66,7 +83,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
       <h3 className="text-xl font-heading font-bold mb-6 uppercase text-white">Reviewing: {courseTitle}</h3>
       
       {message && (
-        <div className={`mb-6 p-4 rounded-xl text-[10px] font-bold uppercase tracking-widest ${message.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+        <div className={`mb-6 p-4 rounded-xl text-[10px] font-bold uppercase tracking-widest leading-relaxed animate-in fade-in slide-in-from-top-2 ${message.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
           {message.text}
         </div>
       )}
