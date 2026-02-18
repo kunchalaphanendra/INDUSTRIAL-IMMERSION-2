@@ -11,6 +11,10 @@ import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import TrackDetailModal from './components/TrackDetailModal';
 import Testimonials from './components/Testimonials';
+import AdminLayout from './components/AdminLayout';
+import AdminDashboardView from './components/AdminDashboardView';
+import AdminStudents from './components/AdminStudents';
+import AdminPayments from './components/AdminPayments';
 import AdminReviews from './components/AdminReviews';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
@@ -64,6 +68,7 @@ const GetStarted: React.FC = () => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
+  const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews'>('overview');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
@@ -86,8 +91,10 @@ const App: React.FC = () => {
     };
     recoverSession();
 
-    // Listen for custom admin navigation event from Dashboard
-    const handleAdminNav = () => setView('admin');
+    const handleAdminNav = () => {
+      setView('admin');
+      setAdminSubView('overview');
+    };
     window.addEventListener('nav-admin', handleAdminNav);
     return () => window.removeEventListener('nav-admin', handleAdminNav);
   }, []);
@@ -116,11 +123,6 @@ const App: React.FC = () => {
     setView('landing');
   };
 
-  const handleEnrollmentComplete = () => {
-    setEnrollment(null);
-    setView('dashboard');
-  };
-
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -129,22 +131,36 @@ const App: React.FC = () => {
     );
   }
 
+  const renderAdminContent = () => {
+    switch (adminSubView) {
+      case 'overview': return <AdminDashboardView />;
+      case 'students': return <AdminStudents />;
+      case 'payments': return <AdminPayments />;
+      case 'reviews': return <AdminReviews />;
+      default: return <AdminDashboardView />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#030303] selection:bg-blue-500/30">
-      <Navbar 
-        user={user} 
-        onLoginClick={() => setShowAuthModal(true)} 
-        onDashboardClick={() => setView('dashboard')} 
-        onAdminClick={() => setView('admin')}
-      />
+      {view !== 'admin' && (
+        <Navbar 
+          user={user} 
+          onLoginClick={() => setShowAuthModal(true)} 
+          onDashboardClick={() => setView('dashboard')} 
+          onAdminClick={() => { setView('admin'); setAdminSubView('overview'); }}
+        />
+      )}
+      
       <main>
         {view === 'admin' && user?.isAdmin ? (
-          <>
-            <AdminReviews />
-            <div className="max-w-7xl mx-auto px-4 pb-20 text-center">
-              <button onClick={() => setView('dashboard')} className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 hover:text-white uppercase tracking-widest text-[10px] font-black transition-all">Exit Management Suite</button>
-            </div>
-          </>
+          <AdminLayout 
+            activeView={adminSubView} 
+            onViewChange={setAdminSubView} 
+            onExit={() => setView('dashboard')}
+          >
+            {renderAdminContent()}
+          </AdminLayout>
         ) : view === 'dashboard' && user ? (
           <Dashboard 
             user={user} 
@@ -167,7 +183,8 @@ const App: React.FC = () => {
           </>
         )}
       </main>
-      <Footer />
+
+      {view !== 'admin' && <Footer />}
 
       {detailTrack && (
         <TrackDetailModal 
@@ -182,7 +199,7 @@ const App: React.FC = () => {
         <CheckoutModal 
           enrollment={enrollment} 
           onClose={() => setEnrollment(null)} 
-          onComplete={handleEnrollmentComplete}
+          onComplete={() => setView('dashboard')}
         />
       )}
 
@@ -197,4 +214,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
