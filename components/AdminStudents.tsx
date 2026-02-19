@@ -8,10 +8,10 @@ const AdminStudents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   const [filters, setFilters] = useState<AdminFilterOptions>({
-    studentType: 'all',
-    program: 'all',
-    courseStatus: 'all',
-    paymentStatus: 'all',
+    studentType: 'ALL',
+    program: 'ALL',
+    courseStatus: 'ALL',
+    paymentStatus: 'ALL',
     search: ''
   });
 
@@ -30,8 +30,14 @@ const AdminStudents: React.FC = () => {
     const res = await apiService.updateApplicationStatus(id, status);
     if (res.success) {
       setApps(prev => prev.map(a => a.id === id ? { ...a, course_status: status } : a));
+    } else {
+      console.error("Status update failed", res.error);
+      alert("Failed to update status");
     }
   };
+
+  const filterSelectClass = "w-full bg-[#0B0F1A] border border-white/10 text-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-[#111827] appearance-none text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all";
+  const tableSelectClass = "bg-[#0B0F1A] border border-white/10 text-white rounded-lg px-3 py-1 text-[9px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500 hover:bg-[#111827] cursor-pointer transition-all";
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-6 duration-500 pb-20">
@@ -52,63 +58,71 @@ const AdminStudents: React.FC = () => {
                placeholder="Name, Email, ID..." 
                value={filters.search}
                onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] focus:border-blue-500 outline-none placeholder:text-gray-700 transition-all"
+               className="w-full bg-[#0B0F1A] border border-white/10 rounded-xl px-4 py-2 text-white text-[10px] focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-[#111827] transition-all placeholder:text-gray-700"
              />
           </div>
           
           <div>
             <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Type</label>
-            <select 
-              value={filters.studentType}
-              onChange={e => setFilters(prev => ({ ...prev, studentType: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500 appearance-none"
-            >
-              <option value="all">All Tiers</option>
-              <option value="school">School</option>
-              <option value="college">College</option>
-            </select>
+            <div className="relative">
+              <select 
+                value={filters.studentType}
+                onChange={e => setFilters(prev => ({ ...prev, studentType: e.target.value }))}
+                className={filterSelectClass}
+              >
+                <option value="ALL" className="bg-[#0B0F1A] text-white">All Tiers</option>
+                <option value="SCHOOL" className="bg-[#0B0F1A] text-white">School</option>
+                <option value="COLLEGE" className="bg-[#0B0F1A] text-white">College</option>
+              </select>
+            </div>
           </div>
 
           <div>
             <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Program Track</label>
-            <select 
-              value={filters.program}
-              onChange={e => setFilters(prev => ({ ...prev, program: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500 appearance-none"
-            >
-              <option value="all">All Tracks</option>
-              {Object.entries(TrackKey).map(([key, val]) => (
-                <option key={val} value={val}>{val.replace(/_/g, ' ')}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select 
+                value={filters.program}
+                onChange={e => setFilters(prev => ({ ...prev, program: e.target.value }))}
+                className={filterSelectClass}
+              >
+                <option value="ALL" className="bg-[#0B0F1A] text-white">All Tracks</option>
+                {Object.entries(TrackKey).map(([key, val]) => (
+                  <option key={val} value={val} className="bg-[#0B0F1A] text-white">{val.replace(/_/g, ' ').toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
             <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Course Progress</label>
-            <select 
-              value={filters.courseStatus}
-              onChange={e => setFilters(prev => ({ ...prev, courseStatus: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500 appearance-none"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="on_going">Ongoing</option>
-              <option value="completed">Completed</option>
-              <option value="drop_out">Dropout</option>
-            </select>
+            <div className="relative">
+              <select 
+                value={filters.courseStatus}
+                onChange={e => setFilters(prev => ({ ...prev, courseStatus: e.target.value }))}
+                className={filterSelectClass}
+              >
+                <option value="ALL" className="bg-[#0B0F1A] text-white">All Status</option>
+                <option value="PENDING" className="bg-[#0B0F1A] text-white">Pending</option>
+                <option value="ONGOING" className="bg-[#0B0F1A] text-white">Ongoing</option>
+                <option value="COMPLETED" className="bg-[#0B0F1A] text-white">Completed</option>
+                <option value="DROPOUT" className="bg-[#0B0F1A] text-white">Dropout</option>
+              </select>
+            </div>
           </div>
 
           <div>
             <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Payment</label>
-            <select 
-              value={filters.paymentStatus}
-              onChange={e => setFilters(prev => ({ ...prev, paymentStatus: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500 appearance-none"
-            >
-              <option value="all">All Payments</option>
-              <option value="completed">Paid</option>
-              <option value="pending">Pending</option>
-            </select>
+            <div className="relative">
+              <select 
+                value={filters.paymentStatus}
+                onChange={e => setFilters(prev => ({ ...prev, paymentStatus: e.target.value }))}
+                className={filterSelectClass}
+              >
+                <option value="ALL" className="bg-[#0B0F1A] text-white">All Payments</option>
+                <option value="completed" className="bg-[#0B0F1A] text-white">Paid</option>
+                <option value="pending" className="bg-[#0B0F1A] text-white">Pending</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -147,7 +161,7 @@ const AdminStudents: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${a.student_type === 'college' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'}`}>
+                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${a.student_type === 'COLLEGE' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'}`}>
                       {a.student_type}
                     </span>
                   </td>
@@ -156,14 +170,14 @@ const AdminStudents: React.FC = () => {
                   </td>
                   <td className="px-8 py-6">
                     <select 
-                      value={a.course_status || 'pending'} 
+                      value={a.course_status || 'PENDING'} 
                       onChange={(e) => handleStatusChange(a.id, e.target.value as CourseStatus)}
-                      className="bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-widest outline-none group-hover:border-blue-500/50 transition-all cursor-pointer text-white"
+                      className={tableSelectClass}
                     >
-                      <option value="pending">Pending</option>
-                      <option value="on_going">Ongoing</option>
-                      <option value="completed">Completed</option>
-                      <option value="drop_out">Dropout</option>
+                      <option value="PENDING" className="bg-[#0B0F1A] text-white">Pending</option>
+                      <option value="ONGOING" className="bg-[#0B0F1A] text-white">Ongoing</option>
+                      <option value="COMPLETED" className="bg-[#0B0F1A] text-white">Completed</option>
+                      <option value="DROPOUT" className="bg-[#0B0F1A] text-white">Dropout</option>
                     </select>
                   </td>
                   <td className="px-8 py-6">
@@ -192,5 +206,6 @@ const AdminStudents: React.FC = () => {
 };
 
 export default AdminStudents;
+
 
 
