@@ -32,8 +32,7 @@ export const apiService = {
     const { data, error } = await supabase
       .from('institutions')
       .select('*')
-      .order('is_verified', { ascending: true }) // unverified first
-      .order('name');
+      .order('created_at', { ascending: false });
     
     if (error) return [];
     return data || [];
@@ -56,6 +55,14 @@ export const apiService = {
     
     if (error) return { id: null, error: error.message };
     return { id: data.id, error: undefined };
+  },
+
+  async adminAddInstitution(name: string, type: StudentType): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase
+      .from('institutions')
+      .insert({ name, type, is_verified: true });
+    
+    return { success: !error, error: error?.message };
   },
 
   async checkUserExists(email: string): Promise<boolean> {
@@ -151,9 +158,6 @@ export const apiService = {
       const appId = await generateApplicationId();
       let finalInstitutionId = data.institution_id;
 
-      // Logic: If user typed a new institution, it was already handled or we handle it here
-      // Based on the user request, if it's "other", we might need to create it here or it was passed
-      
       const payload = {
         application_id: appId,
         full_name: data.fullName,
@@ -383,6 +387,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
