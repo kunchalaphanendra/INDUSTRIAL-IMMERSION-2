@@ -84,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
           </div>
         </div>
 
-        {/* Task 2: Student Identity Card UI */}
+        {/* Student Identity Card UI */}
         {!loading && enrollments.length > 0 && (
           <div className="mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
             <div className="bg-[#0a0a0a] border border-blue-500/20 rounded-[2.5rem] p-10 relative overflow-hidden shadow-[0_0_40px_rgba(37,99,235,0.05)]">
@@ -121,6 +121,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
                   <div>
                     <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Student Name</p>
                     <p className="text-lg font-bold text-gray-200 uppercase tracking-wider">{enrollments[0].fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Institution</p>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">{enrollments[0].institutions?.name || 'Not assigned'}</p>
                   </div>
                 </div>
 
@@ -198,7 +202,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
                              </div>
                              <div className="space-y-1">
                                <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Course Progress</p>
-                               {/* Fix: use course_progress instead of course_status which was renamed in ApplicationRecord interface */}
                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{record.course_progress}</p>
                              </div>
                              <div className="space-y-1">
@@ -228,4 +231,5 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
+
 
