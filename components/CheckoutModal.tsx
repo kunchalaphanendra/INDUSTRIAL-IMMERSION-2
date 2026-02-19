@@ -37,7 +37,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     phone: '',
     currentStatus: loggedInUser?.studentType || 'Student',
     careerGoals: '',
-    studentType: loggedInUser?.studentType || 'college'
+    // Fix: Updated default studentType to uppercase 'COLLEGE' to match StudentType definition
+    studentType: loggedInUser?.studentType || 'COLLEGE'
   });
 
   if (!enrollment.track || !TRACKS[enrollment.track]) {
@@ -165,14 +166,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Type *</label>
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => setFormData({...formData, studentType: 'school'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'school' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        // Fix: Updated studentType to uppercase 'SCHOOL' to match StudentType definition
+                        onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
                         School
                       </button>
                       <button 
-                        onClick={() => setFormData({...formData, studentType: 'college'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'college' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        // Fix: Updated studentType to uppercase 'COLLEGE' to match StudentType definition
+                        onClick={() => setFormData({...formData, studentType: 'COLLEGE'})}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
                         College
                       </button>
@@ -241,6 +244,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
