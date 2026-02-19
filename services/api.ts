@@ -1,5 +1,5 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType } from '../types';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType, Institution } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 // Import admin credentials for internal verification
@@ -15,6 +15,49 @@ export interface AdminFilterOptions {
 }
 
 export const apiService = {
+  // --- Institution Hybrid Logic ---
+  async fetchVerifiedInstitutions(type: StudentType): Promise<Institution[]> {
+    const { data, error } = await supabase
+      .from('institutions')
+      .select('*')
+      .eq('is_verified', true)
+      .eq('type', type)
+      .order('name');
+    
+    if (error) return [];
+    return data || [];
+  },
+
+  async fetchAllInstitutionsForAdmin(): Promise<Institution[]> {
+    const { data, error } = await supabase
+      .from('institutions')
+      .select('*')
+      .order('is_verified', { ascending: true }) // unverified first
+      .order('name');
+    
+    if (error) return [];
+    return data || [];
+  },
+
+  async approveInstitution(id: string) {
+    const { error } = await supabase
+      .from('institutions')
+      .update({ is_verified: true })
+      .eq('id', id);
+    return { success: !error, error: error?.message };
+  },
+
+  async createInstitution(name: string, type: StudentType): Promise<{ id: string | null; error?: string }> {
+    const { data, error } = await supabase
+      .from('institutions')
+      .insert({ name, type, is_verified: false })
+      .select('id')
+      .single();
+    
+    if (error) return { id: null, error: error.message };
+    return { id: data.id, error: undefined };
+  },
+
   async checkUserExists(email: string): Promise<boolean> {
     const { data, error } = await supabase
       .from('applications')
@@ -106,12 +149,18 @@ export const apiService = {
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
       const appId = await generateApplicationId();
+      let finalInstitutionId = data.institution_id;
+
+      // Logic: If user typed a new institution, it was already handled or we handle it here
+      // Based on the user request, if it's "other", we might need to create it here or it was passed
+      
       const payload = {
         application_id: appId,
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
-        institution_name: data.institutionName,
+        institution_name: data.institutionName, // Legacy/Display name
+        institution_id: finalInstitutionId,    // Proper foreign key
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
@@ -135,7 +184,7 @@ export const apiService = {
 
   async fetchAdminApplications(filters?: AdminFilterOptions): Promise<ApplicationRecord[]> {
     try {
-      let query = supabase.from('applications').select('*');
+      let query = supabase.from('applications').select('*, institutions(name)');
       
       if (filters) {
         if (filters.studentType && filters.studentType !== 'ALL') {
@@ -174,7 +223,7 @@ export const apiService = {
 
   async fetchApplicationById(id: string): Promise<ApplicationRecord | null> {
     try {
-      const { data, error } = await supabase.from('applications').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('applications').select('*, institutions(name)').eq('id', id).single();
       if (error || !data) return null;
       return {
         ...data,
@@ -206,8 +255,10 @@ export const apiService = {
     try {
       const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_progress, institution_name');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('review_status', 'pending');
+      const { data: institutions } = await supabase.from('institutions').select('id').eq('is_verified', false);
       
       const pendingReviews = reviews?.length || 0;
+      const pendingInstitutions = institutions?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
       
       const schoolCount = apps?.filter(a => a.student_type?.toUpperCase() === 'SCHOOL').length || 0;
@@ -238,6 +289,7 @@ export const apiService = {
         totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
         totalRevenue,
         pendingReviews,
+        pendingInstitutions,
         schoolCount,
         collegeCount,
         completedCoursesCount,
@@ -258,7 +310,6 @@ export const apiService = {
   },
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
-    // PUBLIC WEBSITE: ONLY fetch approved reviews
     let q = supabase.from('reviews').select('*').eq('review_status', 'approved');
     if (courseKey) q = q.eq('course', courseKey);
     const { data } = await q.order('created_at', { ascending: false });
@@ -266,7 +317,6 @@ export const apiService = {
   },
 
   async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
-    // ADMIN PANEL: Fetch ALL reviews for moderation list
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -305,7 +355,6 @@ export const apiService = {
   },
 
   async deleteReview(reviewId: string) {
-     // Maintained for backward compatibility but using rejectReview is preferred
      return this.rejectReview(reviewId);
   },
 
@@ -315,7 +364,6 @@ export const apiService = {
   },
 
   async upsertReview(review: any) {
-    // Whenever a user updates their review, reset status to 'pending'
     const { error } = await supabase.from('reviews').upsert({
       ...review,
       review_status: 'pending' 
@@ -324,7 +372,7 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<ApplicationRecord[]> {
-    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
+    const { data } = await supabase.from('applications').select('*, institutions(name)').eq('email', email).order('created_at', { ascending: false });
     return (data || []).map(item => ({
       ...item,
       fullName: item.full_name,
@@ -335,6 +383,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
