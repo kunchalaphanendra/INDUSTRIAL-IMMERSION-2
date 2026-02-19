@@ -10,6 +10,7 @@ export interface AdminFilterOptions {
   program?: string;
   courseStatus?: string;
   paymentStatus?: string;
+  institution?: string; // New filter
   search?: string;
 }
 
@@ -111,6 +112,7 @@ export const apiService = {
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
+        institution_name: data.institutionName, // STEP 2 Implementation
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
@@ -137,7 +139,6 @@ export const apiService = {
       let query = supabase.from('applications').select('*');
       
       if (filters) {
-        // Fix: Converting filter values to lowercase to match database storage root cause
         if (filters.studentType && filters.studentType !== 'ALL') {
           query = query.eq('student_type', filters.studentType.toLowerCase());
         }
@@ -150,9 +151,12 @@ export const apiService = {
         if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
           query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
         }
+        if (filters.institution && filters.institution !== 'ALL') {
+          query = query.eq('institution_name', filters.institution);
+        }
         if (filters.search) {
           const s = `%${filters.search}%`;
-          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s}`);
+          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s},institution_name.ilike.${s}`);
         }
       }
 
@@ -161,6 +165,7 @@ export const apiService = {
       return (data || []).map(item => ({
         ...item,
         fullName: item.full_name,
+        institutionName: item.institution_name,
         track_key: item.track_key as TrackKey,
         student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
         course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
@@ -175,6 +180,7 @@ export const apiService = {
       return {
         ...data,
         fullName: data.full_name,
+        institutionName: data.institution_name,
         track_key: data.track_key as TrackKey,
         student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
         course_status: (data.course_status?.toUpperCase() || 'PENDING') as CourseStatus
@@ -191,7 +197,7 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_status');
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_status, institution_name');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
       
       const pendingReviews = reviews?.length || 0;
@@ -201,6 +207,16 @@ export const apiService = {
       const collegeCount = apps?.filter(a => a.student_type?.toUpperCase() === 'COLLEGE').length || 0;
       const completedCoursesCount = apps?.filter(a => a.course_status?.toUpperCase() === 'COMPLETED').length || 0;
       const pendingPaymentsCount = apps?.filter(a => a.payment_status?.toUpperCase() === 'PENDING').length || 0;
+
+      // Group revenue by institution
+      const instRevenue: Record<string, number> = {};
+      apps?.filter(a => a.payment_status === 'completed').forEach(a => {
+        const name = a.institution_name || 'Individual';
+        instRevenue[name] = (instRevenue[name] || 0) + (Number(a.amount_paid) || 0);
+      });
+      const institutionRevenue = Object.entries(instRevenue)
+        .map(([name, revenue]) => ({ name, revenue }))
+        .sort((a, b) => b.revenue - a.revenue);
 
       const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
       apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
@@ -221,6 +237,8 @@ export const apiService = {
         completedCoursesCount,
         pendingPaymentsCount,
         distribution,
+        institutionRevenue,
+        totalInstitutions: new Set(apps?.map(a => a.institution_name)).size || 0,
         totalUsers: new Set(apps?.map(a => a.email)).size || 0
       };
     } catch { return null; }
@@ -265,9 +283,11 @@ export const apiService = {
     return (data || []).map(item => ({
       ...item,
       fullName: item.full_name,
+      institutionName: item.institution_name,
       track_key: item.track_key as TrackKey,
       student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
       course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
     }));
   }
 };
+
