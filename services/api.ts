@@ -2,18 +2,11 @@
 import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
+// Import admin credentials for internal verification
+import { ADMIN_EMAIL, ADMIN_PASSWORD } from '../lib/adminAuth';
 
 export const apiService = {
-  async checkAdminAccess(): Promise<boolean> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session || !session.user) return false;
-    return session.user.email === "admin@stjufends.com";
-  },
-
   async checkUserExists(email: string): Promise<boolean> {
-    const adminEmail = 'admin@stjufends.com';
-    if (email.toLowerCase() === adminEmail.toLowerCase()) return true;
-
     const { data, error } = await supabase
       .from('applications')
       .select('email')
@@ -24,36 +17,10 @@ export const apiService = {
     return data && data.length > 0;
   },
 
-  /**
-   * Admin-only password login
-   */
-  async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
-    try {
-      const email = 'admin@stjufends.com';
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      if (!data.user || !data.session) throw new Error("Login failed");
-
-      const user: User = {
-        id: data.user.id,
-        email: data.user.email || email,
-        fullName: 'Admin System',
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
-        isAdmin: true
-      };
-      return { success: true, user, token: data.session.access_token };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Invalid admin credentials' };
-    }
-  },
-
   async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     try {
       let result;
       if (isSignup) {
-        // Sign up logic with random password to satisfy Supabase auth requirements if necessary, 
-        // but typically signInWithOtp handles user creation if configured.
-        // We'll use signUp to ensure metadata is saved.
         result = await supabase.auth.signUp({
           email,
           password: Math.random().toString(36).slice(-12),
@@ -94,17 +61,36 @@ export const apiService = {
     }
   },
 
+  // Added adminLogin to handle direct password authentication for admin accounts
+  async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+    try {
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem("admin_session", "true");
+        const user: User = {
+          id: 'admin-id',
+          email: ADMIN_EMAIL,
+          fullName: 'Administrator',
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
+          isAdmin: true
+        };
+        return { success: true, user, token: 'admin-token' };
+      }
+      return { success: false, error: 'Invalid credentials' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Admin authentication failed' };
+    }
+  },
+
   async getCurrentUser(token: string): Promise<User | null> {
     try {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return null;
-      const adminEmail = 'admin@stjufends.com';
       return {
         id: user.id,
         email: user.email || '',
         fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-        isAdmin: user.email === adminEmail
+        isAdmin: false
       };
     } catch { return null; }
   },
@@ -229,6 +215,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
