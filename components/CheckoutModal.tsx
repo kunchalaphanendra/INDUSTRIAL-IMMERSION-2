@@ -43,9 +43,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     studentType: (loggedInUser?.studentType as StudentType) || 'COLLEGE'
   });
 
-  // Fetch verified institutions whenever studentType (tier) changes
+  // TASK 1 & 2: Fetch and Filter Institutions from Supabase
   useEffect(() => {
     const fetchInsts = async () => {
+      // Use tier from formData.studentType
       const list = await apiService.fetchVerifiedInstitutions(formData.studentType || 'COLLEGE');
       setInstitutions(list);
       // Reset selection when tier changes
@@ -72,27 +73,29 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const razorpayKey = getEnvVar('VITE_RAZORPAY_KEY');
 
   const handlePayment = async () => {
+    // TASK 4: Store institution_id during enrollment submit
     let finalInstitutionId: string | null = null;
-    let finalInstitutionName = '';
 
-    // Hybrid Logic: handle 'other' vs selected
     if (selectedInstId === 'other') {
       if (!customInstName.trim()) {
-        setErrorMessage("Please enter your school or college name.");
+        setErrorMessage("Please type your institution name.");
         return;
       }
-      // Insert new unverified institution
+      // Insert new unverified institution to get a valid ID
       const instRes = await apiService.createInstitution(customInstName.trim(), formData.studentType || 'COLLEGE');
       if (instRes.error) {
-        setErrorMessage("Institution registration failed. Please try again.");
+        setErrorMessage("Failed to register new institution. Please try again.");
         return;
       }
       finalInstitutionId = instRes.id;
-      finalInstitutionName = customInstName.trim();
     } else {
-      const selected = institutions.find(i => i.id === selectedInstId);
       finalInstitutionId = selectedInstId;
-      finalInstitutionName = selected?.name || '';
+    }
+
+    // TASK 5: Validation check before proceeding to payment
+    if (!finalInstitutionId) {
+      setErrorMessage("Please select your institution.");
+      return;
     }
 
     if (!razorpayKey) { 
@@ -111,10 +114,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
       description: `Enrollment: ${trackData.title}`,
       handler: async function (response: any) {
         try {
-          // Save both ID and name to applications table
+          // Task 4: Store application with institution_id
           const res = await apiService.submitApplication({
             ...formData,
-            institutionName: finalInstitutionName,
             institution_id: finalInstitutionId,
             track: enrollment.track,
             programType: enrollment.track?.includes('school') ? 'school_program' : 'college_program',
@@ -199,13 +201,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <div className="flex gap-2">
                       <button 
                         onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
                         School
                       </button>
                       <button 
                         onClick={() => setFormData({...formData, studentType: 'COLLEGE'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
                         College
                       </button>
@@ -213,23 +215,27 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </div>
                </div>
                
-               {/* Hybrid Dropdown Implementation */}
+               {/* TASK 3: Replace Institution Input with Dropdown */}
                <div>
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Educational Institution *</label>
                   <select 
                     value={selectedInstId} 
-                    onChange={e => setSelectedInstId(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none appearance-none cursor-pointer mb-3"
+                    onChange={e => {
+                      setSelectedInstId(e.target.value);
+                      if (e.target.value !== 'other') setErrorMessage(null);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none appearance-none cursor-pointer mb-3 text-white"
                   >
-                    <option value="" className="bg-black text-white">Select your institution</option>
+                    <option value="" className="bg-black">Select your institution</option>
                     {institutions.map(inst => (
-                      <option key={inst.id} value={inst.id} className="bg-black text-white">
+                      <option key={inst.id} value={inst.id} className="bg-black">
                         {inst.name.toUpperCase()}
                       </option>
                     ))}
-                    <option value="other" className="bg-black text-white">My institution not listed</option>
+                    <option value="other" className="bg-black">My institution not listed</option>
                   </select>
 
+                  {/* TASK 4: Show Manual Input when "Not Listed" selected */}
                   {selectedInstId === 'other' && (
                     <div className="animate-in slide-in-from-top-2 duration-300">
                       <input 
@@ -238,7 +244,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                         value={customInstName} 
                         onChange={e => setCustomInstName(e.target.value)} 
                         placeholder="Type your institution name..." 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" 
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white" 
                       />
                     </div>
                   )}
@@ -246,14 +252,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
                <div>
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Contact Number *</label>
-                  <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 00000 00000" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" />
+                  <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 00000 00000" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white" />
                </div>
                <div>
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Industrial Goals *</label>
-                  <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder="Describe your objectives..." className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none" />
+                  <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder="Describe your objectives..." className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none text-white" />
                </div>
                <button 
                 onClick={() => {
+                  // Task 5: Safety Validation
                   if (!selectedInstId) {
                     setErrorMessage("Please select your institution.");
                     return;
@@ -321,6 +328,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
