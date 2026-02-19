@@ -116,7 +116,7 @@ export const apiService = {
         career_goals: data.careerGoals,
         track_key: data.track,
         program_type: data.programType,
-        student_type: data.studentType || 'COLLEGE',
+        student_type: data.studentType?.toLowerCase() || 'college',
         payment_status: 'completed',
         amount_paid: Number(data.amountPaid) || 0,
         course_status: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
@@ -137,17 +137,18 @@ export const apiService = {
       let query = supabase.from('applications').select('*');
       
       if (filters) {
+        // Fix: Converting filter values to lowercase to match database storage root cause
         if (filters.studentType && filters.studentType !== 'ALL') {
-          query = query.eq('student_type', filters.studentType);
+          query = query.eq('student_type', filters.studentType.toLowerCase());
         }
         if (filters.program && filters.program !== 'ALL') {
           query = query.eq('track_key', filters.program);
         }
         if (filters.courseStatus && filters.courseStatus !== 'ALL') {
-          query = query.eq('course_status', filters.courseStatus);
+          query = query.eq('course_status', filters.courseStatus.toUpperCase());
         }
         if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
-          query = query.eq('payment_status', filters.paymentStatus);
+          query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
         }
         if (filters.search) {
           const s = `%${filters.search}%`;
@@ -270,6 +271,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
