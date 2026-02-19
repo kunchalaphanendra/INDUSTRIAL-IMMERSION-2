@@ -27,39 +27,39 @@ const AdminReviews: React.FC = () => {
   }, []);
 
   /**
-   * Publish (Approve) Review.
-   * Calls DB update, then refetches to confirm item is cleared from moderation queue.
+   * ISSUE 2 FIX: Publish Review not saving
+   * CALL Supabase UPDATE query instead of only setState
    */
-  const handlePublishReview = async (reviewId: string) => {
+  const publishReview = async (reviewId: string) => {
     try {
       const res = await apiService.approveReview(reviewId);
       if (res.success) {
-        // Force refetch to sync with DB
+        // ISSUE 4 FIX: Always reload data after update
         await fetchPendingReviews();
       } else {
         alert("Failed to publish review in database.");
       }
     } catch (err: any) {
-      console.error("Publish error:", err);
+      console.error("Publish failed:", err);
       alert("System error during publishing.");
     }
   };
 
   /**
-   * Reject (Delete) Review.
-   * Calls DB delete, then refetches.
+   * ISSUE 3 FIX: Reject Review
+   * CALL Supabase DELETE query instead of only setState
    */
-  const handleRejectReview = async (reviewId: string) => {
+  const rejectReview = async (reviewId: string) => {
     try {
       const result = await apiService.deleteReview(reviewId);
       if (result.success) {
-        // Force refetch
+        // ISSUE 4 FIX: Always reload data after update
         await fetchPendingReviews();
       } else {
         alert(`Rejection Failed: ${result.error}`);
       }
     } catch (err: any) {
-      console.error("Rejection error:", err);
+      console.error("Rejection failed:", err);
       alert("System error during rejection.");
     }
   };
@@ -135,13 +135,13 @@ const AdminReviews: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-right space-x-2">
                       <button
-                        onClick={() => handleRejectReview(r.id)}
+                        onClick={() => rejectReview(r.id)}
                         className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
                       >
                         Reject
                       </button>
                       <button
-                        onClick={() => handlePublishReview(r.id)}
+                        onClick={() => publishReview(r.id)}
                         className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
                       >
                         Publish Review
@@ -169,6 +169,7 @@ const AdminReviews: React.FC = () => {
 };
 
 export default AdminReviews;
+
 
 
 
