@@ -93,7 +93,7 @@ export interface Review {
   course: string;
   rating: number;
   review_text: string;
-  is_approved: boolean;
+  approval_status: 'pending' | 'approved' | 'rejected'; // Updated from is_approved boolean
   created_at: string;
 }
 
@@ -118,6 +118,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
