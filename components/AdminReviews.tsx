@@ -11,6 +11,7 @@ const AdminReviews: React.FC = () => {
   const loadAll = async () => {
     setLoading(true);
     setError(null);
+    // Step 3 — Fetch Only Pending Reviews
     const result = await apiService.fetchAllReviewsForAdmin();
     
     if (result.error) {
@@ -25,12 +26,26 @@ const AdminReviews: React.FC = () => {
     loadAll();
   }, []);
 
-  const handleToggle = async (id: string, current: boolean) => {
-    const result = await apiService.toggleReviewApproval(id, !current);
+  // Step 2 — Fix Publish Button logic
+  const handlePublishReview = async (reviewId: string) => {
+    try {
+      const res = await apiService.approveReview(reviewId);
+      if (res.success) {
+        // Remove from list immediately (it's no longer pending)
+        setReviews(prev => prev.filter(r => r.id !== reviewId));
+      }
+    } catch (err: any) {
+      console.error("Failed to publish review:", err);
+      alert("Failed to publish review. Check console for details.");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const result = await apiService.toggleReviewApproval(id, false);
     if (result.success) {
-      setReviews(prev => prev.map(r => r.id === id ? { ...r, is_approved: !current } : r));
+      setReviews(prev => prev.filter(r => r.id !== id));
     } else {
-      alert(`Moderation Failed: ${result.error}`);
+      alert(`Rejection Failed: ${result.error}`);
     }
   };
 
@@ -65,14 +80,13 @@ const AdminReviews: React.FC = () => {
 
         {!loading && reviews.length === 0 && !error && (
           <div className="mb-8 p-8 bg-blue-500/5 border border-blue-500/10 rounded-3xl text-center">
-            <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Sync Warning: No Records Found</p>
+            <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Sync Info: Queue Clear</p>
             <p className="text-gray-400 text-sm max-w-2xl mx-auto leading-relaxed mb-6">
-              If you have submitted reviews but they are not showing here, it is likely due to <strong>Supabase Row Level Security (RLS)</strong>. 
-              Since you are using a bypass account, the database might be hiding "Pending" reviews from you.
+              All submitted industrial feedback has been processed. Approved reviews are now visible on the public infrastructure.
             </p>
             <div className="bg-black/40 p-4 rounded-xl border border-white/5 inline-block text-left">
               <code className="text-xs text-gray-500 font-mono">
-                Ensure SQL Policy allows "SELECT" for all users on the reviews table.
+                System monitoring active for fresh student reports.
               </code>
             </div>
           </div>
@@ -93,7 +107,7 @@ const AdminReviews: React.FC = () => {
                     <th className="px-8 py-6">Immersion Track</th>
                     <th className="px-8 py-6">Industrial Rating</th>
                     <th className="px-8 py-6">Execution Summary</th>
-                    <th className="px-8 py-6">Approval Status</th>
+                    <th className="px-8 py-6">Status</th>
                     <th className="px-8 py-6 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -122,18 +136,24 @@ const AdminReviews: React.FC = () => {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2">
-                           <div className={`w-1.5 h-1.5 rounded-full ${r.is_approved ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`} />
-                           <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${r.is_approved ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                            {r.is_approved ? 'Approved' : 'Pending'}
+                           <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                           <span className="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-yellow-500/10 text-yellow-500">
+                            {r.approval_status}
                           </span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="px-8 py-6 text-right space-x-2">
                         <button
-                          onClick={() => handleToggle(r.id, r.is_approved)}
-                          className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${r.is_approved ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 active:scale-95'}`}
+                          onClick={() => handleReject(r.id)}
+                          className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
                         >
-                          {r.is_approved ? 'Revoke Access' : 'Publish Review'}
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handlePublishReview(r.id)}
+                          className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                        >
+                          Publish Review
                         </button>
                       </td>
                     </tr>
@@ -159,4 +179,5 @@ const AdminReviews: React.FC = () => {
 };
 
 export default AdminReviews;
+
 
