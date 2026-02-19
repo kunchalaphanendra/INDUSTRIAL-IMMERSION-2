@@ -9,6 +9,11 @@ const Footer: React.FC = () => {
     }
   };
 
+  const handleAdminClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('nav-admin-login'));
+  };
+
   return (
     <footer className="pt-24 pb-12 bg-black border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,7 +61,15 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-600 font-bold uppercase tracking-widest">
-          <p>© 2026 STJUFENDS Ecosystem. All Rights Reserved.</p>
+          <div className="flex items-center gap-4">
+            <p>© 2026 STJUFENDS Ecosystem. All Rights Reserved.</p>
+            <button 
+              onClick={handleAdminClick}
+              className="opacity-30 hover:opacity-100 transition-opacity text-[8px] uppercase tracking-tighter"
+            >
+              Admin Access
+            </button>
+          </div>
           <p className="mt-4 md:mt-0">Built for the future of professional excellence.</p>
         </div>
       </div>
@@ -65,3 +78,4 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
+
