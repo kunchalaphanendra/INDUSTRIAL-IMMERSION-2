@@ -82,6 +82,10 @@ const App: React.FC = () => {
         const userData = await apiService.getCurrentUser(token);
         if (userData) {
           setUser(userData);
+          // Auto-redirect admin to console
+          if (userData.isAdmin) {
+            setView('admin');
+          }
         } else {
           localStorage.removeItem('ii_token');
           localStorage.removeItem('ii_user');
@@ -111,7 +115,9 @@ const App: React.FC = () => {
   const handleAuthSuccess = (loggedUser: User) => {
     setUser(loggedUser);
     setShowAuthModal(false);
-    if (selectedTrack) {
+    if (loggedUser.isAdmin) {
+      setView('admin');
+    } else if (selectedTrack) {
       setEnrollment({ track: selectedTrack });
     }
   };
@@ -214,5 +220,6 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
