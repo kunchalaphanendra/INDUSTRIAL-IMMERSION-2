@@ -10,19 +10,18 @@ export interface AdminFilterOptions {
   program?: string;
   courseStatus?: string;
   paymentStatus?: string;
-  institution?: string;
+  institutionId?: string;
   search?: string;
 }
 
 export const apiService = {
   // --- Institution Hybrid Logic ---
-  async fetchVerifiedInstitutions(type: StudentType): Promise<Institution[]> {
-    const { data, error } = await supabase
-      .from('institutions')
-      .select('*')
-      .eq('is_verified', true)
-      .eq('type', type.toLowerCase())
-      .order('name');
+  async fetchVerifiedInstitutions(type?: StudentType): Promise<Institution[]> {
+    let query = supabase.from('institutions').select('*').eq('is_verified', true);
+    if (type) {
+      query = query.eq('type', type.toLowerCase());
+    }
+    const { data, error } = await query.order('name');
     
     if (error) return [];
     return (data || []).map(item => ({
@@ -163,7 +162,6 @@ export const apiService = {
     try {
       const appId = await generateApplicationId();
       
-      // Normalized: Using institution_id strictly
       const payload = {
         application_id: appId,
         full_name: data.fullName,
@@ -193,7 +191,14 @@ export const apiService = {
 
   async fetchAdminApplications(filters?: AdminFilterOptions): Promise<ApplicationRecord[]> {
     try {
-      let query = supabase.from('applications').select('*, institutions(name)');
+      let query = supabase.from('applications').select(`
+        *,
+        institutions (
+          id,
+          name,
+          type
+        )
+      `);
       
       if (filters) {
         if (filters.studentType && filters.studentType !== 'ALL') {
@@ -208,12 +213,12 @@ export const apiService = {
         if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
           query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
         }
-        if (filters.institution && filters.institution !== 'ALL') {
-          query = query.eq('institution_name', filters.institution);
+        if (filters.institutionId && filters.institutionId !== 'ALL') {
+          query = query.eq('institution_id', filters.institutionId);
         }
         if (filters.search) {
           const s = `%${filters.search}%`;
-          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s},institution_name.ilike.${s}`);
+          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s}`);
         }
       }
 
@@ -222,7 +227,6 @@ export const apiService = {
       return (data || []).map(item => ({
         ...item,
         fullName: item.full_name,
-        institutionName: item.institution_name,
         track_key: item.track_key as TrackKey,
         student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
         course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
@@ -232,12 +236,18 @@ export const apiService = {
 
   async fetchApplicationById(id: string): Promise<ApplicationRecord | null> {
     try {
-      const { data, error } = await supabase.from('applications').select('*, institutions(name)').eq('id', id).single();
+      const { data, error } = await supabase.from('applications').select(`
+        *,
+        institutions (
+          id,
+          name,
+          type
+        )
+      `).eq('id', id).single();
       if (error || !data) return null;
       return {
         ...data,
         fullName: data.full_name,
-        institutionName: data.institution_name,
         track_key: data.track_key as TrackKey,
         student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
         course_progress: (data.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
@@ -262,7 +272,15 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_progress, institution_name');
+      const { data: apps } = await supabase.from('applications').select(`
+        amount_paid, 
+        track_key, 
+        email, 
+        payment_status, 
+        student_type, 
+        course_progress,
+        institutions ( name )
+      `);
       const { data: reviews } = await supabase.from('reviews').select('id').eq('review_status', 'pending');
       const { data: institutions } = await supabase.from('institutions').select('id').eq('is_verified', false);
       
@@ -277,7 +295,7 @@ export const apiService = {
 
       const instRevenue: Record<string, number> = {};
       apps?.filter(a => a.payment_status === 'completed').forEach(a => {
-        const name = a.institution_name || 'Individual';
+        const name = (a.institutions as any)?.name || 'Individual';
         instRevenue[name] = (instRevenue[name] || 0) + (Number(a.amount_paid) || 0);
       });
       const institutionRevenue = Object.entries(instRevenue)
@@ -305,7 +323,7 @@ export const apiService = {
         pendingPaymentsCount,
         distribution,
         institutionRevenue,
-        totalInstitutions: new Set(apps?.map(a => a.institution_name)).size || 0,
+        totalInstitutions: new Set(apps?.map(a => (a.institutions as any)?.name)).size || 0,
         totalUsers: new Set(apps?.map(a => a.email)).size || 0
       };
     } catch { return null; }
@@ -381,16 +399,23 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<ApplicationRecord[]> {
-    const { data } = await supabase.from('applications').select('*, institutions(name)').eq('email', email).order('created_at', { ascending: false });
+    const { data } = await supabase.from('applications').select(`
+      *,
+      institutions (
+        id,
+        name,
+        type
+      )
+    `).eq('email', email).order('created_at', { ascending: false });
     return (data || []).map(item => ({
       ...item,
       fullName: item.full_name,
-      institutionName: item.institution_name,
       track_key: item.track_key as TrackKey,
       student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
       course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
     }));
   }
 };
+
 
 
