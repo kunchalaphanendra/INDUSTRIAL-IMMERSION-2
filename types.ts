@@ -69,7 +69,7 @@ export interface ApplicationRecord extends UserRegistration {
   track_key: TrackKey;
   program_type: ProgramType;
   student_type: StudentType;
-  course_status: CourseStatus;
+  course_progress: CourseStatus; // Changed from course_status to course_progress
   payment_status: string;
   amount_paid: number;
   razorpay_payment_id?: string;
@@ -93,7 +93,7 @@ export interface Review {
   course: string;
   rating: number;
   review_text: string;
-  approval_status: 'pending' | 'approved' | 'rejected'; // Updated from is_approved boolean
+  is_approved: boolean; // Changed from approval_status back to boolean as per request
   created_at: string;
 }
 
@@ -118,6 +118,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
