@@ -70,6 +70,7 @@ export const apiService = {
 
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
+      // Generate ID on frontend to avoid DB-side MAX() queries
       const appId = await generateApplicationId();
       
       const payload = {
@@ -91,8 +92,9 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      // Restored the original .select() call which may trigger UUID issues depending on DB config
-      const { error } = await supabase.from('applications').insert(payload).select();
+      // CRITICAL: We perform a "blind insert" without .select()
+      // This ensures we do not trigger any count(*) or aggregate metadata queries
+      const { error } = await supabase.from('applications').insert(payload);
       
       if (error) {
         console.error("Database Write Error:", error);
@@ -128,9 +130,9 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      // Reverted to original simpler query style
-      const { data: apps } = await supabase.from('applications').select('*');
-      const { data: reviews } = await supabase.from('reviews').select('*').eq('is_approved', false);
+      // Explicit column select prevents certain PostgREST aggregate side-effects
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
+      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
       
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
@@ -195,8 +197,7 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    // Reverted to original select('*') query
-    const { data } = await supabase.from('applications').select('*').eq('email', email);
+    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
     return (data || []).map(item => ({
       id: item.id,
       track_key: item.track_key as TrackKey,
@@ -206,6 +207,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
