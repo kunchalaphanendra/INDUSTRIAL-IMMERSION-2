@@ -73,7 +73,7 @@ export interface Institution {
   created_at: string;
 }
 
-export interface ApplicationRecord extends UserRegistration {
+export interface ApplicationRecord extends Omit<UserRegistration, 'institutionName'> {
   id: string;
   application_id: string;
   track_key: TrackKey;
@@ -85,9 +85,11 @@ export interface ApplicationRecord extends UserRegistration {
   razorpay_payment_id?: string;
   razorpay_order_id?: string;
   created_at: string;
-  // Join data
+  // Joined data structure
   institutions?: {
+    id: string;
     name: string;
+    type: string;
   };
 }
 
@@ -132,6 +134,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
