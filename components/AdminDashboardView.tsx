@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 
@@ -40,8 +41,8 @@ const AdminDashboardView: React.FC = () => {
   );
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
-      {/* Stat Cards */}
+    <div className="space-y-12 animate-in fade-in duration-500 pb-12">
+      {/* Primary Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Net Revenue', val: `₹${stats?.totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-green-500' },
@@ -56,6 +57,24 @@ const AdminDashboardView: React.FC = () => {
              <div className="mt-4 flex items-center gap-2">
                 <span className="text-[8px] font-black text-blue-500/60 uppercase tracking-widest">Real-time sync active</span>
              </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Advanced Analytic Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: 'School Students', val: stats?.schoolCount, icon: '🏫', color: 'text-purple-400' },
+          { label: 'College Students', val: stats?.collegeCount, icon: '🏛️', color: 'text-indigo-400' },
+          { label: 'Completed Courses', val: stats?.completedCoursesCount, icon: '✅', color: 'text-emerald-400' },
+          { label: 'Pending Payments', val: stats?.pendingPaymentsCount, icon: '⏳', color: 'text-orange-400' },
+        ].map((s, i) => (
+          <div key={i} className="bg-[#080808]/50 border border-white/5 p-6 rounded-[2rem] relative overflow-hidden group hover:bg-[#0a0a0a] transition-all">
+             <div className="flex items-center justify-between mb-4">
+               <span className="text-xl opacity-50">{s.icon}</span>
+               <span className={`text-2xl font-heading font-black tracking-tighter ${s.color}`}>{s.val}</span>
+             </div>
+             <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.4em]">{s.label}</p>
           </div>
         ))}
       </div>
@@ -111,3 +130,4 @@ const AdminDashboardView: React.FC = () => {
 };
 
 export default AdminDashboardView;
+
