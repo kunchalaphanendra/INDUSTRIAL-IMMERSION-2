@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { User, EnrollmentRecord, TrackKey } from '../types';
 import { apiService } from '../services/api';
 import { TRACKS } from '../constants';
+import { supabase } from '../lib/supabaseClient';
 import ReviewForm from './ReviewForm';
 
 interface DashboardProps {
@@ -17,8 +18,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 
   const loadData = async () => {
     setLoading(true);
-    const data = await apiService.fetchUserEnrollments(user.email);
-    setEnrollments(data);
+    
+    // CRITICAL: Fetch current auth user to ensure we use the session email
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    
+    if (authUser?.email) {
+      const data = await apiService.fetchUserEnrollments(authUser.email);
+      setEnrollments(data);
+    } else {
+      console.warn("No authenticated email found for dashboard load.");
+    }
+    
     setLoading(false);
   };
 
@@ -133,4 +143,5 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
+
 
