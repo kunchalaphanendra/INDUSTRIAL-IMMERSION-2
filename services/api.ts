@@ -167,6 +167,20 @@ export const apiService = {
     } catch { return []; }
   },
 
+  async fetchApplicationById(id: string): Promise<ApplicationRecord | null> {
+    try {
+      const { data, error } = await supabase.from('applications').select('*').eq('id', id).single();
+      if (error || !data) return null;
+      return {
+        ...data,
+        fullName: data.full_name,
+        track_key: data.track_key as TrackKey,
+        student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+        course_status: (data.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+      };
+    } catch { return null; }
+  },
+
   async updateApplicationStatus(id: string, status: CourseStatus) {
     try {
       const { error } = await supabase.from('applications').update({ course_status: status }).eq('id', id);
@@ -256,6 +270,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
