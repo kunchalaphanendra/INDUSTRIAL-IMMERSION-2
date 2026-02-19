@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ApplicationRecord, CourseStatus, TrackKey } from '../types';
+import { ApplicationRecord, CourseStatus, TrackKey, Institution } from '../types';
 import { apiService, AdminFilterOptions } from '../services/api';
 
 interface AdminStudentsProps {
@@ -9,7 +9,7 @@ interface AdminStudentsProps {
 
 const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
   const [apps, setApps] = useState<ApplicationRecord[]>([]);
-  const [uniqueInstitutions, setUniqueInstitutions] = useState<string[]>([]);
+  const [institutionsList, setInstitutionsList] = useState<Institution[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [filters, setFilters] = useState<AdminFilterOptions>({
@@ -17,7 +17,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     program: 'ALL',
     courseStatus: 'ALL',
     paymentStatus: 'ALL',
-    institution: 'ALL',
+    institutionId: 'ALL',
     search: ''
   });
 
@@ -26,10 +26,10 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     const data = await apiService.fetchAdminApplications(filters);
     setApps(data);
     
-    // Refresh institution list periodically or on filter reset
-    if (filters.institution === 'ALL') {
-      const insts = [...new Set(data.map(a => a.institutionName).filter(Boolean))].sort() as string[];
-      setUniqueInstitutions(insts);
+    // Only fetch institutions once for the filter
+    if (institutionsList.length === 0) {
+      const insts = await apiService.fetchVerifiedInstitutions();
+      setInstitutionsList(insts);
     }
     
     setLoading(false);
@@ -39,14 +39,9 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     load();
   }, [filters]);
 
-  /**
-   * ISSUE 1 FIX: Course Progress dropdown not saving
-   * CALL Supabase UPDATE query instead of only setState
-   */
   const updateProgress = async (appId: string, newStatus: CourseStatus) => {
     const res = await apiService.updateApplicationStatus(appId, newStatus);
     if (res.success) {
-      // ISSUE 4 FIX: Always reload data after update
       await load();
     } else {
       console.error("Progress update failed:", res.error);
@@ -99,13 +94,13 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
             <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Institution</label>
             <div className="relative">
               <select 
-                value={filters.institution}
-                onChange={e => setFilters(prev => ({ ...prev, institution: e.target.value }))}
+                value={filters.institutionId}
+                onChange={e => setFilters(prev => ({ ...prev, institutionId: e.target.value }))}
                 className={filterSelectClass}
               >
                 <option value="ALL">ALL INSTITUTIONS</option>
-                {uniqueInstitutions.map(inst => (
-                  <option key={inst} value={inst}>{inst.toUpperCase()}</option>
+                {institutionsList.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.name.toUpperCase()}</option>
                 ))}
               </select>
             </div>
@@ -201,7 +196,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                     </span>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-gray-400 uppercase text-[9px] tracking-widest font-black italic">{application.institutionName || '---'}</span>
+                    <span className="text-gray-400 uppercase text-[9px] tracking-widest font-black italic">{application.institutions?.name || 'Not assigned'}</span>
                   </td>
                   <td className="px-8 py-6">
                     <span className="text-gray-500 uppercase text-[9px] tracking-widest">{application.track_key.replace(/_/g, ' ')}</span>
@@ -242,6 +237,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
