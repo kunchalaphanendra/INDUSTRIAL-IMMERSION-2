@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { EnrollmentState, TrackKey, UserRegistration } from '../types';
+import { EnrollmentState, TrackKey, UserRegistration, StudentType } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 import { supabase } from '../lib/supabaseClient';
@@ -37,7 +37,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     phone: '',
     currentStatus: loggedInUser?.studentType || 'Student',
     careerGoals: '',
-    studentType: loggedInUser?.studentType || 'school'
+    studentType: loggedInUser?.studentType || 'college'
   });
 
   if (!enrollment.track || !TRACKS[enrollment.track]) {
@@ -125,9 +125,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
       return;
     }
 
-    // In this SPA implementation, onComplete handles internal state navigation.
-    // If a hard redirect is desired, uncomment the next line:
-    // window.location.href = "/dashboard";
     if (onComplete) {
       onComplete();
     }
@@ -159,14 +156,27 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in">
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Identity</label>
+                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Full Name</label>
                     <input disabled value={formData.fullName} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs opacity-50 font-bold" />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Tier</label>
-                    <input disabled value={formData.studentType?.toUpperCase()} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] font-black text-blue-500 opacity-80" />
+                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Type *</label>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setFormData({...formData, studentType: 'school'})}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'school' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                      >
+                        School
+                      </button>
+                      <button 
+                        onClick={() => setFormData({...formData, studentType: 'college'})}
+                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'college' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                      >
+                        College
+                      </button>
+                    </div>
                   </div>
                </div>
                <div>
@@ -231,6 +241,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
