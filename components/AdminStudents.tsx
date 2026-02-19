@@ -21,36 +21,32 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     search: ''
   });
 
-  useEffect(() => {
-    load();
-  }, [filters]);
-
   const load = async () => {
     setLoading(true);
     const data = await apiService.fetchAdminApplications(filters);
     setApps(data);
     
-    // Extract unique institutions for filter if they haven't been loaded yet or after data update
-    const insts = [...new Set(data.map(a => a.institutionName).filter(Boolean))].sort() as string[];
-    if (uniqueInstitutions.length === 0 || filters.institution === 'ALL') {
-       setUniqueInstitutions(insts);
+    // Refresh institution list periodically or on filter reset
+    if (filters.institution === 'ALL') {
+      const insts = [...new Set(data.map(a => a.institutionName).filter(Boolean))].sort() as string[];
+      setUniqueInstitutions(insts);
     }
     
     setLoading(false);
   };
 
-  /**
-   * CRITICAL: Real-time status update.
-   * Updates database and refreshes local state instantly.
-   */
+  useEffect(() => {
+    load();
+  }, [filters]);
+
   const handleStatusChange = async (id: string, status: CourseStatus) => {
     const res = await apiService.updateApplicationStatus(id, status);
     if (res.success) {
-      // Local refresh after DB update
-      setApps(prev => prev.map(a => a.id === id ? { ...a, course_status: status } : a));
+      // PERMANENT FIX: CALL Supabase UPDATE query and refetch after every change
+      await load();
     } else {
       console.error("Status update failed:", res.error);
-      alert("Failed to update course status");
+      alert("Database sync failed. The change was not saved.");
     }
   };
 
@@ -208,7 +204,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                   </td>
                   <td className="px-8 py-6">
                     <select 
-                      value={application.course_status || 'PENDING'} 
+                      value={application.course_progress || 'PENDING'} 
                       onChange={(e) => handleStatusChange(application.id, e.target.value as CourseStatus)}
                       className={tableSelectClass}
                     >
@@ -242,6 +238,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
