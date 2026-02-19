@@ -10,7 +10,7 @@ export interface AdminFilterOptions {
   program?: string;
   courseStatus?: string;
   paymentStatus?: string;
-  institution?: string; // New filter
+  institution?: string;
   search?: string;
 }
 
@@ -70,7 +70,6 @@ export const apiService = {
     }
   },
 
-  // Added adminLogin to handle direct password authentication for admin accounts
   async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     try {
       if (password === ADMIN_PASSWORD) {
@@ -112,7 +111,7 @@ export const apiService = {
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
-        institution_name: data.institutionName, // STEP 2 Implementation
+        institution_name: data.institutionName,
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
@@ -121,7 +120,7 @@ export const apiService = {
         student_type: data.studentType?.toLowerCase() || 'college',
         payment_status: 'completed',
         amount_paid: Number(data.amountPaid) || 0,
-        course_status: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
+        course_progress: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
@@ -146,7 +145,7 @@ export const apiService = {
           query = query.eq('track_key', filters.program);
         }
         if (filters.courseStatus && filters.courseStatus !== 'ALL') {
-          query = query.eq('course_status', filters.courseStatus.toUpperCase());
+          query = query.eq('course_progress', filters.courseStatus.toUpperCase());
         }
         if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
           query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
@@ -168,7 +167,7 @@ export const apiService = {
         institutionName: item.institution_name,
         track_key: item.track_key as TrackKey,
         student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-        course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+        course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
       }));
     } catch { return []; }
   },
@@ -183,32 +182,40 @@ export const apiService = {
         institutionName: data.institution_name,
         track_key: data.track_key as TrackKey,
         student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-        course_status: (data.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+        course_progress: (data.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
       };
     } catch { return null; }
   },
 
   async updateApplicationStatus(id: string, status: CourseStatus) {
     try {
-      const { error } = await supabase.from('applications').update({ course_status: status }).eq('id', id);
-      return { success: !error, error };
-    } catch (err: any) { return { success: false, error: err.message }; }
+      // PERMANENT FIX: CALL Supabase UPDATE query for applications.course_progress
+      const { error } = await supabase
+        .from('applications')
+        .update({ course_progress: status?.toUpperCase() })
+        .eq('id', id);
+      
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) { 
+      console.error("Failed to update course_progress in DB:", err);
+      return { success: false, error: err.message }; 
+    }
   },
 
   async fetchAdminStats() {
     try {
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_status, institution_name');
-      const { data: reviews } = await supabase.from('reviews').select('id').eq('approval_status', 'pending');
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_progress, institution_name');
+      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
       
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
       
       const schoolCount = apps?.filter(a => a.student_type?.toUpperCase() === 'SCHOOL').length || 0;
       const collegeCount = apps?.filter(a => a.student_type?.toUpperCase() === 'COLLEGE').length || 0;
-      const completedCoursesCount = apps?.filter(a => a.course_status?.toUpperCase() === 'COMPLETED').length || 0;
+      const completedCoursesCount = apps?.filter(a => a.course_progress?.toUpperCase() === 'COMPLETED').length || 0;
       const pendingPaymentsCount = apps?.filter(a => a.payment_status?.toUpperCase() === 'PENDING').length || 0;
 
-      // Group revenue by institution
       const instRevenue: Record<string, number> = {};
       apps?.filter(a => a.payment_status === 'completed').forEach(a => {
         const name = a.institution_name || 'Individual';
@@ -252,41 +259,50 @@ export const apiService = {
   },
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
-    let q = supabase.from('reviews').select('*').eq('approval_status', 'approved');
+    // PUBLIC WEBSITE: Fetch only reviews where is_approved = true
+    let q = supabase.from('reviews').select('*').eq('is_approved', true);
     if (courseKey) q = q.eq('course', courseKey);
     const { data } = await q.order('created_at', { ascending: false });
     return data || [];
   },
 
   async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
-    // Step 3 — Fetch Only Pending Reviews for moderation
+    // ADMIN PANEL: Fetch reviews that are NOT approved yet
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
-      .eq('approval_status', 'pending')
+      .eq('is_approved', false)
       .order('created_at', { ascending: false });
     return { data: data || [], error: error?.message };
   },
 
   async approveReview(reviewId: string) {
-    // Step 1 — Create Supabase Helper Function
-    const { data, error } = await supabase
-      .from("reviews")
-      .update({ approval_status: "approved" })
-      .eq("id", reviewId)
-      .select();
+    try {
+      // PERMANENT FIX: CALL Supabase UPDATE query for reviews.is_approved = true
+      const { error } = await supabase
+        .from("reviews")
+        .update({ is_approved: true })
+        .eq("id", reviewId);
 
-    if (error) {
-      console.error("Error approving review:", error);
-      throw error;
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      console.error("Failed to approve review in DB:", err);
+      return { success: false, error: err.message };
     }
-    return { success: !error, data };
   },
 
-  async toggleReviewApproval(id: string, approved: boolean) {
-    const status = approved ? 'approved' : 'rejected';
-    const { error } = await supabase.from('reviews').update({ approval_status: status }).eq('id', id);
-    return { success: !error, error: error?.message };
+  async deleteReview(reviewId: string) {
+    try {
+      const { error } = await supabase
+        .from("reviews")
+        .delete()
+        .eq("id", reviewId);
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   },
 
   async fetchUserReview(userId: string, courseKey: string) {
@@ -297,7 +313,7 @@ export const apiService = {
   async upsertReview(review: any) {
     const { error } = await supabase.from('reviews').upsert({
       ...review,
-      approval_status: 'pending' // Always reset for moderation
+      is_approved: false 
     }, { onConflict: 'user_id,course' });
     return { success: !error, error: error?.message };
   },
@@ -310,10 +326,11 @@ export const apiService = {
       institutionName: item.institution_name,
       track_key: item.track_key as TrackKey,
       student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-      course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+      course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
     }));
   }
 };
+
 
 
 
