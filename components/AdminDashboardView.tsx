@@ -46,7 +46,7 @@ const AdminDashboardView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Net Revenue', val: `₹${stats?.totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-green-500' },
-          { label: 'Active Students', val: stats?.totalEnrollments, icon: '🎓', color: 'text-blue-500' },
+          { label: 'Institutional Footprint', val: stats?.totalInstitutions, icon: '🏫', color: 'text-blue-500' },
           { label: 'Total Applications', val: stats?.totalApplications, icon: '📄', color: 'text-purple-500' },
           { label: 'Pending Reviews', val: stats?.pendingReviews, icon: '⚖️', color: 'text-yellow-500' },
         ].map((s, i) => (
@@ -61,50 +61,53 @@ const AdminDashboardView: React.FC = () => {
         ))}
       </div>
 
-      {/* Advanced Analytic Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'School Students', val: stats?.schoolCount, icon: '🏫', color: 'text-purple-400' },
-          { label: 'College Students', val: stats?.collegeCount, icon: '🏛️', color: 'text-indigo-400' },
-          { label: 'Completed Courses', val: stats?.completedCoursesCount, icon: '✅', color: 'text-emerald-400' },
-          { label: 'Pending Payments', val: stats?.pendingPaymentsCount, icon: '⏳', color: 'text-orange-400' },
-        ].map((s, i) => (
-          <div key={i} className="bg-[#080808]/50 border border-white/5 p-6 rounded-[2rem] relative overflow-hidden group hover:bg-[#0a0a0a] transition-all">
-             <div className="flex items-center justify-between mb-4">
-               <span className="text-xl opacity-50">{s.icon}</span>
-               <span className={`text-2xl font-heading font-black tracking-tighter ${s.color}`}>{s.val}</span>
-             </div>
-             <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.4em]">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Course Popularity Chart - Dynamic */}
+        {/* Institution Revenue Stacked bars */}
         <div className="lg:col-span-2 bg-[#080808] border border-white/5 rounded-[3rem] p-10">
-           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-10">Enrollment Distribution</h4>
+           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-10">Institutional Revenue breakdown</h4>
            <div className="space-y-8">
-              {stats?.distribution?.map((c: any, i: number) => {
-                const colors = ['bg-blue-600', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500'];
+              {stats?.institutionRevenue?.length === 0 ? (
+                <p className="text-[10px] text-gray-700 uppercase tracking-widest text-center py-20">No institutional revenue recorded</p>
+              ) : stats?.institutionRevenue?.slice(0, 5).map((inst: any, i: number) => {
+                const percentage = Math.round((inst.revenue / stats.totalRevenue) * 100);
+                const colors = ['bg-emerald-500', 'bg-blue-600', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500'];
                 return (
                   <div key={i} className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                       <span>{c.name}</span>
-                       <span className="text-white">{c.raw} Students ({c.count}%)</span>
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                       <span className="text-gray-400">{inst.name}</span>
+                       <span className="text-white">₹{inst.revenue.toLocaleString()} ({percentage}%)</span>
                     </div>
                     <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                        <div 
-                         className={`h-full ${colors[i % colors.length]} transition-all duration-1000 ease-out`} 
-                         style={{ width: `${c.count}%` }}
+                         className={`h-full ${colors[i % colors.length]} transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.3)]`} 
+                         style={{ width: `${percentage}%` }}
                        />
                     </div>
                   </div>
                 );
               })}
+              {stats?.institutionRevenue?.length > 5 && (
+                <p className="text-center text-[8px] font-black text-gray-700 uppercase tracking-widest pt-4">Plus {stats.institutionRevenue.length - 5} other institutions</p>
+              )}
            </div>
         </div>
 
-        {/* Recent Activity - Dynamic */}
+        {/* Enrollment Distribution */}
+        <div className="bg-[#080808] border border-white/5 rounded-[3rem] p-10">
+           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-10">Track Distribution</h4>
+           <div className="space-y-6">
+              {stats?.distribution?.map((c: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.03] last:border-0">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">{c.name}</span>
+                    <span className="text-[10px] font-black text-white">{c.count}%</span>
+                  </div>
+              ))}
+           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Activity */}
         <div className="bg-[#080808] border border-white/5 rounded-[3rem] p-10">
            <div className="flex justify-between items-center mb-8">
              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">System Activity</h4>
@@ -130,4 +133,5 @@ const AdminDashboardView: React.FC = () => {
 };
 
 export default AdminDashboardView;
+
 
