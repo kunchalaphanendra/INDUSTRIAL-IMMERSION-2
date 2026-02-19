@@ -9,7 +9,7 @@ const AdminInstitutions: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Form State
+  // Form State for manual addition
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState<StudentType>('COLLEGE');
   const [formError, setFormError] = useState<string | null>(null);
@@ -41,6 +41,7 @@ const AdminInstitutions: React.FC = () => {
     setIsSubmitting(true);
     setFormError(null);
     
+    // Logic: Admin adding is always verified=true, type saved as lowercase
     const res = await apiService.adminAddInstitution(newName.trim(), newType);
     if (res.success) {
       setIsModalOpen(false);
@@ -88,9 +89,8 @@ const AdminInstitutions: React.FC = () => {
               <thead className="bg-white/[0.03] text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5">
                 <tr>
                   <th className="px-8 py-6">Institution Name</th>
-                  <th className="px-8 py-6">Tier</th>
+                  <th className="px-8 py-6">Type</th>
                   <th className="px-8 py-6">Status</th>
-                  <th className="px-8 py-6">Added On</th>
                   <th className="px-8 py-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -115,16 +115,13 @@ const AdminInstitutions: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                      {new Date(inst.created_at).toLocaleDateString()}
-                    </td>
                     <td className="px-8 py-6 text-right">
                       {!inst.is_verified && (
                         <button
                           onClick={() => handleApprove(inst.id)}
                           className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
                         >
-                          Approve Partner
+                          Approve
                         </button>
                       )}
                     </td>
@@ -132,7 +129,7 @@ const AdminInstitutions: React.FC = () => {
                 ))}
                 {institutions.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-32 text-center text-gray-600">
+                    <td colSpan={4} className="px-8 py-32 text-center text-gray-600">
                       <p className="text-[10px] font-black uppercase tracking-widest">Zero Institutional Records Found</p>
                     </td>
                   </tr>
@@ -173,7 +170,7 @@ const AdminInstitutions: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3">Education Tier</label>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3">Type</label>
                   <div className="flex gap-4">
                     <button 
                       type="button"
@@ -205,7 +202,7 @@ const AdminInstitutions: React.FC = () => {
                     disabled={isSubmitting}
                     className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-widest text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
                    >
-                     {isSubmitting ? 'Registering...' : 'Register Partner'}
+                     {isSubmitting ? 'Registering...' : 'Add Institution'}
                    </button>
                 </div>
              </form>
@@ -217,4 +214,5 @@ const AdminInstitutions: React.FC = () => {
 };
 
 export default AdminInstitutions;
+
 
