@@ -9,6 +9,7 @@ interface AdminStudentsProps {
 
 const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
   const [apps, setApps] = useState<ApplicationRecord[]>([]);
+  const [uniqueInstitutions, setUniqueInstitutions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [filters, setFilters] = useState<AdminFilterOptions>({
@@ -16,6 +17,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     program: 'ALL',
     courseStatus: 'ALL',
     paymentStatus: 'ALL',
+    institution: 'ALL',
     search: ''
   });
 
@@ -27,6 +29,13 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     setLoading(true);
     const data = await apiService.fetchAdminApplications(filters);
     setApps(data);
+    
+    // Extract unique institutions for filter if they haven't been loaded yet or after data update
+    const insts = [...new Set(data.map(a => a.institutionName).filter(Boolean))].sort() as string[];
+    if (uniqueInstitutions.length === 0 || filters.institution === 'ALL') {
+       setUniqueInstitutions(insts);
+    }
+    
     setLoading(false);
   };
 
@@ -59,7 +68,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 
       {/* Advanced Filter Console */}
       <div className="bg-[#080808] p-8 rounded-[2.5rem] border border-white/5 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <div className="lg:col-span-1">
              <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Search</label>
              <input 
@@ -79,9 +88,25 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                 onChange={e => setFilters(prev => ({ ...prev, studentType: e.target.value }))}
                 className={filterSelectClass}
               >
-                <option value="ALL" className="bg-[#0B0F1A] text-white">ALL TIERS</option>
-                <option value="SCHOOL" className="bg-[#0B0F1A] text-white">SCHOOL</option>
-                <option value="COLLEGE" className="bg-[#0B0F1A] text-white">COLLEGE</option>
+                <option value="ALL">ALL TIERS</option>
+                <option value="SCHOOL">SCHOOL</option>
+                <option value="COLLEGE">COLLEGE</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Institution</label>
+            <div className="relative">
+              <select 
+                value={filters.institution}
+                onChange={e => setFilters(prev => ({ ...prev, institution: e.target.value }))}
+                className={filterSelectClass}
+              >
+                <option value="ALL">ALL INSTITUTIONS</option>
+                {uniqueInstitutions.map(inst => (
+                  <option key={inst} value={inst}>{inst.toUpperCase()}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -94,27 +119,27 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                 onChange={e => setFilters(prev => ({ ...prev, program: e.target.value }))}
                 className={filterSelectClass}
               >
-                <option value="ALL" className="bg-[#0B0F1A] text-white">All Tracks</option>
+                <option value="ALL">All Tracks</option>
                 {Object.entries(TrackKey).map(([key, val]) => (
-                  <option key={val} value={val} className="bg-[#0B0F1A] text-white">{val.replace(/_/g, ' ').toUpperCase()}</option>
+                  <option key={val} value={val}>{val.replace(/_/g, ' ').toUpperCase()}</option>
                 ))}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Course Progress</label>
+            <label className="text-[8px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Progress</label>
             <div className="relative">
               <select 
                 value={filters.courseStatus}
                 onChange={e => setFilters(prev => ({ ...prev, courseStatus: e.target.value }))}
                 className={filterSelectClass}
               >
-                <option value="ALL" className="bg-[#0B0F1A] text-white">All Status</option>
-                <option value="PENDING" className="bg-[#0B0F1A] text-white">Pending</option>
-                <option value="ONGOING" className="bg-[#0B0F1A] text-white">Ongoing</option>
-                <option value="COMPLETED" className="bg-[#0B0F1A] text-white">Completed</option>
-                <option value="DROPOUT" className="bg-[#0B0F1A] text-white">Dropout</option>
+                <option value="ALL">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="DROPOUT">Dropout</option>
               </select>
             </div>
           </div>
@@ -127,9 +152,9 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                 onChange={e => setFilters(prev => ({ ...prev, paymentStatus: e.target.value }))}
                 className={filterSelectClass}
               >
-                <option value="ALL" className="bg-[#0B0F1A] text-white">All Payments</option>
-                <option value="completed" className="bg-[#0B0F1A] text-white">Paid</option>
-                <option value="pending" className="bg-[#0B0F1A] text-white">Pending</option>
+                <option value="ALL">All Payments</option>
+                <option value="completed">Paid</option>
+                <option value="pending">Pending</option>
               </select>
             </div>
           </div>
@@ -141,9 +166,10 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
           <table className="w-full text-left">
             <thead className="bg-white/[0.03] text-[9px] font-black uppercase tracking-[0.3em] text-gray-500 border-b border-white/5">
               <tr>
-                <th className="px-8 py-6">Identity Code</th>
+                <th className="px-8 py-6">ID</th>
                 <th className="px-8 py-6">Student</th>
-                <th className="px-8 py-6">Student Type</th>
+                <th className="px-8 py-6">Tier</th>
+                <th className="px-8 py-6">Institution</th>
                 <th className="px-8 py-6">Program</th>
                 <th className="px-8 py-6">Progress</th>
                 <th className="px-8 py-6">Revenue</th>
@@ -152,14 +178,14 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
             </thead>
             <tbody className="divide-y divide-white/5 text-[11px] font-bold">
               {loading ? (
-                <tr><td colSpan={7} className="px-8 py-24 text-center text-gray-600 uppercase tracking-widest">
+                <tr><td colSpan={8} className="px-8 py-24 text-center text-gray-600 uppercase tracking-widest">
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                     <span>Accessing Industrial Registry...</span>
                   </div>
                 </td></tr>
               ) : apps.length === 0 ? (
-                <tr><td colSpan={7} className="px-8 py-24 text-center text-gray-600 uppercase tracking-widest italic">No students matching active filters</td></tr>
+                <tr><td colSpan={8} className="px-8 py-24 text-center text-gray-600 uppercase tracking-widest italic">No students matching active filters</td></tr>
               ) : apps.map(application => (
                 <tr key={application.id} className="hover:bg-white/[0.01] transition-colors group">
                   <td className="px-8 py-6 text-blue-500 font-black tracking-widest font-mono">{application.application_id || '---'}</td>
@@ -170,12 +196,15 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${application.student_type === 'COLLEGE' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'}`}>
+                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${application.student_type === 'COLLEGE' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
                       {application.student_type}
                     </span>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-gray-400 uppercase text-[9px] tracking-widest">{application.track_key.replace(/_/g, ' ')}</span>
+                    <span className="text-gray-400 uppercase text-[9px] tracking-widest font-black italic">{application.institutionName || '---'}</span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="text-gray-500 uppercase text-[9px] tracking-widest">{application.track_key.replace(/_/g, ' ')}</span>
                   </td>
                   <td className="px-8 py-6">
                     <select 
@@ -183,18 +212,15 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                       onChange={(e) => handleStatusChange(application.id, e.target.value as CourseStatus)}
                       className={tableSelectClass}
                     >
-                      <option value="PENDING" className="bg-[#0B0F1A] text-white">Pending</option>
-                      <option value="ONGOING" className="bg-[#0B0F1A] text-white">Ongoing</option>
-                      <option value="COMPLETED" className="bg-[#0B0F1A] text-white">Completed</option>
-                      <option value="DROPOUT" className="bg-[#0B0F1A] text-white">Dropout</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="ONGOING">Ongoing</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="DROPOUT">Dropout</option>
                     </select>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="text-green-500">₹{(Number(application.amount_paid) || 0).toLocaleString()}</span>
-                      <span className={`text-[8px] font-black uppercase tracking-widest ${application.payment_status === 'completed' ? 'text-green-900' : 'text-red-500'}`}>
-                        {application.payment_status}
-                      </span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
@@ -216,6 +242,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
