@@ -48,8 +48,8 @@ export interface DomainData {
   outputs: string[];
 }
 
-export type CourseStatus = 'pending' | 'on_going' | 'completed' | 'drop_out' | null;
-export type StudentType = 'school' | 'college';
+export type CourseStatus = 'PENDING' | 'ONGOING' | 'COMPLETED' | 'DROPOUT' | null;
+export type StudentType = 'SCHOOL' | 'COLLEGE';
 export type ProgramType = 'school_program' | 'college_program';
 
 export interface UserRegistration {
@@ -59,7 +59,7 @@ export interface UserRegistration {
   linkedin?: string;
   currentStatus?: string;
   careerGoals: string;
-  studentType?: StudentType; // New field
+  studentType?: StudentType;
 }
 
 export interface ApplicationRecord extends UserRegistration {
@@ -67,7 +67,7 @@ export interface ApplicationRecord extends UserRegistration {
   application_id: string;
   track_key: TrackKey;
   program_type: ProgramType;
-  student_type: StudentType; // New field
+  student_type: StudentType;
   course_status: CourseStatus;
   payment_status: string;
   amount_paid: number;
@@ -117,6 +117,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
