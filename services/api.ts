@@ -198,7 +198,7 @@ export const apiService = {
       if (error) throw error;
       return { success: true };
     } catch (err: any) { 
-      console.error("Failed to update course_progress in DB:", err);
+      console.error("Progress update failed:", err);
       return { success: false, error: err.message }; 
     }
   },
@@ -259,7 +259,6 @@ export const apiService = {
   },
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
-    // PUBLIC WEBSITE: Fetch only reviews where is_approved = true
     let q = supabase.from('reviews').select('*').eq('is_approved', true);
     if (courseKey) q = q.eq('course', courseKey);
     const { data } = await q.order('created_at', { ascending: false });
@@ -267,7 +266,6 @@ export const apiService = {
   },
 
   async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
-    // ADMIN PANEL: Fetch reviews that are NOT approved yet
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -287,13 +285,14 @@ export const apiService = {
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
-      console.error("Failed to approve review in DB:", err);
+      console.error("Publish failed:", err);
       return { success: false, error: err.message };
     }
   },
 
   async deleteReview(reviewId: string) {
     try {
+      // PERMANENT FIX: CALL Supabase DELETE query
       const { error } = await supabase
         .from("reviews")
         .delete()
@@ -301,6 +300,7 @@ export const apiService = {
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
+      console.error("Rejection failed:", err);
       return { success: false, error: err.message };
     }
   },
@@ -330,6 +330,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
