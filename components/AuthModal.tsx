@@ -18,7 +18,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     email: '', 
     fullName: '', 
     password: '',
-    studentType: 'school' as StudentType 
+    // Fix: Updated default studentType to uppercase 'SCHOOL' to match StudentType definition
+    studentType: 'SCHOOL' as StudentType 
   });
   
   const [timer, setTimer] = useState(0);
@@ -149,7 +150,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                   <div className="space-y-3">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Student Tier</label>
                     <div className="grid grid-cols-2 gap-4">
-                      {(['school', 'college'] as StudentType[]).map(type => (
+                      {/* Fix: Updated literals to uppercase 'SCHOOL' and 'COLLEGE' to match StudentType definition */}
+                      {(['SCHOOL', 'COLLEGE'] as StudentType[]).map(type => (
                         <button
                           key={type}
                           type="button"
@@ -238,6 +240,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
