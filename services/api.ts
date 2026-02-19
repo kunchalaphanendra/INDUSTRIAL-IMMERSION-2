@@ -4,10 +4,25 @@ import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 
 export const apiService = {
+  /**
+   * Checks if an email has an existing enrollment/application record.
+   */
+  async checkUserExists(email: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('email')
+      .eq('email', email)
+      .limit(1);
+    
+    if (error) return false;
+    return data && data.length > 0;
+  },
+
   async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     try {
       let result;
       if (isSignup) {
+        // Sign up logic
         result = await supabase.auth.signUp({
           email,
           password: Math.random().toString(36).slice(-12),
@@ -17,6 +32,7 @@ export const apiService = {
           }
         });
       } else {
+        // Simple magic link/OTP logic for login
         result = await supabase.auth.signInWithOtp({
           email,
           options: { emailRedirectTo: window.location.origin }
@@ -70,13 +86,11 @@ export const apiService = {
 
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
-      // Generate ID on frontend to avoid DB-side MAX() queries
       const appId = await generateApplicationId();
-      
       const payload = {
         application_id: appId,
         full_name: data.fullName,
-        email: data.email, // Linked by email
+        email: data.email,
         phone: data.phone,
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
@@ -91,14 +105,8 @@ export const apiService = {
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
       };
-
       const { error } = await supabase.from('applications').insert(payload);
-      
-      if (error) {
-        console.error("Database Write Error:", error);
-        return { success: false, error: error.message };
-      }
-      
+      if (error) throw error;
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -130,16 +138,9 @@ export const apiService = {
     try {
       const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
-      
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
-      
-      const counts: Record<string, number> = {
-        college_immersion: 0,
-        college_prof: 0,
-        school_skill: 0,
-        school_tuition: 0
-      };
+      const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
       apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
       const totalCount = apps?.length || 1;
       const distribution = Object.entries(counts).map(([key, val]) => ({
@@ -147,7 +148,6 @@ export const apiService = {
         count: Math.round((val / totalCount) * 100),
         raw: val
       }));
-
       return {
         totalApplications: apps?.length || 0,
         totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
@@ -194,13 +194,7 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    // CRITICAL: Filter applications by email (new link standard)
-    const { data } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('email', email)
-      .order('created_at', { ascending: false });
-      
+    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
     return (data || []).map(item => ({
       id: item.id,
       track_key: item.track_key as TrackKey,
@@ -210,6 +204,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
