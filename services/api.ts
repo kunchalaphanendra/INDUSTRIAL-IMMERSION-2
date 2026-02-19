@@ -4,19 +4,12 @@ import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 
 export const apiService = {
-  /**
-   * Verifies if the current Supabase session belongs to the admin.
-   */
   async checkAdminAccess(): Promise<boolean> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !session.user) return false;
     return session.user.email === "admin@stjufends.com";
   },
 
-  /**
-   * Checks if an email has an existing enrollment/application record.
-   * Explicitly allows the admin email to pass.
-   */
   async checkUserExists(email: string): Promise<boolean> {
     const adminEmail = 'admin@stjufends.com';
     if (email.toLowerCase() === adminEmail.toLowerCase()) return true;
@@ -31,28 +24,53 @@ export const apiService = {
     return data && data.length > 0;
   },
 
-  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     try {
-      let result;
-      if (isSignup) {
-        result = await supabase.auth.signUp({
-          email,
-          password: Math.random().toString(36).slice(-12),
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: fullName ? { full_name: fullName } : undefined
-          }
-        });
-      } else {
-        result = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.origin }
-        });
-      }
-      if (result.error) throw result.error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      if (!data.user || !data.session) throw new Error("Login failed");
+
+      const adminEmail = 'admin@stjufends.com';
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email || email,
+        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
+        isAdmin: data.user.email === adminEmail
+      };
+      return { success: true, user, token: data.session.access_token };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Invalid credentials' };
+    }
+  },
+
+  async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Failed to send OTP' };
+      return { success: false, error: err.message };
+    }
+  },
+
+  async sendOtp(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
     }
   },
 
@@ -211,6 +229,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
