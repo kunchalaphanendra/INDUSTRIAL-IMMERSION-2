@@ -39,13 +39,17 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
     load();
   }, [filters]);
 
-  const handleStatusChange = async (id: string, status: CourseStatus) => {
-    const res = await apiService.updateApplicationStatus(id, status);
+  /**
+   * ISSUE 1 FIX: Course Progress dropdown not saving
+   * CALL Supabase UPDATE query instead of only setState
+   */
+  const updateProgress = async (appId: string, newStatus: CourseStatus) => {
+    const res = await apiService.updateApplicationStatus(appId, newStatus);
     if (res.success) {
-      // PERMANENT FIX: CALL Supabase UPDATE query and refetch after every change
+      // ISSUE 4 FIX: Always reload data after update
       await load();
     } else {
-      console.error("Status update failed:", res.error);
+      console.error("Progress update failed:", res.error);
       alert("Database sync failed. The change was not saved.");
     }
   };
@@ -205,7 +209,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
                   <td className="px-8 py-6">
                     <select 
                       value={application.course_progress || 'PENDING'} 
-                      onChange={(e) => handleStatusChange(application.id, e.target.value as CourseStatus)}
+                      onChange={(e) => updateProgress(application.id, e.target.value as CourseStatus)}
                       className={tableSelectClass}
                     >
                       <option value="PENDING">Pending</option>
@@ -238,6 +242,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
