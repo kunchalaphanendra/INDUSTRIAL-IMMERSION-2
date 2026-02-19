@@ -198,7 +198,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
                              </div>
                              <div className="space-y-1">
                                <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Course Progress</p>
-                               <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{record.course_status}</p>
+                               {/* Fix: use course_progress instead of course_status which was renamed in ApplicationRecord interface */}
+                               <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{record.course_progress}</p>
                              </div>
                              <div className="space-y-1">
                                <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Payment Settlement</p>
@@ -227,3 +228,4 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
+
