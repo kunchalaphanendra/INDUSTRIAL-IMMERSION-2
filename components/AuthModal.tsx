@@ -21,12 +21,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     studentType: 'school' as StudentType 
   });
   
-  // Timer State for OTP Verification
   const [timer, setTimer] = useState(0);
-  
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Timer Effect
   useEffect(() => {
     let interval: any;
     if (timer > 0) {
@@ -37,43 +34,41 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
+  const isAdminEmail = formData.email.toLowerCase() === 'admin@stjufends.com';
+
+  const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     
     try {
-      if (isLogin) {
-        // 1. Check if user email exists in industrial records (skip for admin)
-        const exists = await apiService.checkUserExists(formData.email);
-        if (!exists) {
-          setError("Access Denied: No industrial profile found for this email. Please apply first.");
-          setLoading(false);
-          return;
-        }
-
-        // 2. Perform Password Login
-        const res = await apiService.login(formData.email, formData.password);
+      if (isAdminEmail) {
+        // Admin Flow: Direct Password Login
+        const res = await apiService.adminLogin(formData.password);
         if (res.success && res.user) {
           localStorage.setItem('ii_token', res.token || '');
-          localStorage.setItem('ii_user', JSON.stringify({
-            ...res.user,
-            studentType: formData.studentType 
-          }));
+          localStorage.setItem('ii_user', JSON.stringify(res.user));
           onSuccess(res.user);
         } else {
-          setError(res.error || 'Authentication failed. Check your password.');
+          setError(res.error || 'Invalid Admin Credentials');
         }
       } else {
-        // 3. Perform Sign Up
-        const res = await apiService.signUp(formData.email, formData.password, formData.fullName);
+        // User Flow: OTP Authentication
+        if (isLogin) {
+          const exists = await apiService.checkUserExists(formData.email);
+          if (!exists) {
+            setError("No profile found for this email. Please apply first.");
+            setLoading(false);
+            return;
+          }
+        }
+        
+        const res = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
         if (res.success) {
-          // Trigger OTP for verification
-          await apiService.sendOtp(formData.email);
           setNeedsVerification(true);
-          setTimer(60); 
+          setTimer(60);
         } else {
-          setError(res.error || 'Registration failed.');
+          setError(res.error || 'Failed to send code.');
         }
       }
     } catch (err: any) {
@@ -110,12 +105,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
   const resendOtp = async () => {
     setLoading(true);
-    const res = await apiService.sendOtp(formData.email);
+    const res = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
     if (res.success) {
       setTimer(60);
       setError(null);
     } else {
-      setError("Failed to resend. Try again later.");
+      setError("Resend failed.");
     }
     setLoading(false);
   };
@@ -132,6 +127,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               <h2 className="text-3xl font-heading font-bold mb-2 uppercase tracking-tight text-white">
                 {isLogin ? 'Member' : 'Join'} <span className="brand-text text-blue-500">STJUFENDS</span>
               </h2>
+              {isAdminEmail && (
+                <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-2 animate-pulse">Root Administrator Detected</p>
+              )}
             </div>
 
             {error && (
@@ -140,8 +138,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
             )}
 
-            <form onSubmit={handleAuthSubmit} className="space-y-6">
-              {!isLogin && (
+            <form onSubmit={handleInitialSubmit} className="space-y-6">
+              {!isLogin && !isAdminEmail && (
                 <>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Full Legal Name</label>
@@ -149,7 +147,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                   </div>
                   
                   <div className="space-y-3">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Student Category</label>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Student Tier</label>
                     <div className="grid grid-cols-2 gap-4">
                       {(['school', 'college'] as StudentType[]).map(type => (
                         <button
@@ -167,31 +165,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               )}
               
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Account Identifier (Email)</label>
                 <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Access Password</label>
-                <input required type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
-              </div>
+              {isAdminEmail && (
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Admin Passkey</label>
+                  <input required type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
+                </div>
+              )}
 
               <button disabled={loading} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50">
-                {loading ? "Processing..." : (isLogin ? 'Grant Access' : 'Create Profile')}
+                {loading ? "Authorizing..." : (isAdminEmail ? 'Admin Access' : (isLogin ? 'Send Code' : 'Join Program'))}
               </button>
             </form>
 
             <div className="mt-10 text-center pt-8 border-t border-white/5">
               <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em]">
-                {isLogin ? "Apply for New Profile" : "Existing Member? Sign In"}
+                {isLogin ? "New to program? Apply" : "Already registered? Login"}
               </button>
             </div>
           </>
         ) : (
           <div className="text-center">
-            <h2 className="text-3xl font-heading font-black mb-4 text-white uppercase tracking-tighter">Verify Email</h2>
+            <h2 className="text-3xl font-heading font-black mb-4 text-white uppercase tracking-tighter">Confirm Identity</h2>
             <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mb-10 leading-relaxed">
-              Industrial verification code transmitted to <br />
+              Industrial OTP transmitted to <br />
               <span className="text-blue-500">{formData.email}</span>
             </p>
             
@@ -208,13 +208,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             </div>
 
             <button onClick={() => performVerification(otp.join(''))} disabled={loading} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-widest text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-              {loading ? "Verifying..." : "Confirm Code"}
+              {loading ? "Validating..." : "Verify Identity"}
             </button>
 
             <div className="mt-10 pt-8 border-t border-white/5">
               {timer > 0 ? (
                 <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
-                  Resend Sequence in <span className="text-blue-500 neon-text-blue">{timer}s</span>
+                  Resend Code in <span className="text-blue-500 neon-text-blue font-heading">{timer}s</span>
                 </p>
               ) : (
                 <button 
@@ -222,13 +222,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
                   disabled={loading}
                   className="text-[10px] text-blue-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
                 >
-                  Resend OTP
+                  Resend Sequence
                 </button>
               )}
             </div>
             
             <button onClick={() => setNeedsVerification(false)} className="mt-6 text-[8px] text-gray-700 hover:text-gray-400 font-bold uppercase tracking-widest">
-              Back to Sign In
+              Update email address
             </button>
           </div>
         )}
@@ -238,6 +238,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
