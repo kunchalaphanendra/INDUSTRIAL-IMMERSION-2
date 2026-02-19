@@ -16,9 +16,11 @@ import AdminDashboardView from './components/AdminDashboardView';
 import AdminStudents from './components/AdminStudents';
 import AdminPayments from './components/AdminPayments';
 import AdminReviews from './components/AdminReviews';
+import AdminLogin from './components/AdminLogin';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
+import { isAdminLoggedIn } from './lib/adminAuth';
 
 const PartnersSection: React.FC = () => (
   <section className="py-12 bg-black border-y border-white/5 overflow-hidden">
@@ -67,7 +69,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews'>('overview');
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
@@ -77,15 +79,22 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const recoverSession = async () => {
+      // 1. Check for Admin Session first
+      if (isAdminLoggedIn()) {
+        setView('admin');
+        setIsInitializing(false);
+        return;
+      }
+
+      // 2. Check for User Session
       const token = localStorage.getItem('ii_token');
       if (token) {
         const userData = await apiService.getCurrentUser(token);
         if (userData) {
           setUser(userData);
-          // Auto-redirect admin to console
-          if (userData.isAdmin) {
-            setView('admin');
-          }
+          // Only auto-switch to dashboard if we are on landing
+          // (prevents interfering with manual view changes)
+          // setView('dashboard');
         } else {
           localStorage.removeItem('ii_token');
           localStorage.removeItem('ii_user');
@@ -96,11 +105,24 @@ const App: React.FC = () => {
     recoverSession();
 
     const handleAdminNav = () => {
-      setView('admin');
-      setAdminSubView('overview');
+      if (isAdminLoggedIn()) {
+        setView('admin');
+        setAdminSubView('overview');
+      } else {
+        setView('admin-login');
+      }
     };
+
+    const handleAdminLoginNav = () => {
+      setView('admin-login');
+    };
+
     window.addEventListener('nav-admin', handleAdminNav);
-    return () => window.removeEventListener('nav-admin', handleAdminNav);
+    window.addEventListener('nav-admin-login', handleAdminLoginNav);
+    return () => {
+      window.removeEventListener('nav-admin', handleAdminNav);
+      window.removeEventListener('nav-admin-login', handleAdminLoginNav);
+    };
   }, []);
 
   const handleTrackSelect = (track: TrackKey) => {
@@ -115,10 +137,10 @@ const App: React.FC = () => {
   const handleAuthSuccess = (loggedUser: User) => {
     setUser(loggedUser);
     setShowAuthModal(false);
-    if (loggedUser.isAdmin) {
-      setView('admin');
-    } else if (selectedTrack) {
+    if (selectedTrack) {
       setEnrollment({ track: selectedTrack });
+    } else {
+      setView('dashboard');
     }
   };
 
@@ -147,6 +169,15 @@ const App: React.FC = () => {
     }
   };
 
+  if (view === 'admin-login') {
+    return (
+      <AdminLogin 
+        onSuccess={() => setView('admin')} 
+        onBack={() => setView('landing')} 
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#030303] selection:bg-blue-500/30">
       {view !== 'admin' && (
@@ -154,16 +185,23 @@ const App: React.FC = () => {
           user={user} 
           onLoginClick={() => setShowAuthModal(true)} 
           onDashboardClick={() => setView('dashboard')} 
-          onAdminClick={() => { setView('admin'); setAdminSubView('overview'); }}
+          onAdminClick={() => { 
+            if (isAdminLoggedIn()) {
+              setView('admin'); 
+              setAdminSubView('overview'); 
+            } else {
+              setView('admin-login');
+            }
+          }}
         />
       )}
       
       <main>
-        {view === 'admin' && user?.isAdmin ? (
+        {view === 'admin' ? (
           <AdminLayout 
             activeView={adminSubView} 
             onViewChange={setAdminSubView} 
-            onExit={() => setView('dashboard')}
+            onExit={() => { setView('landing'); }}
           >
             {renderAdminContent()}
           </AdminLayout>
@@ -220,6 +258,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
