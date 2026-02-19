@@ -1,17 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import { EnrollmentState, TrackKey, UserRegistration, StudentType } from '../types';
+import React, { useState } from 'react';
+import { EnrollmentState, TrackKey, UserRegistration } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 
 /**
- * TEST MODE CONFIGURATION
- * -----------------------
- * Set to true for ₹1 payments (Testing).
- * Set to false for live production prices.
- * 
- * IMPORTANT: To use Razorpay Test Mode properly, ensure your 
- * VITE_RAZORPAY_KEY environment variable is set to a Test Key (starts with rzp_test_).
+ * PAYMENT CONFIGURATION
+ * Set to true for ₹1 Test Mode.
+ * Set to false for Production prices.
  */
 const PAYMENT_TEST_MODE = true;
 
@@ -62,7 +58,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
   const handlePayment = () => {
     if (!razorpayKey) { 
-      setErrorMessage("Razorpay API Key (VITE_RAZORPAY_KEY) is missing in environment."); 
+      setErrorMessage("Razorpay API Key (VITE_RAZORPAY_KEY) is missing. Check your environment variables."); 
       return; 
     }
     
@@ -90,10 +86,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           if (res.success) {
             setStep(4);
           } else {
-            setErrorMessage(res.error || "Failed to sync application.");
+            setErrorMessage(res.error || "Database sync failed. Contact support.");
           }
         } catch (err: any) {
-          setErrorMessage(err.message || "An unexpected error occurred.");
+          setErrorMessage(err.message || "An unexpected error occurred during sync.");
         } finally {
           setIsProcessing(false);
         }
@@ -117,6 +113,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     rzp.open();
   };
 
+  const themeColor = PAYMENT_TEST_MODE ? 'red' : 'blue';
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
@@ -125,13 +123,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
         {/* Test Mode Banner */}
         {PAYMENT_TEST_MODE && (
           <div className="bg-red-600/20 text-red-500 py-2 text-[9px] font-black uppercase tracking-[0.4em] text-center border-b border-red-500/20 animate-pulse">
-            ⚠️ Payment Test Mode Active — ₹1 Simulation
+            ⚠️ Payment Test Mode Active — ₹1 Verification
           </div>
         )}
         
         <div className="p-8 border-b border-white/5 bg-white/[0.01]">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Step {step}: Enrollment</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${PAYMENT_TEST_MODE ? 'text-red-500' : 'text-blue-500'}`}>Step {step}: Enrollment</p>
             <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -143,7 +141,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 
         <div className="p-10 overflow-y-auto custom-scrollbar">
           {errorMessage && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-[10px] font-bold uppercase text-center tracking-widest">
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-[10px] font-bold uppercase text-center tracking-widest leading-relaxed">
               {errorMessage}
             </div>
           )}
@@ -157,7 +155,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </div>
                   <div>
                     <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Tier</label>
-                    <input disabled value={formData.studentType?.toUpperCase()} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] font-black text-blue-500 opacity-80" />
+                    <input disabled value={formData.studentType?.toUpperCase()} className={`w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] font-black ${PAYMENT_TEST_MODE ? 'text-red-500' : 'text-blue-500'} opacity-80`} />
                   </div>
                </div>
                <div>
@@ -180,17 +178,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <div className="flex items-baseline gap-2">
                     <span className={`${PAYMENT_TEST_MODE ? 'text-red-500' : 'text-blue-500'} text-4xl font-black`}>₹{displayPrice.toLocaleString()}</span>
                     <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest">
-                      {PAYMENT_TEST_MODE ? 'Test Environment Price' : 'Program Fee'}
+                      {PAYMENT_TEST_MODE ? 'Simulated Price' : 'Program Fee'}
                     </span>
                   </div>
-                  {PAYMENT_TEST_MODE && (
-                    <p className="mt-4 text-[8px] text-red-500/60 font-black uppercase tracking-widest leading-relaxed">
-                      Note: Real amounts are bypassed. Only ₹1 will be charged for gateway testing.
-                    </p>
-                  )}
                </div>
-               <button onClick={() => setStep(3)} className={`w-full py-5 ${PAYMENT_TEST_MODE ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-black rounded-2xl text-[10px] uppercase tracking-widest transition-all`}>Confirm to Proceed</button>
-               <button onClick={() => setStep(1)} className="w-full text-[9px] text-gray-600 font-bold uppercase hover:text-white transition-colors">Edit Application Profile</button>
+               <button onClick={() => setStep(3)} className={`w-full py-5 ${PAYMENT_TEST_MODE ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-black rounded-2xl text-[10px] uppercase tracking-widest transition-all`}>Confirm & Pay</button>
+               <button onClick={() => setStep(1)} className="w-full text-[9px] text-gray-600 font-bold uppercase hover:text-white transition-colors">Edit Profile</button>
             </div>
           )}
 
@@ -199,16 +192,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                <div className="mb-8 opacity-20">
                   <svg className={`w-20 h-20 mx-auto ${PAYMENT_TEST_MODE ? 'text-red-500' : 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                </div>
-               <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest">Secure Settlement</h3>
+               <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest">Secure Checkout</h3>
                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-8">
-                 {PAYMENT_TEST_MODE ? 'SIMULATED TRANSACTION' : 'ENCRYPTED TRANSACTION'}
+                 {PAYMENT_TEST_MODE ? 'TEST GATEWAY ACTIVE' : 'SSL ENCRYPTED'}
                </p>
                <button 
                  onClick={handlePayment} 
                  disabled={isProcessing} 
                  className={`w-full py-6 rounded-2xl text-xl uppercase tracking-[0.2em] shadow-2xl transition-all ${isProcessing ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : (PAYMENT_TEST_MODE ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700') + ' text-white'}`}
                >
-                 {isProcessing ? 'Syncing...' : `Pay ₹${displayPrice}`}
+                 {isProcessing ? 'Redirecting...' : `Pay ₹${displayPrice}`}
                </button>
                <p className="mt-8 text-[9px] text-gray-600 font-bold uppercase tracking-[0.3em]">Institutional Grade Encryption (Razorpay)</p>
             </div>
@@ -231,6 +224,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
