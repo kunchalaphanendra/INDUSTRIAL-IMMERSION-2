@@ -57,11 +57,20 @@ export interface UserRegistration {
   fullName: string;
   email: string;
   phone: string;
-  institutionName: string; // Captured educational institution
+  institutionName: string; 
+  institution_id?: string; // New field for foreign key mapping
   linkedin?: string;
   currentStatus?: string;
   careerGoals: string;
   studentType?: StudentType;
+}
+
+export interface Institution {
+  id: string;
+  name: string;
+  type: StudentType;
+  is_verified: boolean;
+  created_at: string;
 }
 
 export interface ApplicationRecord extends UserRegistration {
@@ -76,6 +85,10 @@ export interface ApplicationRecord extends UserRegistration {
   razorpay_payment_id?: string;
   razorpay_order_id?: string;
   created_at: string;
+  // Join data
+  institutions?: {
+    name: string;
+  };
 }
 
 export interface User {
@@ -94,7 +107,7 @@ export interface Review {
   course: string;
   rating: number;
   review_text: string;
-  review_status: ReviewStatus; // Migrated from is_approved
+  review_status: ReviewStatus; 
   created_at: string;
 }
 
@@ -119,6 +132,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
