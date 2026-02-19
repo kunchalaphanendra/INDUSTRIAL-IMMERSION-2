@@ -37,6 +37,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
   const handleStatusChange = async (id: string, status: CourseStatus) => {
     const res = await apiService.updateApplicationStatus(id, status);
     if (res.success) {
+      // Local refresh after DB update
       setApps(prev => prev.map(a => a.id === id ? { ...a, course_status: status } : a));
     } else {
       console.error("Status update failed:", res.error);
@@ -215,6 +216,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
