@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { EnrollmentState, TrackKey, UserRegistration } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
+import { supabase } from '../lib/supabaseClient';
 
 /**
  * PAYMENT CONFIGURATION
@@ -112,6 +113,26 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     rzp.open();
   };
 
+  /**
+   * CRITICAL: Redirect logic after success
+   * Verifies session and redirects.
+   */
+  const handleGoToDashboard = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "/";
+      return;
+    }
+
+    // In this SPA implementation, onComplete handles internal state navigation.
+    // If a hard redirect is desired, uncomment the next line:
+    // window.location.href = "/dashboard";
+    if (onComplete) {
+      onComplete();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={onClose} />
@@ -200,7 +221,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                </div>
                <h3 className="text-3xl font-heading font-black text-white mb-4 uppercase tracking-tighter">Seat Secured</h3>
                <p className="text-gray-500 mb-10 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Verification Complete. Industrial Profile Synced.</p>
-               <button onClick={onComplete} className="w-full py-5 bg-white text-black font-black rounded-2xl uppercase tracking-widest hover:bg-gray-200 transition-all">Go to Dashboard</button>
+               <button onClick={handleGoToDashboard} className="w-full py-5 bg-white text-black font-black rounded-2xl uppercase tracking-widest hover:bg-gray-200 transition-all">Go to Dashboard</button>
             </div>
           )}
         </div>
@@ -210,6 +231,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
