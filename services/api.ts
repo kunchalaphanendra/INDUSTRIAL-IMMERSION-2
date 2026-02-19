@@ -91,8 +91,8 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      // FIX: Blind Insert. Do NOT use .select() after insert to avoid PostgREST aggregate triggers.
-      const { error } = await supabase.from('applications').insert(payload);
+      // Restored the original .select() call which may trigger UUID issues depending on DB config
+      const { error } = await supabase.from('applications').insert(payload).select();
       
       if (error) {
         console.error("Database Write Error:", error);
@@ -107,7 +107,6 @@ export const apiService = {
 
   async fetchAdminApplications(): Promise<ApplicationRecord[]> {
     try {
-      // Explicitly select all columns to avoid count=exact header injection
       const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []).map(item => ({
@@ -129,9 +128,9 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      // FIX: Requesting minimal columns explicitly to prevent DB-level aggregate guessing
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
-      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
+      // Reverted to original simpler query style
+      const { data: apps } = await supabase.from('applications').select('*');
+      const { data: reviews } = await supabase.from('reviews').select('*').eq('is_approved', false);
       
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
@@ -196,8 +195,8 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    // FIX: Using minimal column select to avoid MAX(UUID) error on retrieval
-    const { data } = await supabase.from('applications').select('id, track_key, created_at, payment_status').eq('email', email);
+    // Reverted to original select('*') query
+    const { data } = await supabase.from('applications').select('*').eq('email', email);
     return (data || []).map(item => ({
       id: item.id,
       track_key: item.track_key as TrackKey,
@@ -207,6 +206,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
