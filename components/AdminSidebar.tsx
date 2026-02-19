@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { logoutAdmin } from '../lib/adminAuth';
 
 interface AdminSidebarProps {
   activeView: string;
@@ -14,6 +15,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeView, onViewChange, o
     { id: 'payments', label: 'Payments', icon: '💳' },
     { id: 'reviews', label: 'Moderation', icon: '★' },
   ];
+
+  const handleLogout = () => {
+    logoutAdmin();
+    window.location.href = "/";
+  };
 
   return (
     <aside className="w-72 bg-[#080808] border-r border-white/5 flex flex-col shrink-0">
@@ -46,7 +52,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeView, onViewChange, o
 
       <div className="p-6 border-t border-white/5">
         <button 
-          onClick={onExit}
+          onClick={handleLogout}
           className="w-full py-4 bg-white/5 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] transition-all border border-transparent hover:border-red-500/20"
         >
           Exit Control Center
@@ -57,3 +63,4 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeView, onViewChange, o
 };
 
 export default AdminSidebar;
+
