@@ -1,7 +1,9 @@
 
+
+
 import React, { useEffect } from 'react';
 import AdminSidebar from './AdminSidebar';
-import { apiService } from '../services/api';
+import { isAdminLoggedIn } from '../lib/adminAuth';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -13,17 +15,12 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeView, onViewChange, onExit }) => {
   /**
    * CRITICAL: Admin route protection.
-   * Ensures only admin@stjufends.com can render the management suite.
+   * Ensures session is valid via local storage check.
    */
   useEffect(() => {
-    const verifyAdmin = async () => {
-      const isAdmin = await apiService.checkAdminAccess();
-      if (!isAdmin) {
-        console.warn("Unauthorized admin access attempt blocked.");
-        window.location.href = "/";
-      }
-    };
-    verifyAdmin();
+    if (!isAdminLoggedIn()) {
+      window.location.href = "/";
+    }
   }, []);
 
   return (
@@ -50,4 +47,3 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeView, onViewC
 };
 
 export default AdminLayout;
-
