@@ -16,6 +16,7 @@ import AdminDashboardView from './components/AdminDashboardView';
 import AdminStudents from './components/AdminStudents';
 import AdminPayments from './components/AdminPayments';
 import AdminReviews from './components/AdminReviews';
+import AdminInstitutions from './components/AdminInstitutions';
 import AdminLogin from './components/AdminLogin';
 import AdminStudentProfile from './components/AdminStudentProfile';
 import { PARTNERS, TRACKS } from './constants';
@@ -71,7 +72,7 @@ const GetStarted: React.FC = () => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login'>('landing');
-  const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews'>('overview');
+  const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
@@ -174,6 +175,7 @@ const App: React.FC = () => {
       case 'students': return <AdminStudents onSelectStudent={(id) => setSelectedStudentId(id)} />;
       case 'payments': return <AdminPayments />;
       case 'reviews': return <AdminReviews />;
+      case 'institutions': return <AdminInstitutions />;
       default: return <AdminDashboardView />;
     }
   };
@@ -268,6 +270,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
