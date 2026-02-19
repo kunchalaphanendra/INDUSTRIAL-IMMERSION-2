@@ -169,8 +169,8 @@ export const apiService = {
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
-        institution_name: data.institutionName, // Legacy/Display name
-        institution_id: finalInstitutionId,    // Proper foreign key
+        institution_name: data.institutionName, // Hybrid: saves name
+        institution_id: finalInstitutionId,    // Hybrid: saves foreign key
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
@@ -393,3 +393,4 @@ export const apiService = {
     }));
   }
 };
+
