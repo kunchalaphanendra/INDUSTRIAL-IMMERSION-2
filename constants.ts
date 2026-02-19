@@ -50,7 +50,7 @@ export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.COLLEGE_IMMERSION]: {
     title: 'Industry Immersion Certification',
     duration: '6 + 6 Months',
-    price: 14999,
+    price: 1,
     billingType: BillingType.ONETIME,
     description: 'Comprehensive 1-year journey: 6 months of cross-domain professional training (Fashion, Tech, FMCG, etc.) followed by 6 months of guaranteed work experience.',
     idealFor: 'Students seeking complete industrial exposure across multiple high-growth sectors.',
