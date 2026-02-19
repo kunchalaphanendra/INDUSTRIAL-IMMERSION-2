@@ -76,7 +76,7 @@ export const apiService = {
       const payload = {
         application_id: appId,
         full_name: data.fullName,
-        email: data.email,
+        email: data.email, // Linked by email
         phone: data.phone,
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
@@ -92,8 +92,6 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      // CRITICAL: We perform a "blind insert" without .select()
-      // This ensures we do not trigger any count(*) or aggregate metadata queries
       const { error } = await supabase.from('applications').insert(payload);
       
       if (error) {
@@ -130,7 +128,6 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      // Explicit column select prevents certain PostgREST aggregate side-effects
       const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
       
@@ -197,7 +194,13 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
+    // CRITICAL: Filter applications by email (new link standard)
+    const { data } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('email', email)
+      .order('created_at', { ascending: false });
+      
     return (data || []).map(item => ({
       id: item.id,
       track_key: item.track_key as TrackKey,
@@ -207,6 +210,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
