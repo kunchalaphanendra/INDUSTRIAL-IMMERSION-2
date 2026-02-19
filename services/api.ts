@@ -24,53 +24,54 @@ export const apiService = {
     return data && data.length > 0;
   },
 
-  async login(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+  /**
+   * Admin-only password login
+   */
+  async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
     try {
+      const email = 'admin@stjufends.com';
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (!data.user || !data.session) throw new Error("Login failed");
 
-      const adminEmail = 'admin@stjufends.com';
       const user: User = {
         id: data.user.id,
         email: data.user.email || email,
-        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
-        isAdmin: data.user.email === adminEmail
+        fullName: 'Admin System',
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
+        isAdmin: true
       };
       return { success: true, user, token: data.session.access_token };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Invalid credentials' };
+      return { success: false, error: err.message || 'Invalid admin credentials' };
     }
   },
 
-  async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
+      let result;
+      if (isSignup) {
+        // Sign up logic with random password to satisfy Supabase auth requirements if necessary, 
+        // but typically signInWithOtp handles user creation if configured.
+        // We'll use signUp to ensure metadata is saved.
+        result = await supabase.auth.signUp({
+          email,
+          password: Math.random().toString(36).slice(-12),
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: window.location.origin
+          }
+        });
+      } else {
+        result = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: window.location.origin }
+        });
+      }
+      if (result.error) throw result.error;
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  },
-
-  async sendOtp(email: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.origin }
-      });
-      if (error) throw error;
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Failed to send verification code' };
     }
   },
 
@@ -80,13 +81,12 @@ export const apiService = {
       if (error) throw error;
       if (!data.user || !data.session) throw new Error("Verification failed");
       
-      const adminEmail = 'admin@stjufends.com';
       const user: User = {
         id: data.user.id,
         email: data.user.email || email,
         fullName: data.user.user_metadata?.full_name || email.split('@')[0],
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
-        isAdmin: data.user.email === adminEmail
+        isAdmin: false
       };
       return { success: true, user, token: data.session.access_token };
     } catch (err: any) {
@@ -229,6 +229,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
