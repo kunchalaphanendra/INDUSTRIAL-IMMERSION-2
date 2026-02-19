@@ -56,6 +56,7 @@ export interface UserRegistration {
   fullName: string;
   email: string;
   phone: string;
+  institutionName: string; // Captured educational institution
   linkedin?: string;
   currentStatus?: string;
   careerGoals: string;
@@ -117,6 +118,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
