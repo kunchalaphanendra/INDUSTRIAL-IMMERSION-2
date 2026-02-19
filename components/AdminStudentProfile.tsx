@@ -65,7 +65,7 @@ const AdminStudentProfile: React.FC<AdminStudentProfileProps> = ({ id, onBack })
           <div className="w-full pt-8 border-t border-white/5 space-y-4">
             <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
               <span className="text-gray-600">Progress</span>
-              <span className="text-blue-500">{data.course_status}</span>
+              <span className="text-blue-500">{data.course_progress}</span>
             </div>
             <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
               <span className="text-gray-600">Program Fee</span>
@@ -127,4 +127,5 @@ const AdminStudentProfile: React.FC<AdminStudentProfileProps> = ({ id, onBack })
 };
 
 export default AdminStudentProfile;
+
 
