@@ -1,13 +1,12 @@
 
-import React, { useState } from 'react';
-import { EnrollmentState, TrackKey, UserRegistration, StudentType } from '../types';
+import React, { useState, useEffect } from 'react';
+import { EnrollmentState, TrackKey, UserRegistration, StudentType, Institution } from '../types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 import { supabase } from '../lib/supabaseClient';
 
 /**
  * PAYMENT CONFIGURATION
- * Set to false for Live Production prices.
  */
 const PAYMENT_TEST_MODE = false;
 
@@ -27,6 +26,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const [step, setStep] = useState(1); 
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [selectedInstId, setSelectedInstId] = useState<string>('other');
+  const [customInstName, setCustomInstName] = useState<string>('');
   
   const loggedInUserStr = localStorage.getItem('ii_user');
   const loggedInUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
@@ -35,12 +37,23 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     fullName: loggedInUser?.fullName || '',
     email: loggedInUser?.email || '',
     phone: '',
-    institutionName: '', // New required field
+    institutionName: '', 
     currentStatus: loggedInUser?.studentType || 'Student',
     careerGoals: '',
-    // Fix: Updated default studentType to uppercase 'COLLEGE' to match StudentType definition
-    studentType: loggedInUser?.studentType || 'COLLEGE'
+    studentType: (loggedInUser?.studentType as StudentType) || 'COLLEGE'
   });
+
+  // Fetch verified institutions whenever studentType changes
+  useEffect(() => {
+    const fetchInsts = async () => {
+      const list = await apiService.fetchVerifiedInstitutions(formData.studentType || 'COLLEGE');
+      setInstitutions(list);
+      // Reset selection if type changes
+      setSelectedInstId('other');
+      setCustomInstName('');
+    };
+    fetchInsts();
+  }, [formData.studentType]);
 
   if (!enrollment.track || !TRACKS[enrollment.track]) {
     return (
@@ -58,10 +71,26 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const displayPrice = PAYMENT_TEST_MODE ? 1 : trackData.price;
   const razorpayKey = getEnvVar('VITE_RAZORPAY_KEY');
 
-  const handlePayment = () => {
-    if (!formData.institutionName) {
-      setErrorMessage("Please enter your school or college name.");
-      return;
+  const handlePayment = async () => {
+    let finalInstitutionId: string | null = null;
+    let finalInstitutionName = '';
+
+    if (selectedInstId === 'other') {
+      if (!customInstName.trim()) {
+        setErrorMessage("Please enter your school or college name.");
+        return;
+      }
+      // Step 5: Insert new institution if typed
+      const instRes = await apiService.createInstitution(customInstName, formData.studentType || 'COLLEGE');
+      if (instRes.error) {
+        setErrorMessage("Institution registration failed. Please try again.");
+        return;
+      }
+      finalInstitutionId = instRes.id;
+      finalInstitutionName = customInstName;
+    } else {
+      finalInstitutionId = selectedInstId;
+      finalInstitutionName = institutions.find(i => i.id === selectedInstId)?.name || '';
     }
 
     if (!razorpayKey) { 
@@ -82,6 +111,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
         try {
           const res = await apiService.submitApplication({
             ...formData,
+            institutionName: finalInstitutionName,
+            institution_id: finalInstitutionId,
             track: enrollment.track,
             programType: enrollment.track?.includes('school') ? 'school_program' : 'college_program',
             amountPaid: displayPrice,
@@ -120,21 +151,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     rzp.open();
   };
 
-  /**
-   * CRITICAL: Redirect logic after success
-   * Verifies session and redirects.
-   */
   const handleGoToDashboard = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-
     if (!session) {
       window.location.href = "/";
       return;
     }
-
-    if (onComplete) {
-      onComplete();
-    }
+    if (onComplete) onComplete();
   };
 
   return (
@@ -169,7 +192,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <input disabled value={formData.fullName} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs opacity-50 font-bold" />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Type *</label>
+                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Tier *</label>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
@@ -187,17 +210,34 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </div>
                </div>
                
-               {/* STEP 2: Institution Entry */}
+               {/* Step 2: Hybrid Select Dropdown */}
                <div>
-                  <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">School / College Name *</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.institutionName} 
-                    onChange={e => setFormData({...formData, institutionName: e.target.value})} 
-                    placeholder="E.g. Vignan University, Narayana School..." 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" 
-                  />
+                  <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Educational Institution *</label>
+                  <select 
+                    value={selectedInstId} 
+                    onChange={e => setSelectedInstId(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none appearance-none cursor-pointer mb-3"
+                  >
+                    <option value="other" className="bg-black text-white">My institution not listed</option>
+                    {institutions.map(inst => (
+                      <option key={inst.id} value={inst.id} className="bg-black text-white">
+                        {inst.name.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedInstId === 'other' && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                      <input 
+                        required 
+                        type="text" 
+                        value={customInstName} 
+                        onChange={e => setCustomInstName(e.target.value)} 
+                        placeholder="Type full institution name..." 
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" 
+                      />
+                    </div>
+                  )}
                </div>
 
                <div>
@@ -210,7 +250,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                </div>
                <button 
                 onClick={() => {
-                  if (!formData.institutionName) {
+                  if (selectedInstId === 'other' && !customInstName.trim()) {
                     setErrorMessage("Institution name is required.");
                     return;
                   }
@@ -273,6 +313,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
