@@ -81,7 +81,7 @@ const AdminStudentProfile: React.FC<AdminStudentProfileProps> = ({ id, onBack })
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 {[
                   { label: 'Full Legal Name', val: data.fullName },
-                  { label: 'Institution / School', val: data.institutionName || 'Not Provided' },
+                  { label: 'Institution / School', val: data.institutions?.name || 'Not assigned' },
                   { label: 'Contact Sequence', val: data.phone },
                   { label: 'Educational Tier', val: data.student_type },
                   { label: 'Assigned Track', val: data.track_key.replace(/_/g, ' ').toUpperCase() },
@@ -127,5 +127,6 @@ const AdminStudentProfile: React.FC<AdminStudentProfileProps> = ({ id, onBack })
 };
 
 export default AdminStudentProfile;
+
 
 
