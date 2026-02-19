@@ -35,6 +35,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     fullName: loggedInUser?.fullName || '',
     email: loggedInUser?.email || '',
     phone: '',
+    institutionName: '', // New required field
     currentStatus: loggedInUser?.studentType || 'Student',
     careerGoals: '',
     // Fix: Updated default studentType to uppercase 'COLLEGE' to match StudentType definition
@@ -58,6 +59,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const razorpayKey = getEnvVar('VITE_RAZORPAY_KEY');
 
   const handlePayment = () => {
+    if (!formData.institutionName) {
+      setErrorMessage("Please enter your school or college name.");
+      return;
+    }
+
     if (!razorpayKey) { 
       setErrorMessage("Razorpay API Key (VITE_RAZORPAY_KEY) is missing. Check environment variables."); 
       return; 
@@ -166,14 +172,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Type *</label>
                     <div className="flex gap-2">
                       <button 
-                        // Fix: Updated studentType to uppercase 'SCHOOL' to match StudentType definition
                         onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
                         className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
                         School
                       </button>
                       <button 
-                        // Fix: Updated studentType to uppercase 'COLLEGE' to match StudentType definition
                         onClick={() => setFormData({...formData, studentType: 'COLLEGE'})}
                         className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
                       >
@@ -182,6 +186,20 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     </div>
                   </div>
                </div>
+               
+               {/* STEP 2: Institution Entry */}
+               <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">School / College Name *</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={formData.institutionName} 
+                    onChange={e => setFormData({...formData, institutionName: e.target.value})} 
+                    placeholder="E.g. Vignan University, Narayana School..." 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" 
+                  />
+               </div>
+
                <div>
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Contact Number *</label>
                   <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 00000 00000" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" />
@@ -190,7 +208,18 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Industrial Goals *</label>
                   <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder="Describe your objectives..." className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none" />
                </div>
-               <button onClick={() => setStep(2)} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">Continue to Verification</button>
+               <button 
+                onClick={() => {
+                  if (!formData.institutionName) {
+                    setErrorMessage("Institution name is required.");
+                    return;
+                  }
+                  setStep(2);
+                }} 
+                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+               >
+                 Continue to Verification
+               </button>
             </div>
           )}
 
@@ -244,6 +273,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
