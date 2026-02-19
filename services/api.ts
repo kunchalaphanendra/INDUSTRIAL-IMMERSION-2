@@ -260,40 +260,14 @@ export const apiService = {
     return { success: !error, error: error?.message };
   },
 
-  async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
+  async fetchUserEnrollments(email: string): Promise<ApplicationRecord[]> {
     const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
     return (data || []).map(item => ({
-      id: item.id,
+      ...item,
+      fullName: item.full_name,
       track_key: item.track_key as TrackKey,
-      created_at: item.created_at,
-      payment_status: item.payment_status,
-      progress: 0
+      student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+      course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
     }));
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
