@@ -189,7 +189,6 @@ export const apiService = {
 
   async updateApplicationStatus(id: string, status: CourseStatus) {
     try {
-      // PERMANENT FIX: CALL Supabase UPDATE query for applications.course_progress
       const { error } = await supabase
         .from('applications')
         .update({ course_progress: status?.toUpperCase() })
@@ -206,7 +205,7 @@ export const apiService = {
   async fetchAdminStats() {
     try {
       const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_progress, institution_name');
-      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
+      const { data: reviews } = await supabase.from('reviews').select('id').eq('review_status', 'pending');
       
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
@@ -259,50 +258,55 @@ export const apiService = {
   },
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
-    let q = supabase.from('reviews').select('*').eq('is_approved', true);
+    // PUBLIC WEBSITE: ONLY fetch approved reviews
+    let q = supabase.from('reviews').select('*').eq('review_status', 'approved');
     if (courseKey) q = q.eq('course', courseKey);
     const { data } = await q.order('created_at', { ascending: false });
     return data || [];
   },
 
   async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
+    // ADMIN PANEL: Fetch ALL reviews for moderation list
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
-      .eq('is_approved', false)
       .order('created_at', { ascending: false });
     return { data: data || [], error: error?.message };
   },
 
   async approveReview(reviewId: string) {
     try {
-      // PERMANENT FIX: CALL Supabase UPDATE query for reviews.is_approved = true
       const { error } = await supabase
         .from("reviews")
-        .update({ is_approved: true })
+        .update({ review_status: "approved" })
         .eq("id", reviewId);
 
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
-      console.error("Publish failed:", err);
+      console.error("Approve failed:", err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  async rejectReview(reviewId: string) {
+    try {
+      const { error } = await supabase
+        .from("reviews")
+        .update({ review_status: "rejected" })
+        .eq("id", reviewId);
+      
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      console.error("Reject failed:", err);
       return { success: false, error: err.message };
     }
   },
 
   async deleteReview(reviewId: string) {
-    try {
-      // PERMANENT FIX: CALL Supabase DELETE query
-      const { error } = await supabase
-        .from("reviews")
-        .delete()
-        .eq("id", reviewId);
-      if (error) throw error;
-      return { success: true };
-    } catch (err: any) {
-      console.error("Rejection failed:", err);
-      return { success: false, error: err.message };
-    }
+     // Maintained for backward compatibility but using rejectReview is preferred
+     return this.rejectReview(reviewId);
   },
 
   async fetchUserReview(userId: string, courseKey: string) {
@@ -311,9 +315,10 @@ export const apiService = {
   },
 
   async upsertReview(review: any) {
+    // Whenever a user updates their review, reset status to 'pending'
     const { error } = await supabase.from('reviews').upsert({
       ...review,
-      is_approved: false 
+      review_status: 'pending' 
     }, { onConflict: 'user_id,course' });
     return { success: !error, error: error?.message };
   },
@@ -330,6 +335,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
