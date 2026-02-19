@@ -27,7 +27,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [selectedInstId, setSelectedInstId] = useState<string>('other');
+  const [selectedInstId, setSelectedInstId] = useState<string>('');
   const [customInstName, setCustomInstName] = useState<string>('');
   
   const loggedInUserStr = localStorage.getItem('ii_user');
@@ -43,13 +43,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     studentType: (loggedInUser?.studentType as StudentType) || 'COLLEGE'
   });
 
-  // Fetch verified institutions whenever studentType changes
+  // Fetch verified institutions whenever studentType (tier) changes
   useEffect(() => {
     const fetchInsts = async () => {
       const list = await apiService.fetchVerifiedInstitutions(formData.studentType || 'COLLEGE');
       setInstitutions(list);
-      // Reset selection if type changes
-      setSelectedInstId('other');
+      // Reset selection when tier changes
+      setSelectedInstId('');
       setCustomInstName('');
     };
     fetchInsts();
@@ -75,26 +75,28 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     let finalInstitutionId: string | null = null;
     let finalInstitutionName = '';
 
+    // Hybrid Logic: handle 'other' vs selected
     if (selectedInstId === 'other') {
       if (!customInstName.trim()) {
         setErrorMessage("Please enter your school or college name.");
         return;
       }
-      // Step 5: Insert new institution if typed
-      const instRes = await apiService.createInstitution(customInstName, formData.studentType || 'COLLEGE');
+      // Insert new unverified institution
+      const instRes = await apiService.createInstitution(customInstName.trim(), formData.studentType || 'COLLEGE');
       if (instRes.error) {
         setErrorMessage("Institution registration failed. Please try again.");
         return;
       }
       finalInstitutionId = instRes.id;
-      finalInstitutionName = customInstName;
+      finalInstitutionName = customInstName.trim();
     } else {
+      const selected = institutions.find(i => i.id === selectedInstId);
       finalInstitutionId = selectedInstId;
-      finalInstitutionName = institutions.find(i => i.id === selectedInstId)?.name || '';
+      finalInstitutionName = selected?.name || '';
     }
 
     if (!razorpayKey) { 
-      setErrorMessage("Razorpay API Key (VITE_RAZORPAY_KEY) is missing. Check environment variables."); 
+      setErrorMessage("Razorpay API Key missing. Please check configuration."); 
       return; 
     }
     
@@ -109,6 +111,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
       description: `Enrollment: ${trackData.title}`,
       handler: async function (response: any) {
         try {
+          // Save both ID and name to applications table
           const res = await apiService.submitApplication({
             ...formData,
             institutionName: finalInstitutionName,
@@ -210,7 +213,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </div>
                </div>
                
-               {/* Step 2: Hybrid Select Dropdown */}
+               {/* Hybrid Dropdown Implementation */}
                <div>
                   <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Educational Institution *</label>
                   <select 
@@ -218,12 +221,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     onChange={e => setSelectedInstId(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none appearance-none cursor-pointer mb-3"
                   >
-                    <option value="other" className="bg-black text-white">My institution not listed</option>
+                    <option value="" className="bg-black text-white">Select your institution</option>
                     {institutions.map(inst => (
                       <option key={inst.id} value={inst.id} className="bg-black text-white">
                         {inst.name.toUpperCase()}
                       </option>
                     ))}
+                    <option value="other" className="bg-black text-white">My institution not listed</option>
                   </select>
 
                   {selectedInstId === 'other' && (
@@ -233,7 +237,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                         type="text" 
                         value={customInstName} 
                         onChange={e => setCustomInstName(e.target.value)} 
-                        placeholder="Type full institution name..." 
+                        placeholder="Type your institution name..." 
                         className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none" 
                       />
                     </div>
@@ -250,6 +254,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                </div>
                <button 
                 onClick={() => {
+                  if (!selectedInstId) {
+                    setErrorMessage("Please select your institution.");
+                    return;
+                  }
                   if (selectedInstId === 'other' && !customInstName.trim()) {
                     setErrorMessage("Institution name is required.");
                     return;
@@ -313,6 +321,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
