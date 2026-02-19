@@ -8,10 +8,10 @@ const AdminReviews: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPendingReviews = async () => {
+  const fetchReviews = async () => {
     setLoading(true);
     setError(null);
-    // ADMIN PANEL: Fetch reviews that are NOT approved yet
+    // ADMIN PANEL: Fetch ALL reviews (no filtering)
     const result = await apiService.fetchAllReviewsForAdmin();
     
     if (result.error) {
@@ -23,44 +23,45 @@ const AdminReviews: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPendingReviews();
+    fetchReviews();
   }, []);
 
-  /**
-   * ISSUE 2 FIX: Publish Review not saving
-   * CALL Supabase UPDATE query instead of only setState
-   */
-  const publishReview = async (reviewId: string) => {
+  const handleApproveReview = async (reviewId: string) => {
     try {
       const res = await apiService.approveReview(reviewId);
       if (res.success) {
-        // ISSUE 4 FIX: Always reload data after update
-        await fetchPendingReviews();
+        // Refresh list from DB
+        await fetchReviews();
       } else {
-        alert("Failed to publish review in database.");
+        alert("Failed to approve review.");
       }
     } catch (err: any) {
-      console.error("Publish failed:", err);
-      alert("System error during publishing.");
+      console.error("Approve error:", err);
+      alert("System error during approval.");
     }
   };
 
-  /**
-   * ISSUE 3 FIX: Reject Review
-   * CALL Supabase DELETE query instead of only setState
-   */
-  const rejectReview = async (reviewId: string) => {
+  const handleRejectReview = async (reviewId: string) => {
     try {
-      const result = await apiService.deleteReview(reviewId);
+      const result = await apiService.rejectReview(reviewId);
       if (result.success) {
-        // ISSUE 4 FIX: Always reload data after update
-        await fetchPendingReviews();
+        // Refresh list from DB
+        await fetchReviews();
       } else {
         alert(`Rejection Failed: ${result.error}`);
       }
     } catch (err: any) {
-      console.error("Rejection failed:", err);
+      console.error("Rejection error:", err);
       alert("System error during rejection.");
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'text-green-500 bg-green-500/10 border-green-500/20';
+      case 'rejected': return 'text-red-500 bg-red-500/10 border-red-500/20';
+      case 'pending':
+      default: return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
     }
   };
 
@@ -69,11 +70,11 @@ const AdminReviews: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter">Moderation Console</h1>
-          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2">Approve or reject participant feedback</p>
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2">Manage participant feedback and visibility</p>
         </div>
         <div className="flex gap-4">
           <button 
-            onClick={fetchPendingReviews} 
+            onClick={fetchReviews} 
             disabled={loading}
             className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all disabled:opacity-50"
           >
@@ -107,6 +108,7 @@ const AdminReviews: React.FC = () => {
                   <th className="px-8 py-6">Immersion Track</th>
                   <th className="px-8 py-6">Industrial Rating</th>
                   <th className="px-8 py-6">Execution Summary</th>
+                  <th className="px-8 py-6">Status</th>
                   <th className="px-8 py-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -133,25 +135,32 @@ const AdminReviews: React.FC = () => {
                     <td className="px-8 py-6">
                       <p className="text-gray-500 text-[11px] font-medium max-w-xs truncate group-hover:text-gray-400 transition-colors" title={r.review_text}>{r.review_text}</p>
                     </td>
+                    <td className="px-8 py-6">
+                      <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${getStatusColor(r.review_status)}`}>
+                        {r.review_status}
+                      </span>
+                    </td>
                     <td className="px-8 py-6 text-right space-x-2">
                       <button
-                        onClick={() => rejectReview(r.id)}
-                        className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                        onClick={() => handleRejectReview(r.id)}
+                        disabled={r.review_status === 'rejected'}
+                        className={`px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${r.review_status === 'rejected' ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         Reject
                       </button>
                       <button
-                        onClick={() => publishReview(r.id)}
-                        className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                        onClick={() => handleApproveReview(r.id)}
+                        disabled={r.review_status === 'approved'}
+                        className={`px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all ${r.review_status === 'approved' ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
-                        Publish Review
+                        Approve
                       </button>
                     </td>
                   </tr>
                 ))}
                 {reviews.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-32 text-center text-gray-600">
+                    <td colSpan={6} className="px-8 py-32 text-center text-gray-600">
                       <div className="flex flex-col items-center justify-center">
                          <div className="text-4xl mb-4 opacity-20">🗄️</div>
                          <p className="text-[10px] font-black uppercase tracking-widest">Zero Records in Moderation Queue</p>
@@ -169,6 +178,7 @@ const AdminReviews: React.FC = () => {
 };
 
 export default AdminReviews;
+
 
 
 
