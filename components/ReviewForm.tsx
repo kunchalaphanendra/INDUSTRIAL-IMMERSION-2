@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Review, TrackKey } from '../types';
 import { apiService } from '../services/api';
@@ -17,7 +18,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
 
   useEffect(() => {
     const checkExisting = async () => {
-      // Bypass account check (test-user-id is hardcoded in AuthModal test bypass)
+      // test account check
       if (user.id === 'test-user-id') return;
       
       const review = await apiService.fetchUserReview(user.id, courseKey);
@@ -57,7 +58,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
       course: courseKey,
       rating,
       review_text: reviewText,
-      is_approved: false // Always reset to false for re-moderation on edit
+      review_status: 'pending' // Resets to pending for moderation on every edit
     });
 
     if (result.success) {
@@ -129,3 +130,4 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
 };
 
 export default ReviewForm;
+
