@@ -17,10 +17,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({ 
     email: '', 
     fullName: '', 
+    password: '',
     studentType: 'school' as StudentType 
   });
   
-  // Timer State
+  // Timer State for OTP Verification
   const [timer, setTimer] = useState(0);
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -36,29 +37,44 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     
     try {
-      // 1. If login, check if user exists in applications first
       if (isLogin) {
+        // 1. Check if user email exists in industrial records (skip for admin)
         const exists = await apiService.checkUserExists(formData.email);
         if (!exists) {
-          setError("This email does not exist in our industrial records. Please apply for a program first.");
+          setError("Access Denied: No industrial profile found for this email. Please apply first.");
           setLoading(false);
           return;
         }
-      }
 
-      // 2. Send OTP via Supabase
-      const res = await apiService.sendOtp(formData.email, isLogin ? undefined : formData.fullName, !isLogin);
-      if (res.success) {
-        setNeedsVerification(true);
-        setTimer(60); // Start 60s countdown
+        // 2. Perform Password Login
+        const res = await apiService.login(formData.email, formData.password);
+        if (res.success && res.user) {
+          localStorage.setItem('ii_token', res.token || '');
+          localStorage.setItem('ii_user', JSON.stringify({
+            ...res.user,
+            studentType: formData.studentType 
+          }));
+          onSuccess(res.user);
+        } else {
+          setError(res.error || 'Authentication failed. Check your password.');
+        }
       } else {
-        setError(res.error || 'Gateway Error');
+        // 3. Perform Sign Up
+        const res = await apiService.signUp(formData.email, formData.password, formData.fullName);
+        if (res.success) {
+          // Trigger OTP for verification
+          await apiService.sendOtp(formData.email);
+          setNeedsVerification(true);
+          setTimer(60); 
+        } else {
+          setError(res.error || 'Registration failed.');
+        }
       }
     } catch (err: any) {
       setError(err.message);
@@ -87,7 +103,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       }));
       onSuccess(res.user);
     } else {
-      setError(res.error || 'Invalid code');
+      setError(res.error || 'Invalid verification code.');
+    }
+    setLoading(false);
+  };
+
+  const resendOtp = async () => {
+    setLoading(true);
+    const res = await apiService.sendOtp(formData.email);
+    if (res.success) {
+      setTimer(60);
+      setError(null);
+    } else {
+      setError("Failed to resend. Try again later.");
     }
     setLoading(false);
   };
@@ -112,25 +140,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
             )}
 
-            <form onSubmit={handleSendOtp} className="space-y-6">
+            <form onSubmit={handleAuthSubmit} className="space-y-6">
               {!isLogin && (
                 <>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Full Legal Name</label>
-                    <input required type="text" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all" />
+                    <input required type="text" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
                   </div>
                   
                   <div className="space-y-3">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Select Student Type</label>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Student Category</label>
                     <div className="grid grid-cols-2 gap-4">
                       {(['school', 'college'] as StudentType[]).map(type => (
                         <button
                           key={type}
                           type="button"
                           onClick={() => setFormData({...formData, studentType: type})}
-                          className={`py-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.studentType === type ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border-white/10 text-gray-500 hover:border-white/20'}`}
+                          className={`py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === type ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border-white/10 text-gray-500 hover:border-white/20'}`}
                         >
-                          {type} Student
+                          {type}
                         </button>
                       ))}
                     </div>
@@ -139,25 +167,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               )}
               
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Professional Email</label>
-                <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-blue-500 outline-none transition-all" />
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+                <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
               </div>
 
-              <button disabled={loading} className="w-full py-6 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50">
-                {loading ? "Initializing..." : (isLogin ? 'Authorize Access' : 'Create Profile')}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Access Password</label>
+                <input required type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500 outline-none transition-all text-xs" />
+              </div>
+
+              <button disabled={loading} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50">
+                {loading ? "Processing..." : (isLogin ? 'Grant Access' : 'Create Profile')}
               </button>
             </form>
 
             <div className="mt-10 text-center pt-8 border-t border-white/5">
               <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="text-[9px] text-gray-500 hover:text-white font-black uppercase tracking-[0.3em]">
-                {isLogin ? "Request New Profile" : "Existing Member? Login"}
+                {isLogin ? "Apply for New Profile" : "Existing Member? Sign In"}
               </button>
             </div>
           </>
         ) : (
           <div className="text-center">
-            <h2 className="text-2xl font-heading font-bold mb-4 text-white uppercase tracking-widest">Verify Email</h2>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-10">Verification code sent to {formData.email}</p>
+            <h2 className="text-3xl font-heading font-black mb-4 text-white uppercase tracking-tighter">Verify Email</h2>
+            <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mb-10 leading-relaxed">
+              Industrial verification code transmitted to <br />
+              <span className="text-blue-500">{formData.email}</span>
+            </p>
             
             {error && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[9px] font-bold uppercase tracking-widest">
@@ -165,26 +201,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
               </div>
             )}
 
-            <div className="flex justify-between gap-2 mb-10">
+            <div className="flex justify-between gap-3 mb-10">
               {otp.map((digit, idx) => (
-                <input key={idx} ref={el => { otpRefs.current[idx] = el; }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={e => handleOtpChange(idx, e.target.value)} className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500 outline-none" />
+                <input key={idx} ref={el => { otpRefs.current[idx] = el; }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={e => handleOtpChange(idx, e.target.value)} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl text-center text-lg font-bold text-white focus:border-blue-500 outline-none transition-all" />
               ))}
             </div>
 
             <button onClick={() => performVerification(otp.join(''))} disabled={loading} className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl uppercase tracking-widest text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-              {loading ? "Verifying..." : "Verify Code"}
+              {loading ? "Verifying..." : "Confirm Code"}
             </button>
 
             <div className="mt-10 pt-8 border-t border-white/5">
               {timer > 0 ? (
                 <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
-                  Resend Code in <span className="text-blue-500 neon-text-blue">{timer}s</span>
+                  Resend Sequence in <span className="text-blue-500 neon-text-blue">{timer}s</span>
                 </p>
               ) : (
                 <button 
-                  onClick={() => handleSendOtp()} 
+                  onClick={resendOtp} 
                   disabled={loading}
-                  className="text-[9px] text-blue-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
+                  className="text-[10px] text-blue-500 hover:text-white font-black uppercase tracking-[0.3em] transition-colors"
                 >
                   Resend OTP
                 </button>
@@ -202,6 +238,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
