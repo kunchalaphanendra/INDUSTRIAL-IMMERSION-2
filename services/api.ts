@@ -162,15 +162,14 @@ export const apiService = {
   async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
     try {
       const appId = await generateApplicationId();
-      let finalInstitutionId = data.institution_id;
-
+      
+      // Normalized: Using institution_id strictly
       const payload = {
         application_id: appId,
         full_name: data.fullName,
         email: data.email,
         phone: data.phone,
-        institution_name: data.institutionName, // Hybrid: saves name
-        institution_id: finalInstitutionId,    // Hybrid: saves foreign key
+        institution_id: data.institution_id,
         linkedin: data.linkedin || null,
         current_status: data.currentStatus,
         career_goals: data.careerGoals,
@@ -393,4 +392,5 @@ export const apiService = {
     }));
   }
 };
+
 
