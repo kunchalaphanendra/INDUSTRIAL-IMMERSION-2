@@ -17,6 +17,7 @@ import AdminStudents from './components/AdminStudents';
 import AdminPayments from './components/AdminPayments';
 import AdminReviews from './components/AdminReviews';
 import AdminLogin from './components/AdminLogin';
+import AdminStudentProfile from './components/AdminStudentProfile';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews'>('overview');
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
@@ -92,9 +94,6 @@ const App: React.FC = () => {
         const userData = await apiService.getCurrentUser(token);
         if (userData) {
           setUser(userData);
-          // Only auto-switch to dashboard if we are on landing
-          // (prevents interfering with manual view changes)
-          // setView('dashboard');
         } else {
           localStorage.removeItem('ii_token');
           localStorage.removeItem('ii_user');
@@ -108,6 +107,7 @@ const App: React.FC = () => {
       if (isAdminLoggedIn()) {
         setView('admin');
         setAdminSubView('overview');
+        setSelectedStudentId(null);
       } else {
         setView('admin-login');
       }
@@ -160,9 +160,18 @@ const App: React.FC = () => {
   }
 
   const renderAdminContent = () => {
+    if (selectedStudentId) {
+      return (
+        <AdminStudentProfile 
+          id={selectedStudentId} 
+          onBack={() => setSelectedStudentId(null)} 
+        />
+      );
+    }
+
     switch (adminSubView) {
       case 'overview': return <AdminDashboardView />;
-      case 'students': return <AdminStudents />;
+      case 'students': return <AdminStudents onSelectStudent={(id) => setSelectedStudentId(id)} />;
       case 'payments': return <AdminPayments />;
       case 'reviews': return <AdminReviews />;
       default: return <AdminDashboardView />;
@@ -189,6 +198,7 @@ const App: React.FC = () => {
             if (isAdminLoggedIn()) {
               setView('admin'); 
               setAdminSubView('overview'); 
+              setSelectedStudentId(null);
             } else {
               setView('admin-login');
             }
@@ -200,7 +210,7 @@ const App: React.FC = () => {
         {view === 'admin' ? (
           <AdminLayout 
             activeView={adminSubView} 
-            onViewChange={setAdminSubView} 
+            onViewChange={(v) => { setAdminSubView(v); setSelectedStudentId(null); }} 
             onExit={() => { setView('landing'); }}
           >
             {renderAdminContent()}
@@ -258,6 +268,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
