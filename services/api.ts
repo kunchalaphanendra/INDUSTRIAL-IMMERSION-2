@@ -21,11 +21,14 @@ export const apiService = {
       .from('institutions')
       .select('*')
       .eq('is_verified', true)
-      .eq('type', type)
+      .eq('type', type.toLowerCase())
       .order('name');
     
     if (error) return [];
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      type: item.type.toUpperCase() as StudentType
+    }));
   },
 
   async fetchAllInstitutionsForAdmin(): Promise<Institution[]> {
@@ -35,7 +38,10 @@ export const apiService = {
       .order('created_at', { ascending: false });
     
     if (error) return [];
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      type: item.type.toUpperCase() as StudentType
+    }));
   },
 
   async approveInstitution(id: string) {
@@ -49,7 +55,7 @@ export const apiService = {
   async createInstitution(name: string, type: StudentType): Promise<{ id: string | null; error?: string }> {
     const { data, error } = await supabase
       .from('institutions')
-      .insert({ name, type, is_verified: false })
+      .insert({ name, type: type.toLowerCase(), is_verified: false })
       .select('id')
       .single();
     
@@ -60,7 +66,7 @@ export const apiService = {
   async adminAddInstitution(name: string, type: StudentType): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase
       .from('institutions')
-      .insert({ name, type, is_verified: true });
+      .insert({ name, type: type.toLowerCase(), is_verified: true });
     
     return { success: !error, error: error?.message };
   },
@@ -387,11 +393,3 @@ export const apiService = {
     }));
   }
 };
-
-
-
-
-
-
-
-
