@@ -1,9 +1,17 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus } from '../types';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 // Import admin credentials for internal verification
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from '../lib/adminAuth';
+
+export interface AdminFilterOptions {
+  studentType?: string;
+  program?: string;
+  courseStatus?: string;
+  paymentStatus?: string;
+  search?: string;
+}
 
 export const apiService = {
   async checkUserExists(email: string): Promise<boolean> {
@@ -111,7 +119,7 @@ export const apiService = {
         student_type: data.studentType || 'college',
         payment_status: 'completed',
         amount_paid: Number(data.amountPaid) || 0,
-        course_status: data.studentType === 'college' ? 'pending' : null,
+        course_status: data.studentType === 'college' ? 'pending' : 'completed',
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
@@ -124,9 +132,30 @@ export const apiService = {
     }
   },
 
-  async fetchAdminApplications(): Promise<ApplicationRecord[]> {
+  async fetchAdminApplications(filters?: AdminFilterOptions): Promise<ApplicationRecord[]> {
     try {
-      const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('applications').select('*');
+      
+      if (filters) {
+        if (filters.studentType && filters.studentType !== 'all') {
+          query = query.eq('student_type', filters.studentType);
+        }
+        if (filters.program && filters.program !== 'all') {
+          query = query.eq('track_key', filters.program);
+        }
+        if (filters.courseStatus && filters.courseStatus !== 'all') {
+          query = query.eq('course_status', filters.courseStatus);
+        }
+        if (filters.paymentStatus && filters.paymentStatus !== 'all') {
+          query = query.eq('payment_status', filters.paymentStatus);
+        }
+        if (filters.search) {
+          const s = `%${filters.search}%`;
+          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s}`);
+        }
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []).map(item => ({
         ...item,
@@ -147,10 +176,17 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_status');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
+      
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
+      
+      const schoolCount = apps?.filter(a => a.student_type === 'school').length || 0;
+      const collegeCount = apps?.filter(a => a.student_type === 'college').length || 0;
+      const completedCoursesCount = apps?.filter(a => a.course_status === 'completed').length || 0;
+      const pendingPaymentsCount = apps?.filter(a => a.payment_status === 'pending').length || 0;
+
       const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
       apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
       const totalCount = apps?.length || 1;
@@ -159,11 +195,16 @@ export const apiService = {
         count: Math.round((val / totalCount) * 100),
         raw: val
       }));
+
       return {
         totalApplications: apps?.length || 0,
         totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
         totalRevenue,
         pendingReviews,
+        schoolCount,
+        collegeCount,
+        completedCoursesCount,
+        pendingPaymentsCount,
         distribution,
         totalUsers: new Set(apps?.map(a => a.email)).size || 0
       };
@@ -215,6 +256,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
