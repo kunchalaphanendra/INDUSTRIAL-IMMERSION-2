@@ -51,6 +51,7 @@ export interface DomainData {
 export type CourseStatus = 'PENDING' | 'ONGOING' | 'COMPLETED' | 'DROPOUT' | null;
 export type StudentType = 'SCHOOL' | 'COLLEGE';
 export type ProgramType = 'school_program' | 'college_program';
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
 export interface UserRegistration {
   fullName: string;
@@ -69,7 +70,7 @@ export interface ApplicationRecord extends UserRegistration {
   track_key: TrackKey;
   program_type: ProgramType;
   student_type: StudentType;
-  course_progress: CourseStatus; // Changed from course_status to course_progress
+  course_progress: CourseStatus; 
   payment_status: string;
   amount_paid: number;
   razorpay_payment_id?: string;
@@ -93,7 +94,7 @@ export interface Review {
   course: string;
   rating: number;
   review_text: string;
-  is_approved: boolean; // Changed from approval_status back to boolean as per request
+  review_status: ReviewStatus; // Migrated from is_approved
   created_at: string;
 }
 
@@ -118,6 +119,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
