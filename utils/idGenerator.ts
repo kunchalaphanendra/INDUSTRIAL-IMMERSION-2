@@ -1,8 +1,8 @@
 
 /**
- * Generates a unique Application ID: STJ + YY + MM + [2 Letters] + [3 Numbers]
- * Format: STJ2601AB123
- * This avoids any database-side MAX(id) queries which fail on UUID primary keys.
+ * Generates a unique Application ID: STJ + YY + MM + [2 Letters] + [2 Numbers]
+ * Format: STJ2601AB12
+ * This follows the industrial standard: STJ + Year + Month + Random Alphanumeric.
  */
 export async function generateApplicationId(): Promise<string> {
   const now = new Date();
@@ -12,10 +12,11 @@ export async function generateApplicationId(): Promise<string> {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const randLetter1 = letters[Math.floor(Math.random() * letters.length)];
   const randLetter2 = letters[Math.floor(Math.random() * letters.length)];
-  const randNum = Math.floor(100 + Math.random() * 900); // 3 digits
+  const randNum = Math.floor(10 + Math.random() * 90); // 2 digits (10-99)
 
   return `STJ${year}${month}${randLetter1}${randLetter2}${randNum}`;
 }
+
 
 
 
