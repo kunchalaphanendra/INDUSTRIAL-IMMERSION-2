@@ -116,10 +116,10 @@ export const apiService = {
         career_goals: data.careerGoals,
         track_key: data.track,
         program_type: data.programType,
-        student_type: data.studentType || 'college',
+        student_type: data.studentType || 'COLLEGE',
         payment_status: 'completed',
         amount_paid: Number(data.amountPaid) || 0,
-        course_status: data.studentType === 'college' ? 'pending' : 'completed',
+        course_status: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
         razorpay_payment_id: data.paymentId || null,
         razorpay_order_id: data.orderId || null,
         razorpay_signature: data.signature || null
@@ -137,16 +137,16 @@ export const apiService = {
       let query = supabase.from('applications').select('*');
       
       if (filters) {
-        if (filters.studentType && filters.studentType !== 'all') {
+        if (filters.studentType && filters.studentType !== 'ALL') {
           query = query.eq('student_type', filters.studentType);
         }
-        if (filters.program && filters.program !== 'all') {
+        if (filters.program && filters.program !== 'ALL') {
           query = query.eq('track_key', filters.program);
         }
-        if (filters.courseStatus && filters.courseStatus !== 'all') {
+        if (filters.courseStatus && filters.courseStatus !== 'ALL') {
           query = query.eq('course_status', filters.courseStatus);
         }
-        if (filters.paymentStatus && filters.paymentStatus !== 'all') {
+        if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
           query = query.eq('payment_status', filters.paymentStatus);
         }
         if (filters.search) {
@@ -161,8 +161,8 @@ export const apiService = {
         ...item,
         fullName: item.full_name,
         track_key: item.track_key as TrackKey,
-        student_type: item.student_type as any,
-        course_status: item.course_status as any
+        student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+        course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
       }));
     } catch { return []; }
   },
@@ -182,10 +182,10 @@ export const apiService = {
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
       
-      const schoolCount = apps?.filter(a => a.student_type === 'school').length || 0;
-      const collegeCount = apps?.filter(a => a.student_type === 'college').length || 0;
-      const completedCoursesCount = apps?.filter(a => a.course_status === 'completed').length || 0;
-      const pendingPaymentsCount = apps?.filter(a => a.payment_status === 'pending').length || 0;
+      const schoolCount = apps?.filter(a => a.student_type?.toUpperCase() === 'SCHOOL').length || 0;
+      const collegeCount = apps?.filter(a => a.student_type?.toUpperCase() === 'COLLEGE').length || 0;
+      const completedCoursesCount = apps?.filter(a => a.course_status?.toUpperCase() === 'COMPLETED').length || 0;
+      const pendingPaymentsCount = apps?.filter(a => a.payment_status?.toUpperCase() === 'PENDING').length || 0;
 
       const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
       apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
@@ -256,6 +256,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
