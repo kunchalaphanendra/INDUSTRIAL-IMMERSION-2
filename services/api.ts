@@ -91,11 +91,11 @@ export const apiService = {
         razorpay_signature: data.signature || null
       };
 
-      // Explicitly insert without requesting data back to minimize PostgREST complexity
+      // FIX: Blind Insert. Do NOT use .select() after insert to avoid PostgREST aggregate triggers.
       const { error } = await supabase.from('applications').insert(payload);
       
       if (error) {
-        console.error("Database Insert Error:", error);
+        console.error("Database Write Error:", error);
         return { success: false, error: error.message };
       }
       
@@ -107,6 +107,7 @@ export const apiService = {
 
   async fetchAdminApplications(): Promise<ApplicationRecord[]> {
     try {
+      // Explicitly select all columns to avoid count=exact header injection
       const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []).map(item => ({
@@ -128,8 +129,10 @@ export const apiService = {
 
   async fetchAdminStats() {
     try {
-      const { data: apps } = await supabase.from('applications').select('*');
+      // FIX: Requesting minimal columns explicitly to prevent DB-level aggregate guessing
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status');
       const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
+      
       const pendingReviews = reviews?.length || 0;
       const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
       
@@ -183,7 +186,6 @@ export const apiService = {
   },
 
   async fetchUserReview(userId: string, courseKey: string) {
-    // Avoid maybeSingle()
     const { data } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).limit(1);
     return data && data.length > 0 ? data[0] : null;
   },
@@ -194,7 +196,8 @@ export const apiService = {
   },
 
   async fetchUserEnrollments(email: string): Promise<EnrollmentRecord[]> {
-    const { data } = await supabase.from('applications').select('*').eq('email', email);
+    // FIX: Using minimal column select to avoid MAX(UUID) error on retrieval
+    const { data } = await supabase.from('applications').select('id, track_key, created_at, payment_status').eq('email', email);
     return (data || []).map(item => ({
       id: item.id,
       track_key: item.track_key as TrackKey,
@@ -204,6 +207,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
