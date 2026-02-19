@@ -5,9 +5,22 @@ import { generateApplicationId } from '../utils/idGenerator';
 
 export const apiService = {
   /**
+   * Verifies if the current Supabase session belongs to the admin.
+   */
+  async checkAdminAccess(): Promise<boolean> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) return false;
+    return session.user.email === "admin@stjufends.com";
+  },
+
+  /**
    * Checks if an email has an existing enrollment/application record.
+   * Explicitly allows the admin email to pass.
    */
   async checkUserExists(email: string): Promise<boolean> {
+    const adminEmail = 'admin@stjufends.com';
+    if (email.toLowerCase() === adminEmail.toLowerCase()) return true;
+
     const { data, error } = await supabase
       .from('applications')
       .select('email')
@@ -22,7 +35,6 @@ export const apiService = {
     try {
       let result;
       if (isSignup) {
-        // Sign up logic
         result = await supabase.auth.signUp({
           email,
           password: Math.random().toString(36).slice(-12),
@@ -32,7 +44,6 @@ export const apiService = {
           }
         });
       } else {
-        // Simple magic link/OTP logic for login
         result = await supabase.auth.signInWithOtp({
           email,
           options: { emailRedirectTo: window.location.origin }
@@ -66,10 +77,6 @@ export const apiService = {
   },
 
   async getCurrentUser(token: string): Promise<User | null> {
-    if (token === 'test-token-bypass') {
-      const storedUser = localStorage.getItem('ii_user');
-      return storedUser ? JSON.parse(storedUser) : null;
-    }
     try {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return null;
@@ -204,6 +211,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
