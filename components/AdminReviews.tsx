@@ -1,335 +1,175 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType } from '../types';
-import { supabase } from '../lib/supabaseClient';
-import { generateApplicationId } from '../utils/idGenerator';
-// Import admin credentials for internal verification
-import { ADMIN_EMAIL, ADMIN_PASSWORD } from '../lib/adminAuth';
+import React, { useState, useEffect } from 'react';
+import { Review } from '../types';
+import { apiService } from '../services/api';
 
-export interface AdminFilterOptions {
-  studentType?: string;
-  program?: string;
-  courseStatus?: string;
-  paymentStatus?: string;
-  institution?: string;
-  search?: string;
-}
+const AdminReviews: React.FC = () => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const apiService = {
-  async checkUserExists(email: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('applications')
-      .select('email')
-      .eq('email', email)
-      .limit(1);
-    
-    if (error) return false;
-    return data && data.length > 0;
-  },
-
-  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
-    try {
-      let result;
-      if (isSignup) {
-        result = await supabase.auth.signUp({
-          email,
-          password: Math.random().toString(36).slice(-12),
-          options: {
-            data: { full_name: fullName },
-            emailRedirectTo: window.location.origin
-          }
-        });
-      } else {
-        result = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.origin }
-        });
-      }
-      if (result.error) throw result.error;
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Failed to send verification code' };
-    }
-  },
-
-  async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-      if (error) throw error;
-      if (!data.user || !data.session) throw new Error("Verification failed");
-      
-      const user: User = {
-        id: data.user.id,
-        email: data.user.email || email,
-        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
-        isAdmin: false
-      };
-      return { success: true, user, token: data.session.access_token };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Invalid code.' };
-    }
-  },
-
-  async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
-    try {
-      if (password === ADMIN_PASSWORD) {
-        localStorage.setItem("admin_session", "true");
-        const user: User = {
-          id: 'admin-id',
-          email: ADMIN_EMAIL,
-          fullName: 'Administrator',
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
-          isAdmin: true
-        };
-        return { success: true, user, token: 'admin-token' };
-      }
-      return { success: false, error: 'Invalid credentials' };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Admin authentication failed' };
-    }
-  },
-
-  async getCurrentUser(token: string): Promise<User | null> {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) return null;
-      return {
-        id: user.id,
-        email: user.email || '',
-        fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-        isAdmin: false
-      };
-    } catch { return null; }
-  },
-
-  async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
-    try {
-      const appId = await generateApplicationId();
-      const payload = {
-        application_id: appId,
-        full_name: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        institution_name: data.institutionName,
-        linkedin: data.linkedin || null,
-        current_status: data.currentStatus,
-        career_goals: data.careerGoals,
-        track_key: data.track,
-        program_type: data.programType,
-        student_type: data.studentType?.toLowerCase() || 'college',
-        payment_status: 'completed',
-        amount_paid: Number(data.amountPaid) || 0,
-        course_progress: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
-        razorpay_payment_id: data.paymentId || null,
-        razorpay_order_id: data.orderId || null,
-        razorpay_signature: data.signature || null
-      };
-      const { error } = await supabase.from('applications').insert(payload);
-      if (error) throw error;
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  },
-
-  async fetchAdminApplications(filters?: AdminFilterOptions): Promise<ApplicationRecord[]> {
-    try {
-      let query = supabase.from('applications').select('*');
-      
-      if (filters) {
-        if (filters.studentType && filters.studentType !== 'ALL') {
-          query = query.eq('student_type', filters.studentType.toLowerCase());
-        }
-        if (filters.program && filters.program !== 'ALL') {
-          query = query.eq('track_key', filters.program);
-        }
-        if (filters.courseStatus && filters.courseStatus !== 'ALL') {
-          query = query.eq('course_progress', filters.courseStatus.toUpperCase());
-        }
-        if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
-          query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
-        }
-        if (filters.institution && filters.institution !== 'ALL') {
-          query = query.eq('institution_name', filters.institution);
-        }
-        if (filters.search) {
-          const s = `%${filters.search}%`;
-          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s},institution_name.ilike.${s}`);
-        }
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map(item => ({
-        ...item,
-        fullName: item.full_name,
-        institutionName: item.institution_name,
-        track_key: item.track_key as TrackKey,
-        student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-        course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
-      }));
-    } catch { return []; }
-  },
-
-  async fetchApplicationById(id: string): Promise<ApplicationRecord | null> {
-    try {
-      const { data, error } = await supabase.from('applications').select('*').eq('id', id).single();
-      if (error || !data) return null;
-      return {
-        ...data,
-        fullName: data.full_name,
-        institutionName: data.institution_name,
-        track_key: data.track_key as TrackKey,
-        student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-        course_progress: (data.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
-      };
-    } catch { return null; }
-  },
-
-  async updateApplicationStatus(id: string, status: CourseStatus) {
-    try {
-      // PERMANENT FIX: CALL Supabase UPDATE query for applications.course_progress
-      const { error } = await supabase
-        .from('applications')
-        .update({ course_progress: status?.toUpperCase() })
-        .eq('id', id);
-      
-      if (error) throw error;
-      return { success: true };
-    } catch (err: any) { 
-      console.error("Failed to update course_progress in DB:", err);
-      return { success: false, error: err.message }; 
-    }
-  },
-
-  async fetchAdminStats() {
-    try {
-      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_progress, institution_name');
-      const { data: reviews } = await supabase.from('reviews').select('id').eq('is_approved', false);
-      
-      const pendingReviews = reviews?.length || 0;
-      const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
-      
-      const schoolCount = apps?.filter(a => a.student_type?.toUpperCase() === 'SCHOOL').length || 0;
-      const collegeCount = apps?.filter(a => a.student_type?.toUpperCase() === 'COLLEGE').length || 0;
-      const completedCoursesCount = apps?.filter(a => a.course_progress?.toUpperCase() === 'COMPLETED').length || 0;
-      const pendingPaymentsCount = apps?.filter(a => a.payment_status?.toUpperCase() === 'PENDING').length || 0;
-
-      const instRevenue: Record<string, number> = {};
-      apps?.filter(a => a.payment_status === 'completed').forEach(a => {
-        const name = a.institution_name || 'Individual';
-        instRevenue[name] = (instRevenue[name] || 0) + (Number(a.amount_paid) || 0);
-      });
-      const institutionRevenue = Object.entries(instRevenue)
-        .map(([name, revenue]) => ({ name, revenue }))
-        .sort((a, b) => b.revenue - a.revenue);
-
-      const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
-      apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
-      const totalCount = apps?.length || 1;
-      const distribution = Object.entries(counts).map(([key, val]) => ({
-        name: key.replace(/_/g, ' '),
-        count: Math.round((val / totalCount) * 100),
-        raw: val
-      }));
-
-      return {
-        totalApplications: apps?.length || 0,
-        totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
-        totalRevenue,
-        pendingReviews,
-        schoolCount,
-        collegeCount,
-        completedCoursesCount,
-        pendingPaymentsCount,
-        distribution,
-        institutionRevenue,
-        totalInstitutions: new Set(apps?.map(a => a.institution_name)).size || 0,
-        totalUsers: new Set(apps?.map(a => a.email)).size || 0
-      };
-    } catch { return null; }
-  },
-
-  async fetchRecentActivity() {
-    try {
-      const { data: apps } = await supabase.from('applications').select('full_name, created_at').order('created_at', { ascending: false }).limit(5);
-      return (apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at, type: 'app' }));
-    } catch { return []; }
-  },
-
-  async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
-    // PUBLIC WEBSITE: Fetch only reviews where is_approved = true
-    let q = supabase.from('reviews').select('*').eq('is_approved', true);
-    if (courseKey) q = q.eq('course', courseKey);
-    const { data } = await q.order('created_at', { ascending: false });
-    return data || [];
-  },
-
-  async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
+  const fetchPendingReviews = async () => {
+    setLoading(true);
+    setError(null);
     // ADMIN PANEL: Fetch reviews that are NOT approved yet
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('is_approved', false)
-      .order('created_at', { ascending: false });
-    return { data: data || [], error: error?.message };
-  },
-
-  async approveReview(reviewId: string) {
-    try {
-      // PERMANENT FIX: CALL Supabase UPDATE query for reviews.is_approved = true
-      const { error } = await supabase
-        .from("reviews")
-        .update({ is_approved: true })
-        .eq("id", reviewId);
-
-      if (error) throw error;
-      return { success: true };
-    } catch (err: any) {
-      console.error("Failed to approve review in DB:", err);
-      return { success: false, error: err.message };
+    const result = await apiService.fetchAllReviewsForAdmin();
+    
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setReviews(result.data);
     }
-  },
+    setLoading(false);
+  };
 
-  async deleteReview(reviewId: string) {
+  useEffect(() => {
+    fetchPendingReviews();
+  }, []);
+
+  /**
+   * Publish (Approve) Review.
+   * Calls DB update, then refetches to confirm item is cleared from moderation queue.
+   */
+  const handlePublishReview = async (reviewId: string) => {
     try {
-      const { error } = await supabase
-        .from("reviews")
-        .delete()
-        .eq("id", reviewId);
-      if (error) throw error;
-      return { success: true };
+      const res = await apiService.approveReview(reviewId);
+      if (res.success) {
+        // Force refetch to sync with DB
+        await fetchPendingReviews();
+      } else {
+        alert("Failed to publish review in database.");
+      }
     } catch (err: any) {
-      return { success: false, error: err.message };
+      console.error("Publish error:", err);
+      alert("System error during publishing.");
     }
-  },
+  };
 
-  async fetchUserReview(userId: string, courseKey: string) {
-    const { data } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).limit(1);
-    return data && data.length > 0 ? data[0] : null;
-  },
+  /**
+   * Reject (Delete) Review.
+   * Calls DB delete, then refetches.
+   */
+  const handleRejectReview = async (reviewId: string) => {
+    try {
+      const result = await apiService.deleteReview(reviewId);
+      if (result.success) {
+        // Force refetch
+        await fetchPendingReviews();
+      } else {
+        alert(`Rejection Failed: ${result.error}`);
+      }
+    } catch (err: any) {
+      console.error("Rejection error:", err);
+      alert("System error during rejection.");
+    }
+  };
 
-  async upsertReview(review: any) {
-    const { error } = await supabase.from('reviews').upsert({
-      ...review,
-      is_approved: false 
-    }, { onConflict: 'user_id,course' });
-    return { success: !error, error: error?.message };
-  },
+  return (
+    <div className="space-y-12 animate-in fade-in duration-500 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter">Moderation Console</h1>
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2">Approve or reject participant feedback</p>
+        </div>
+        <div className="flex gap-4">
+          <button 
+            onClick={fetchPendingReviews} 
+            disabled={loading}
+            className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all disabled:opacity-50"
+          >
+            {loading ? 'Refreshing...' : 'Force Refresh'}
+          </button>
+        </div>
+      </div>
 
-  async fetchUserEnrollments(email: string): Promise<ApplicationRecord[]> {
-    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
-    return (data || []).map(item => ({
-      ...item,
-      fullName: item.full_name,
-      institutionName: item.institution_name,
-      track_key: item.track_key as TrackKey,
-      student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
-      course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
-    }));
-  }
+      {error && (
+        <div className="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold uppercase tracking-widest flex items-center gap-4">
+          <svg className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <div>
+            <p className="mb-1">DATABASE SYNC ERROR</p>
+            <p className="opacity-70 normal-case font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+          <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Accessing Industrial Database...</p>
+        </div>
+      ) : (
+        <div className="bg-[#080808] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left">
+              <thead className="bg-white/[0.03] text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5">
+                <tr>
+                  <th className="px-8 py-6">Identity</th>
+                  <th className="px-8 py-6">Immersion Track</th>
+                  <th className="px-8 py-6">Industrial Rating</th>
+                  <th className="px-8 py-6">Execution Summary</th>
+                  <th className="px-8 py-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {reviews.map((r) => (
+                  <tr key={r.id} className="hover:bg-white/[0.01] transition-colors group">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                        <img src={r.user_avatar} className="w-9 h-9 rounded-xl border border-white/10 shadow-lg" alt="" />
+                        <div className="flex flex-col">
+                          <span className="text-white text-xs font-bold">{r.user_name}</span>
+                          <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest mt-0.5">ID: {r.user_id.slice(0, 8)}...</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                        {r.course.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className="text-blue-500 font-bold tracking-widest">{"★".repeat(r.rating)}<span className="text-gray-800">{"☆".repeat(5-r.rating)}</span></span>
+                    </td>
+                    <td className="px-8 py-6">
+                      <p className="text-gray-500 text-[11px] font-medium max-w-xs truncate group-hover:text-gray-400 transition-colors" title={r.review_text}>{r.review_text}</p>
+                    </td>
+                    <td className="px-8 py-6 text-right space-x-2">
+                      <button
+                        onClick={() => handleRejectReview(r.id)}
+                        className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handlePublishReview(r.id)}
+                        className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                      >
+                        Publish Review
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {reviews.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-32 text-center text-gray-600">
+                      <div className="flex flex-col items-center justify-center">
+                         <div className="text-4xl mb-4 opacity-20">🗄️</div>
+                         <p className="text-[10px] font-black uppercase tracking-widest">Zero Records in Moderation Queue</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
+
+export default AdminReviews;
+
 
 
 
