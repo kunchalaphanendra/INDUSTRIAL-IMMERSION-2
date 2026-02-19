@@ -3,7 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { ApplicationRecord, CourseStatus, TrackKey } from '../types';
 import { apiService, AdminFilterOptions } from '../services/api';
 
-const AdminStudents: React.FC = () => {
+interface AdminStudentsProps {
+  onSelectStudent?: (id: string) => void;
+}
+
+const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
   const [apps, setApps] = useState<ApplicationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -26,13 +30,17 @@ const AdminStudents: React.FC = () => {
     setLoading(false);
   };
 
+  /**
+   * CRITICAL: Real-time status update.
+   * Updates database and refreshes local state instantly.
+   */
   const handleStatusChange = async (id: string, status: CourseStatus) => {
     const res = await apiService.updateApplicationStatus(id, status);
     if (res.success) {
       setApps(prev => prev.map(a => a.id === id ? { ...a, course_status: status } : a));
     } else {
-      console.error("Status update failed", res.error);
-      alert("Failed to update status");
+      console.error("Status update failed:", res.error);
+      alert("Failed to update course status");
     }
   };
 
@@ -43,7 +51,7 @@ const AdminStudents: React.FC = () => {
     <div className="space-y-8 animate-in slide-in-from-bottom-6 duration-500 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter">Student CRM</h1>
+          <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter text-shadow-blue">Student CRM</h1>
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2">Manage all active and historical enrollments</p>
         </div>
       </div>
@@ -70,9 +78,9 @@ const AdminStudents: React.FC = () => {
                 onChange={e => setFilters(prev => ({ ...prev, studentType: e.target.value }))}
                 className={filterSelectClass}
               >
-                <option value="ALL" className="bg-[#0B0F1A] text-white">All Tiers</option>
-                <option value="SCHOOL" className="bg-[#0B0F1A] text-white">School</option>
-                <option value="COLLEGE" className="bg-[#0B0F1A] text-white">College</option>
+                <option value="ALL" className="bg-[#0B0F1A] text-white">ALL TIERS</option>
+                <option value="SCHOOL" className="bg-[#0B0F1A] text-white">SCHOOL</option>
+                <option value="COLLEGE" className="bg-[#0B0F1A] text-white">COLLEGE</option>
               </select>
             </div>
           </div>
@@ -151,27 +159,27 @@ const AdminStudents: React.FC = () => {
                 </td></tr>
               ) : apps.length === 0 ? (
                 <tr><td colSpan={7} className="px-8 py-24 text-center text-gray-600 uppercase tracking-widest italic">No students matching active filters</td></tr>
-              ) : apps.map(a => (
-                <tr key={a.id} className="hover:bg-white/[0.01] transition-colors group">
-                  <td className="px-8 py-6 text-blue-500 font-black tracking-widest font-mono">{a.application_id || '---'}</td>
+              ) : apps.map(application => (
+                <tr key={application.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <td className="px-8 py-6 text-blue-500 font-black tracking-widest font-mono">{application.application_id || '---'}</td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-white">{a.fullName}</span>
-                      <span className="text-[9px] text-gray-600 uppercase tracking-widest font-black mt-1">{a.email}</span>
+                      <span className="text-white">{application.fullName}</span>
+                      <span className="text-[9px] text-gray-600 uppercase tracking-widest font-black mt-1">{application.email}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${a.student_type === 'COLLEGE' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'}`}>
-                      {a.student_type}
+                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${application.student_type === 'COLLEGE' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'}`}>
+                      {application.student_type}
                     </span>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-gray-400 uppercase text-[9px] tracking-widest">{a.track_key.replace(/_/g, ' ')}</span>
+                    <span className="text-gray-400 uppercase text-[9px] tracking-widest">{application.track_key.replace(/_/g, ' ')}</span>
                   </td>
                   <td className="px-8 py-6">
                     <select 
-                      value={a.course_status || 'PENDING'} 
-                      onChange={(e) => handleStatusChange(a.id, e.target.value as CourseStatus)}
+                      value={application.course_status || 'PENDING'} 
+                      onChange={(e) => handleStatusChange(application.id, e.target.value as CourseStatus)}
                       className={tableSelectClass}
                     >
                       <option value="PENDING" className="bg-[#0B0F1A] text-white">Pending</option>
@@ -182,14 +190,15 @@ const AdminStudents: React.FC = () => {
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-green-500">₹{(Number(a.amount_paid) || 0).toLocaleString()}</span>
-                      <span className={`text-[8px] font-black uppercase tracking-widest ${a.payment_status === 'completed' ? 'text-green-900' : 'text-red-500'}`}>
-                        {a.payment_status}
+                      <span className="text-green-500">₹{(Number(application.amount_paid) || 0).toLocaleString()}</span>
+                      <span className={`text-[8px] font-black uppercase tracking-widest ${application.payment_status === 'completed' ? 'text-green-900' : 'text-red-500'}`}>
+                        {application.payment_status}
                       </span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <button 
+                      onClick={() => onSelectStudent?.(application.id)}
                       className="text-gray-500 hover:text-white transition-all text-[8px] uppercase tracking-widest font-black border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5"
                     >
                       Profile
@@ -206,6 +215,7 @@ const AdminStudents: React.FC = () => {
 };
 
 export default AdminStudents;
+
 
 
 
