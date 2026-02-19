@@ -1,122 +1,319 @@
 
-import React from 'react';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType } from '../types';
+import { supabase } from '../lib/supabaseClient';
+import { generateApplicationId } from '../utils/idGenerator';
+// Import admin credentials for internal verification
+import { ADMIN_EMAIL, ADMIN_PASSWORD } from '../lib/adminAuth';
 
-// Added BillingType enum for subscription and one-time payments
-export enum BillingType {
-  MONTHLY = 'monthly',
-  ONETIME = 'onetime'
+export interface AdminFilterOptions {
+  studentType?: string;
+  program?: string;
+  courseStatus?: string;
+  paymentStatus?: string;
+  institution?: string; // New filter
+  search?: string;
 }
 
-// Added InstitutionType enum for program categorization in the UI
-export enum InstitutionType {
-  SCHOOL = 'school',
-  COLLEGE = 'college'
-}
+export const apiService = {
+  async checkUserExists(email: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('email')
+      .eq('email', email)
+      .limit(1);
+    
+    if (error) return false;
+    return data && data.length > 0;
+  },
 
-// Added DomainKey enum for defining different industrial tracks
-export enum DomainKey {
-  FASHION = 'fashion',
-  BEVERAGE = 'beverage',
-  ELECTRONICS = 'electronics',
-  GROWTH = 'growth',
-  TECH = 'tech'
-}
+  async sendOtp(email: string, fullName?: string, isSignup: boolean = true): Promise<{ success: boolean; error?: string }> {
+    try {
+      let result;
+      if (isSignup) {
+        result = await supabase.auth.signUp({
+          email,
+          password: Math.random().toString(36).slice(-12),
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: window.location.origin
+          }
+        });
+      } else {
+        result = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: window.location.origin }
+        });
+      }
+      if (result.error) throw result.error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to send verification code' };
+    }
+  },
 
-export enum TrackKey {
-  SCHOOL_TUITION = 'school_tuition',
-  SCHOOL_SKILL = 'school_skill',
-  COLLEGE_PROF = 'college_prof',
-  COLLEGE_IMMERSION = 'college_immersion'
-}
+  async verifyOtp(email: string, token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) throw error;
+      if (!data.user || !data.session) throw new Error("Verification failed");
+      
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email || email,
+        fullName: data.user.user_metadata?.full_name || email.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
+        isAdmin: false
+      };
+      return { success: true, user, token: data.session.access_token };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Invalid code.' };
+    }
+  },
 
-// Added TrackData interface to describe program structures
-export interface TrackData {
-  title: string;
-  duration: string;
-  price: number;
-  billingType: BillingType;
-  description: string;
-  idealFor: string;
-  features: string[];
-}
+  // Added adminLogin to handle direct password authentication for admin accounts
+  async adminLogin(password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+    try {
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem("admin_session", "true");
+        const user: User = {
+          id: 'admin-id',
+          email: ADMIN_EMAIL,
+          fullName: 'Administrator',
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
+          isAdmin: true
+        };
+        return { success: true, user, token: 'admin-token' };
+      }
+      return { success: false, error: 'Invalid credentials' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Admin authentication failed' };
+    }
+  },
 
-// Added DomainData interface to describe specific industry domain deliverables
-export interface DomainData {
-  title: string;
-  icon: string;
-  description: string;
-  outputs: string[];
-}
+  async getCurrentUser(token: string): Promise<User | null> {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) return null;
+      return {
+        id: user.id,
+        email: user.email || '',
+        fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+        isAdmin: false
+      };
+    } catch { return null; }
+  },
 
-export type CourseStatus = 'PENDING' | 'ONGOING' | 'COMPLETED' | 'DROPOUT' | null;
-export type StudentType = 'SCHOOL' | 'COLLEGE';
-export type ProgramType = 'school_program' | 'college_program';
+  async submitApplication(data: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      const appId = await generateApplicationId();
+      const payload = {
+        application_id: appId,
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        institution_name: data.institutionName, // STEP 2 Implementation
+        linkedin: data.linkedin || null,
+        current_status: data.currentStatus,
+        career_goals: data.careerGoals,
+        track_key: data.track,
+        program_type: data.programType,
+        student_type: data.studentType?.toLowerCase() || 'college',
+        payment_status: 'completed',
+        amount_paid: Number(data.amountPaid) || 0,
+        course_status: data.studentType === 'COLLEGE' ? 'PENDING' : 'COMPLETED',
+        razorpay_payment_id: data.paymentId || null,
+        razorpay_order_id: data.orderId || null,
+        razorpay_signature: data.signature || null
+      };
+      const { error } = await supabase.from('applications').insert(payload);
+      if (error) throw error;
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
 
-export interface UserRegistration {
-  fullName: string;
-  email: string;
-  phone: string;
-  institutionName: string; // Captured educational institution
-  linkedin?: string;
-  currentStatus?: string;
-  careerGoals: string;
-  studentType?: StudentType;
-}
+  async fetchAdminApplications(filters?: AdminFilterOptions): Promise<ApplicationRecord[]> {
+    try {
+      let query = supabase.from('applications').select('*');
+      
+      if (filters) {
+        if (filters.studentType && filters.studentType !== 'ALL') {
+          query = query.eq('student_type', filters.studentType.toLowerCase());
+        }
+        if (filters.program && filters.program !== 'ALL') {
+          query = query.eq('track_key', filters.program);
+        }
+        if (filters.courseStatus && filters.courseStatus !== 'ALL') {
+          query = query.eq('course_status', filters.courseStatus.toUpperCase());
+        }
+        if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
+          query = query.eq('payment_status', filters.paymentStatus.toLowerCase());
+        }
+        if (filters.institution && filters.institution !== 'ALL') {
+          query = query.eq('institution_name', filters.institution);
+        }
+        if (filters.search) {
+          const s = `%${filters.search}%`;
+          query = query.or(`full_name.ilike.${s},email.ilike.${s},application_id.ilike.${s},institution_name.ilike.${s}`);
+        }
+      }
 
-export interface ApplicationRecord extends UserRegistration {
-  id: string;
-  application_id: string;
-  track_key: TrackKey;
-  program_type: ProgramType;
-  student_type: StudentType;
-  course_status: CourseStatus;
-  payment_status: string;
-  amount_paid: number;
-  razorpay_payment_id?: string;
-  razorpay_order_id?: string;
-  created_at: string;
-}
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(item => ({
+        ...item,
+        fullName: item.full_name,
+        institutionName: item.institution_name,
+        track_key: item.track_key as TrackKey,
+        student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+        course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+      }));
+    } catch { return []; }
+  },
 
-export interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  avatarUrl?: string;
-  isAdmin?: boolean;
-}
+  async fetchApplicationById(id: string): Promise<ApplicationRecord | null> {
+    try {
+      const { data, error } = await supabase.from('applications').select('*').eq('id', id).single();
+      if (error || !data) return null;
+      return {
+        ...data,
+        fullName: data.full_name,
+        institutionName: data.institution_name,
+        track_key: data.track_key as TrackKey,
+        student_type: (data.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+        course_status: (data.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+      };
+    } catch { return null; }
+  },
 
-export interface Review {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_avatar: string;
-  course: string;
-  rating: number;
-  review_text: string;
-  approval_status: 'pending' | 'approved' | 'rejected'; // Updated from is_approved boolean
-  created_at: string;
-}
+  async updateApplicationStatus(id: string, status: CourseStatus) {
+    try {
+      const { error } = await supabase.from('applications').update({ course_status: status }).eq('id', id);
+      return { success: !error, error };
+    } catch (err: any) { return { success: false, error: err.message }; }
+  },
 
-export interface EnrollmentState {
-  track: TrackKey | null;
-}
+  async fetchAdminStats() {
+    try {
+      const { data: apps } = await supabase.from('applications').select('amount_paid, track_key, email, payment_status, student_type, course_status, institution_name');
+      const { data: reviews } = await supabase.from('reviews').select('id').eq('approval_status', 'pending');
+      
+      const pendingReviews = reviews?.length || 0;
+      const totalRevenue = apps?.reduce((sum, a) => sum + (Number(a.amount_paid) || 0), 0) || 0;
+      
+      const schoolCount = apps?.filter(a => a.student_type?.toUpperCase() === 'SCHOOL').length || 0;
+      const collegeCount = apps?.filter(a => a.student_type?.toUpperCase() === 'COLLEGE').length || 0;
+      const completedCoursesCount = apps?.filter(a => a.course_status?.toUpperCase() === 'COMPLETED').length || 0;
+      const pendingPaymentsCount = apps?.filter(a => a.payment_status?.toUpperCase() === 'PENDING').length || 0;
 
-export interface EnrollmentRecord {
-  id: string;
-  track_key: TrackKey;
-  created_at: string;
-  payment_status: string;
-  progress: number;
-}
+      // Group revenue by institution
+      const instRevenue: Record<string, number> = {};
+      apps?.filter(a => a.payment_status === 'completed').forEach(a => {
+        const name = a.institution_name || 'Individual';
+        instRevenue[name] = (instRevenue[name] || 0) + (Number(a.amount_paid) || 0);
+      });
+      const institutionRevenue = Object.entries(instRevenue)
+        .map(([name, revenue]) => ({ name, revenue }))
+        .sort((a, b) => b.revenue - a.revenue);
 
-export interface FAQItem {
-  question: string;
-  answer: string | React.ReactNode;
-}
+      const counts: Record<string, number> = { college_immersion: 0, college_prof: 0, school_skill: 0, school_tuition: 0 };
+      apps?.forEach(a => { if (counts[a.track_key] !== undefined) counts[a.track_key]++; });
+      const totalCount = apps?.length || 1;
+      const distribution = Object.entries(counts).map(([key, val]) => ({
+        name: key.replace(/_/g, ' '),
+        count: Math.round((val / totalCount) * 100),
+        raw: val
+      }));
 
-export interface FAQCategory {
-  title: string;
-  items: FAQItem[];
-}
+      return {
+        totalApplications: apps?.length || 0,
+        totalEnrollments: apps?.filter(a => a.payment_status === 'completed').length || 0,
+        totalRevenue,
+        pendingReviews,
+        schoolCount,
+        collegeCount,
+        completedCoursesCount,
+        pendingPaymentsCount,
+        distribution,
+        institutionRevenue,
+        totalInstitutions: new Set(apps?.map(a => a.institution_name)).size || 0,
+        totalUsers: new Set(apps?.map(a => a.email)).size || 0
+      };
+    } catch { return null; }
+  },
+
+  async fetchRecentActivity() {
+    try {
+      const { data: apps } = await supabase.from('applications').select('full_name, created_at').order('created_at', { ascending: false }).limit(5);
+      return (apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at, type: 'app' }));
+    } catch { return []; }
+  },
+
+  async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
+    let q = supabase.from('reviews').select('*').eq('approval_status', 'approved');
+    if (courseKey) q = q.eq('course', courseKey);
+    const { data } = await q.order('created_at', { ascending: false });
+    return data || [];
+  },
+
+  async fetchAllReviewsForAdmin(): Promise<{ data: Review[], error?: string }> {
+    // Step 3 — Fetch Only Pending Reviews for moderation
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('approval_status', 'pending')
+      .order('created_at', { ascending: false });
+    return { data: data || [], error: error?.message };
+  },
+
+  async approveReview(reviewId: string) {
+    // Step 1 — Create Supabase Helper Function
+    const { data, error } = await supabase
+      .from("reviews")
+      .update({ approval_status: "approved" })
+      .eq("id", reviewId)
+      .select();
+
+    if (error) {
+      console.error("Error approving review:", error);
+      throw error;
+    }
+    return { success: !error, data };
+  },
+
+  async toggleReviewApproval(id: string, approved: boolean) {
+    const status = approved ? 'approved' : 'rejected';
+    const { error } = await supabase.from('reviews').update({ approval_status: status }).eq('id', id);
+    return { success: !error, error: error?.message };
+  },
+
+  async fetchUserReview(userId: string, courseKey: string) {
+    const { data } = await supabase.from('reviews').select('*').eq('user_id', userId).eq('course', courseKey).limit(1);
+    return data && data.length > 0 ? data[0] : null;
+  },
+
+  async upsertReview(review: any) {
+    const { error } = await supabase.from('reviews').upsert({
+      ...review,
+      approval_status: 'pending' // Always reset for moderation
+    }, { onConflict: 'user_id,course' });
+    return { success: !error, error: error?.message };
+  },
+
+  async fetchUserEnrollments(email: string): Promise<ApplicationRecord[]> {
+    const { data } = await supabase.from('applications').select('*').eq('email', email).order('created_at', { ascending: false });
+    return (data || []).map(item => ({
+      ...item,
+      fullName: item.full_name,
+      institutionName: item.institution_name,
+      track_key: item.track_key as TrackKey,
+      student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
+      course_status: (item.course_status?.toUpperCase() || 'PENDING') as CourseStatus
+    }));
+  }
+};
+
 
 
