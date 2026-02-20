@@ -1,5 +1,5 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType, Institution } from '../types';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType, Institution, BlogPost, BlogPostInput } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 // Import admin credentials for internal verification
@@ -335,6 +335,79 @@ export const apiService = {
       return (apps || []).map(a => ({ msg: 'New Application', user: a.full_name, time: a.created_at, type: 'app' }));
     } catch { return []; }
   },
+  
+  // --- Blog CMS Logic ---
+  async fetchAllBlogPostsForAdmin(): Promise<BlogPost[]> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) return [];
+    return data || [];
+  },
+
+  async fetchPublishedBlogPosts(): Promise<Partial<BlogPost>[]> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, title, slug, excerpt, cover_image, created_at')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) return [];
+    return data || [];
+  },
+
+  async fetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_published', true)
+      .single();
+    
+    if (error) return null;
+    return data;
+  },
+
+  async createBlogPost(post: BlogPostInput): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase
+      .from('blog_posts')
+      .insert(post);
+    
+    return { success: !error, error: error?.message };
+  },
+
+  async updateBlogPost(id: string, post: Partial<BlogPostInput>): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase
+      .from('blog_posts')
+      .update(post)
+      .eq('id', id);
+    
+    return { success: !error, error: error?.message };
+  },
+
+  async deleteBlogPost(id: string): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
+    
+    return { success: !error, error: error?.message };
+  },
+
+  async fetchRelatedPosts(currentSlug: string, limit: number = 3): Promise<Partial<BlogPost>[]> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, title, slug, cover_image, created_at')
+      .eq('is_published', true)
+      .neq('slug', currentSlug)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) return [];
+    return data || [];
+  },
 
   async fetchApprovedReviews(courseKey?: string): Promise<Review[]> {
     let q = supabase.from('reviews').select('*').eq('review_status', 'approved');
@@ -416,6 +489,7 @@ export const apiService = {
     }));
   }
 };
+
 
 
 
