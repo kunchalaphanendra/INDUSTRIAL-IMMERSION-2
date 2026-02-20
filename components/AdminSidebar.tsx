@@ -14,6 +14,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeView, onViewChange, o
     { id: 'students', label: 'Student CRM', icon: '👥' },
     { id: 'institutions', label: 'Institutions', icon: '🏫' },
     { id: 'payments', label: 'Payments', icon: '💳' },
+    { id: 'blog', label: 'Blog CMS', icon: '📝' },
     { id: 'reviews', label: 'Moderation', icon: '★' },
   ];
 
@@ -64,5 +65,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeView, onViewChange, o
 };
 
 export default AdminSidebar;
+
 
 
