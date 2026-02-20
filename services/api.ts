@@ -337,6 +337,28 @@ export const apiService = {
   },
   
   // --- Blog CMS Logic ---
+  async uploadBlogImage(file: File): Promise<{ url: string | null; error?: string }> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `blog-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath);
+
+      return { url: data.publicUrl };
+    } catch (err: any) {
+      return { url: null, error: err.message };
+    }
+  },
+
   async fetchAllBlogPostsForAdmin(): Promise<BlogPost[]> {
     const { data, error } = await supabase
       .from('blog_posts')
@@ -350,12 +372,25 @@ export const apiService = {
   async fetchPublishedBlogPosts(): Promise<Partial<BlogPost>[]> {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, excerpt, cover_image, created_at')
-      .eq('is_published', true)
-      .order('created_at', { ascending: false });
+      .select('id, title, slug, excerpt, cover_image, category, reading_time, is_featured, created_at, published_at')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false });
     
     if (error) return [];
     return data || [];
+  },
+
+  async fetchFeaturedPost(): Promise<BlogPost | null> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('status', 'published')
+      .eq('is_featured', true)
+      .limit(1)
+      .single();
+    
+    if (error) return null;
+    return data;
   },
 
   async fetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
@@ -363,7 +398,7 @@ export const apiService = {
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
-      .eq('is_published', true)
+      .eq('status', 'published')
       .single();
     
     if (error) return null;
@@ -371,20 +406,57 @@ export const apiService = {
   },
 
   async createBlogPost(post: BlogPostInput): Promise<{ success: boolean; error?: string }> {
-    const { error } = await supabase
-      .from('blog_posts')
-      .insert(post);
-    
-    return { success: !error, error: error?.message };
+    try {
+      // If this post is featured, unfeature others
+      if (post.is_featured) {
+        await supabase.from('blog_posts').update({ is_featured: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+      }
+
+      const payload = {
+        ...post,
+        published_at: post.status === 'published' ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('blog_posts')
+        .insert(payload);
+      
+      return { success: !error, error: error?.message };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   },
 
   async updateBlogPost(id: string, post: Partial<BlogPostInput>): Promise<{ success: boolean; error?: string }> {
-    const { error } = await supabase
-      .from('blog_posts')
-      .update(post)
-      .eq('id', id);
-    
-    return { success: !error, error: error?.message };
+    try {
+      // If this post is featured, unfeature others
+      if (post.is_featured) {
+        await supabase.from('blog_posts').update({ is_featured: false }).neq('id', id);
+      }
+
+      const payload: any = {
+        ...post,
+        updated_at: new Date().toISOString()
+      };
+
+      if (post.status === 'published') {
+        // Only set published_at if it wasn't already set
+        const { data: current } = await supabase.from('blog_posts').select('published_at').eq('id', id).single();
+        if (!current?.published_at) {
+          payload.published_at = new Date().toISOString();
+        }
+      }
+
+      const { error } = await supabase
+        .from('blog_posts')
+        .update(payload)
+        .eq('id', id);
+      
+      return { success: !error, error: error?.message };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   },
 
   async deleteBlogPost(id: string): Promise<{ success: boolean; error?: string }> {
@@ -396,13 +468,14 @@ export const apiService = {
     return { success: !error, error: error?.message };
   },
 
-  async fetchRelatedPosts(currentSlug: string, limit: number = 3): Promise<Partial<BlogPost>[]> {
+  async fetchRelatedPosts(currentId: string, category: string, limit: number = 3): Promise<Partial<BlogPost>[]> {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, cover_image, created_at')
-      .eq('is_published', true)
-      .neq('slug', currentSlug)
-      .order('created_at', { ascending: false })
+      .select('id, title, slug, cover_image, created_at, published_at')
+      .eq('status', 'published')
+      .eq('category', category)
+      .neq('id', currentId)
+      .order('published_at', { ascending: false })
       .limit(limit);
     
     if (error) return [];
@@ -489,7 +562,3 @@ export const apiService = {
     }));
   }
 };
-
-
-
-
