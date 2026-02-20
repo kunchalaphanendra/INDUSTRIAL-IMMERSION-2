@@ -19,6 +19,9 @@ import AdminReviews from './components/AdminReviews';
 import AdminInstitutions from './components/AdminInstitutions';
 import AdminLogin from './components/AdminLogin';
 import AdminStudentProfile from './components/AdminStudentProfile';
+import AdminBlogCMS from './components/AdminBlogCMS';
+import BlogList from './components/BlogList';
+import BlogPostDetail from './components/BlogPostDetail';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
@@ -71,9 +74,10 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login'>('landing');
-  const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions'>('overview');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post'>('landing');
+  const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<TrackKey | null>(null);
   const [detailTrack, setDetailTrack] = useState<TrackKey | null>(null);
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
@@ -118,11 +122,18 @@ const App: React.FC = () => {
       setView('admin-login');
     };
 
+    const handleHomeNav = () => {
+      setView('landing');
+      setSelectedBlogSlug(null);
+    };
+
     window.addEventListener('nav-admin', handleAdminNav);
     window.addEventListener('nav-admin-login', handleAdminLoginNav);
+    window.addEventListener('nav-home', handleHomeNav);
     return () => {
       window.removeEventListener('nav-admin', handleAdminNav);
       window.removeEventListener('nav-admin-login', handleAdminLoginNav);
+      window.removeEventListener('nav-home', handleHomeNav);
     };
   }, []);
 
@@ -176,6 +187,7 @@ const App: React.FC = () => {
       case 'payments': return <AdminPayments />;
       case 'reviews': return <AdminReviews />;
       case 'institutions': return <AdminInstitutions />;
+      case 'blog': return <AdminBlogCMS />;
       default: return <AdminDashboardView />;
     }
   };
@@ -196,6 +208,7 @@ const App: React.FC = () => {
           user={user} 
           onLoginClick={() => setShowAuthModal(true)} 
           onDashboardClick={() => setView('dashboard')} 
+          onBlogClick={() => setView('blog')}
           onAdminClick={() => { 
             if (isAdminLoggedIn()) {
               setView('admin'); 
@@ -222,6 +235,26 @@ const App: React.FC = () => {
             user={user} 
             onLogout={handleLogout} 
             onBackToLanding={() => setView('landing')} 
+          />
+        ) : view === 'blog' ? (
+          <BlogList 
+            onPostClick={(slug) => {
+              setSelectedBlogSlug(slug);
+              setView('blog-post');
+            }} 
+          />
+        ) : view === 'blog-post' && selectedBlogSlug ? (
+          <BlogPostDetail 
+            slug={selectedBlogSlug} 
+            onBack={() => setView('blog')} 
+            onPostClick={(slug) => setSelectedBlogSlug(slug)}
+            onApplyClick={() => {
+              setView('landing');
+              setTimeout(() => {
+                const element = document.getElementById('organisations');
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
           />
         ) : (
           <>
@@ -270,6 +303,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
