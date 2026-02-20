@@ -130,10 +130,28 @@ export interface FAQItem {
   answer: string | React.ReactNode;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  cover_image: string;
+  meta_title: string;
+  meta_description: string;
+  keywords: string;
+  author: string;
+  is_published: boolean;
+  created_at: string;
+}
+
+export interface BlogPostInput extends Omit<BlogPost, 'id' | 'created_at'> {}
+
 export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
