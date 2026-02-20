@@ -130,6 +130,8 @@ export interface FAQItem {
   answer: string | React.ReactNode;
 }
 
+export type BlogPostStatus = 'draft' | 'published' | 'scheduled' | 'archived';
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -137,30 +139,31 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   cover_image: string;
+  image_alt_text?: string;
+  category: string;
+  tags: string[];
+  reading_time: number;
+  word_count: number;
+  status: BlogPostStatus;
+  is_published: boolean; // Keeping for backward compatibility if needed, but status is preferred
+  is_featured: boolean;
   meta_title: string;
   meta_description: string;
   keywords: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  slug_locked: boolean;
   author: string;
-  is_published: boolean;
+  published_at?: string;
+  updated_at?: string;
   created_at: string;
 }
 
-export interface BlogPostInput extends Omit<BlogPost, 'id' | 'created_at'> {}
+export interface BlogPostInput extends Omit<BlogPost, 'id' | 'created_at' | 'updated_at' | 'published_at'> {}
 
 export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
