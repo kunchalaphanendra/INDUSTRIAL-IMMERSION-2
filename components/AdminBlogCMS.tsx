@@ -105,6 +105,11 @@ const AdminBlogCMS: React.FC = () => {
       alert('Upload failed: ' + error);
     }
     setIsUploading(false);
+    
+    // Reset input value to allow re-uploading the same file if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -294,7 +299,10 @@ const AdminBlogCMS: React.FC = () => {
 
           {/* Media Card */}
           <div className="glass-card p-10 rounded-[2.5rem] border-white/5 space-y-8">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-500">Visual Assets</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-500">Visual Assets</h3>
+              <p className="text-[8px] text-gray-600 uppercase tracking-widest">Requires 'blog-images' bucket in Supabase Storage</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cover Image</label>
@@ -327,6 +335,16 @@ const AdminBlogCMS: React.FC = () => {
                 />
               </div>
               <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cover Image URL (Manual Override)</label>
+                  <input 
+                    type="url"
+                    value={currentPost.cover_image}
+                    onChange={(e) => setCurrentPost({ ...currentPost, cover_image: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500/50 outline-none transition-all"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Image Alt Text (SEO)</label>
                   <input 
@@ -395,8 +413,9 @@ const AdminBlogCMS: React.FC = () => {
                     value={currentPost.canonical_url}
                     onChange={(e) => setCurrentPost({ ...currentPost, canonical_url: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500/50 outline-none transition-all"
-                    placeholder="https://stjufends.com/blog/..."
+                    placeholder="https://stjufends.com/blog/future-of-industry"
                   />
+                  <p className="text-[8px] text-gray-600 uppercase tracking-widest">The "master" version of this page for search engines.</p>
                 </div>
               </div>
 
@@ -427,8 +446,9 @@ const AdminBlogCMS: React.FC = () => {
                     value={currentPost.og_image}
                     onChange={(e) => setCurrentPost({ ...currentPost, og_image: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500/50 outline-none transition-all"
-                    placeholder="Social Share Image URL"
+                    placeholder="https://stjufends.com/social-share.jpg"
                   />
+                  <p className="text-[8px] text-gray-600 uppercase tracking-widest">The image shown when the post is shared on social media.</p>
                 </div>
               </div>
             </div>
@@ -569,3 +589,4 @@ const AdminBlogCMS: React.FC = () => {
 };
 
 export default AdminBlogCMS;
+
