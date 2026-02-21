@@ -8,9 +8,10 @@ interface BlogPostDetailProps {
   onBack: () => void;
   onPostClick: (slug: string) => void;
   onApplyClick: () => void;
+  onPartnerClick: () => void;
 }
 
-const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostClick, onApplyClick }) => {
+const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostClick, onApplyClick, onPartnerClick }) => {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Partial<BlogPost>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -214,13 +215,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
                   Explore Programs
                 </button>
                 <button 
-                  onClick={() => {
-                    onApplyClick();
-                    setTimeout(() => {
-                      const el = document.getElementById('organisations');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }, 200);
-                  }}
+                  onClick={onPartnerClick}
                   className="w-full sm:w-auto px-12 py-5 bg-white/5 text-white font-black rounded-2xl hover:bg-white/10 transition-all border border-white/10 uppercase tracking-widest text-sm"
                 >
                   Partner With Us
@@ -286,3 +281,4 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
 };
 
 export default BlogPostDetail;
+
