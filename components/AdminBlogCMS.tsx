@@ -27,7 +27,18 @@ const AdminBlogCMS: React.FC = () => {
   const loadPosts = async () => {
     setIsLoading(true);
     const data = await apiService.fetchAllBlogPostsForAdmin();
-    setPosts(data);
+    
+    // Auto-convert scheduled posts to published if time has passed
+    const now = new Date();
+    const updatedData = await Promise.all(data.map(async (post) => {
+      if (post.status === 'scheduled' && post.published_at && new Date(post.published_at) <= now) {
+        await apiService.updateBlogPost(post.id, { status: 'published' });
+        return { ...post, status: 'published' as BlogPostStatus };
+      }
+      return post;
+    }));
+
+    setPosts(updatedData);
     setIsLoading(false);
   };
 
@@ -119,6 +130,20 @@ const AdminBlogCMS: React.FC = () => {
 
     const { words, readingTime } = calculateMetrics(currentPost.content || '');
 
+    // Validation for scheduled posts
+    if (currentPost.status === 'scheduled') {
+      if (!currentPost.published_at) {
+        alert('Scheduled posts require a publish date');
+        setIsSaving(false);
+        return;
+      }
+      if (new Date(currentPost.published_at) <= new Date()) {
+        alert('Scheduled publish date must be in the future');
+        setIsSaving(false);
+        return;
+      }
+    }
+
     const postInput: BlogPostInput = {
       title: currentPost.title || '',
       slug: currentPost.slug || generateSlug(currentPost.title || ''),
@@ -141,7 +166,8 @@ const AdminBlogCMS: React.FC = () => {
       og_description: currentPost.og_description || currentPost.meta_description || currentPost.excerpt || '',
       og_image: currentPost.og_image || currentPost.cover_image || '',
       slug_locked: currentPost.status === 'published' ? true : (currentPost.slug_locked || false),
-      author: currentPost.author || 'STJUFENDS Editorial'
+      author: currentPost.author || 'STJUFENDS Editorial',
+      published_at: currentPost.published_at || null
     };
 
     let result;
@@ -248,7 +274,14 @@ const AdminBlogCMS: React.FC = () => {
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Status</label>
                 <select 
                   value={currentPost.status}
-                  onChange={(e) => setCurrentPost({ ...currentPost, status: e.target.value as BlogPostStatus })}
+                  onChange={(e) => {
+                    const status = e.target.value as BlogPostStatus;
+                    const updates: any = { status };
+                    if (status === 'published' && !currentPost.published_at) {
+                      updates.published_at = new Date().toISOString();
+                    }
+                    setCurrentPost({ ...currentPost, ...updates });
+                  }}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-blue-500/50 outline-none transition-all appearance-none"
                 >
                   <option value="draft" className="bg-black">Draft</option>
@@ -257,6 +290,18 @@ const AdminBlogCMS: React.FC = () => {
                   <option value="archived" className="bg-black">Archived</option>
                 </select>
               </div>
+              {currentPost.status === 'scheduled' && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Publish Date & Time</label>
+                  <input 
+                    type="datetime-local"
+                    required
+                    value={currentPost.published_at ? new Date(new Date(currentPost.published_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setCurrentPost({ ...currentPost, published_at: new Date(e.target.value).toISOString() })}
+                    className="w-full bg-blue-500/5 border border-blue-500/20 rounded-2xl px-6 py-4 text-white focus:border-blue-500/50 outline-none transition-all"
+                  />
+                </div>
+              )}
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Author</label>
                 <input 
@@ -589,4 +634,5 @@ const AdminBlogCMS: React.FC = () => {
 };
 
 export default AdminBlogCMS;
+
 
