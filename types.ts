@@ -161,9 +161,10 @@ export interface BlogPost {
   created_at: string;
 }
 
-export interface BlogPostInput extends Omit<BlogPost, 'id' | 'created_at' | 'updated_at' | 'published_at'> {}
+export interface BlogPostInput extends Omit<BlogPost, 'id' | 'created_at'> {}
 
 export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
