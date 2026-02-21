@@ -370,10 +370,11 @@ export const apiService = {
   },
 
   async fetchPublishedBlogPosts(): Promise<Partial<BlogPost>[]> {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('blog_posts')
       .select('id, title, slug, excerpt, cover_image, category, reading_time, is_featured, created_at, published_at')
-      .eq('status', 'published')
+      .or(`status.eq.published,and(status.eq.scheduled,published_at.lte.${now})`)
       .order('published_at', { ascending: false });
     
     if (error) return [];
@@ -381,10 +382,11 @@ export const apiService = {
   },
 
   async fetchFeaturedPost(): Promise<BlogPost | null> {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
-      .eq('status', 'published')
+      .or(`status.eq.published,and(status.eq.scheduled,published_at.lte.${now})`)
       .eq('is_featured', true)
       .limit(1)
       .single();
@@ -394,11 +396,12 @@ export const apiService = {
   },
 
   async fetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
-      .eq('status', 'published')
+      .or(`status.eq.published,and(status.eq.scheduled,published_at.lte.${now})`)
       .single();
     
     if (error) return null;
@@ -469,10 +472,11 @@ export const apiService = {
   },
 
   async fetchRelatedPosts(currentId: string, category: string, limit: number = 3): Promise<Partial<BlogPost>[]> {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('blog_posts')
       .select('id, title, slug, cover_image, created_at, published_at')
-      .eq('status', 'published')
+      .or(`status.eq.published,and(status.eq.scheduled,published_at.lte.${now})`)
       .eq('category', category)
       .neq('id', currentId)
       .order('published_at', { ascending: false })
@@ -562,3 +566,4 @@ export const apiService = {
     }));
   }
 };
+
