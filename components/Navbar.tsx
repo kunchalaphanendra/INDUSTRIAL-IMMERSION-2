@@ -1,4 +1,7 @@
 
+
+
+
 import React from 'react';
 import { User } from '../types';
 
@@ -7,20 +10,24 @@ interface NavbarProps {
   onLoginClick: () => void;
   onDashboardClick: () => void;
   onBlogClick: () => void;
+  onProgramsClick: () => void;
+  onForCollegesClick: () => void;
+  onAboutClick: () => void;
   onAdminClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, onBlogClick, onAdminClick }) => {
-  const scrollTo = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+const Navbar: React.FC<NavbarProps> = ({ 
+  user, 
+  onLoginClick, 
+  onDashboardClick, 
+  onBlogClick, 
+  onProgramsClick,
+  onForCollegesClick,
+  onAboutClick,
+  onAdminClick 
+}) => {
   const handleHomeClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // If we are on blog page, we need to navigate back to landing
     const event = new CustomEvent('nav-home');
     window.dispatchEvent(event);
   };
@@ -36,14 +43,15 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
           
           <div className="flex items-center space-x-4 md:space-x-8 text-sm font-medium">
             <div className="hidden lg:flex items-center space-x-8 text-gray-400">
-              <button onClick={handleHomeClick} className="hover:text-white transition-colors">Home</button>
-              <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Programs</button>
-              <button onClick={onBlogClick} className="hover:text-white transition-colors">Blog</button>
-              <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
+              <button onClick={handleHomeClick} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Home</button>
+              <button onClick={onProgramsClick} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Programs</button>
+              <button onClick={onForCollegesClick} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">For Colleges</button>
+              <button onClick={onBlogClick} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Blog</button>
+              <button onClick={onAboutClick} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">About</button>
               {user?.isAdmin && (
                 <button 
                   onClick={onAdminClick}
-                  className="text-blue-500 font-black uppercase tracking-[0.2em] animate-pulse"
+                  className="text-blue-500 font-black uppercase tracking-[0.2em] animate-pulse text-[10px]"
                 >
                   Admin
                 </button>
@@ -71,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
                     onClick={onLoginClick} 
                     className="px-6 py-2.5 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all text-xs uppercase tracking-widest"
                   >
-                    Apply Now
+                    Apply
                   </button>
                 </>
               )}
@@ -84,5 +92,3 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
 };
 
 export default Navbar;
-
-
