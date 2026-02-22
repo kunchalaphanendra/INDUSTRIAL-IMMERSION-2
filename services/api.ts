@@ -588,5 +588,109 @@ export const apiService = {
       student_type: (item.student_type?.toUpperCase() || 'COLLEGE') as StudentType,
       course_progress: (item.course_progress?.toUpperCase() || 'PENDING') as CourseStatus
     }));
+  },
+
+  async seedAuthorityContent(): Promise<void> {
+    const posts = [
+      {
+        title: "The Complete Guide to Industrial Immersion Programs: Bridging the Gap Between Education and Real Business Execution",
+        slug: "the-complete-guide-to-industrial-immersion-programs",
+        excerpt: "A comprehensive guide on how industrial immersion programs transform education by integrating real business execution into the learning process.",
+        content: `<h2>Introduction</h2><p>Industrial immersion is the future of education. It moves beyond theory into the realm of live business operations.</p><h3>Why Execution Matters</h3><p>In today's fast-paced economy, theoretical knowledge is no longer enough. Businesses need individuals who can execute from day one.</p><h3>The STJUFENDS Model</h3><p>Our model places participants inside real operating environments where they contribute to actual deliverables.</p>`,
+        category: "Industry Insights",
+        is_featured: true,
+        status: "published",
+        reading_time: 12,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/immersion/1200/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString() // 1 week ago
+      },
+      {
+        title: "What Is an Industrial Immersion Program? A Complete Guide",
+        slug: "what-is-an-industrial-immersion-program",
+        excerpt: "Understanding the fundamental structure and benefits of industrial immersion for career readiness.",
+        content: `<p>Industrial immersion is a structured model where students work on real projects. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Industry Insights",
+        is_featured: false,
+        status: "published",
+        reading_time: 5,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/guide/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString()
+      },
+      {
+        title: "Execution-Based Learning vs Traditional Education",
+        slug: "execution-based-learning-vs-traditional-education",
+        excerpt: "Comparing the outcomes of theory-heavy education versus hands-on execution models.",
+        content: `<p>Traditional education often stops at theory. Execution-based learning starts there. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Execution Framework",
+        is_featured: false,
+        status: "published",
+        reading_time: 6,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/learning/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString()
+      },
+      {
+        title: "How Industry Immersion Helps College Students Become Job-Ready",
+        slug: "how-industry-immersion-helps-college-students",
+        excerpt: "Why practical exposure is the most critical factor in modern workforce readiness.",
+        content: `<p>College students need more than a degree. They need proof-of-work. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Workforce Development",
+        is_featured: false,
+        status: "published",
+        reading_time: 7,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/college/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString()
+      },
+      {
+        title: "Why Schools Should Integrate Practical Skill Programs",
+        slug: "why-schools-should-integrate-practical-skills",
+        excerpt: "The importance of early exposure to industrial workflows for school-level students.",
+        content: `<p>Early exposure builds discipline and perspective. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Education Reform",
+        is_featured: false,
+        status: "published",
+        reading_time: 5,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/school/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString()
+      },
+      {
+        title: "The Role of Live Business Projects in Skill Development",
+        slug: "role-of-live-business-projects",
+        excerpt: "How working on actual business deliverables accelerates technical and soft skill growth.",
+        content: `<p>Live projects provide immediate feedback loops. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Execution Framework",
+        is_featured: false,
+        status: "published",
+        reading_time: 6,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/projects/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString()
+      },
+      {
+        title: "Bridging the Gap Between Colleges and Industry",
+        slug: "bridging-the-gap-colleges-industry",
+        excerpt: "Strategies for institutional partnerships that create sustainable career pathways.",
+        content: `<p>Partnerships are the bridge to the future. For a comprehensive explanation of structured industrial immersion models, read our complete guide to industrial immersion programs.</p>`,
+        category: "Institutional Partnerships",
+        is_featured: false,
+        status: "published",
+        reading_time: 8,
+        author: "STJUFENDS Editorial",
+        cover_image: "https://picsum.photos/seed/bridge/800/600",
+        published_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString()
+      }
+    ];
+
+    for (const post of posts) {
+      const { data: existing } = await supabase.from('blog_posts').select('id').eq('slug', post.slug).limit(1);
+      if (!existing || existing.length === 0) {
+        await supabase.from('blog_posts').insert(post);
+      }
+    }
   }
 };
+
