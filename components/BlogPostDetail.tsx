@@ -199,9 +199,24 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
           )}
 
           <div 
-            className="prose prose-invert prose-blue max-w-none mb-24 blog-content"
+            className="prose prose-invert prose-blue max-w-none mb-12 blog-content"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
+
+          {/* Internal Linking Rule */}
+          {post.slug !== 'the-complete-guide-to-industrial-immersion-programs' && (
+            <div className="mb-24 p-8 glass-card rounded-3xl border-blue-500/10 bg-blue-500/5">
+              <p className="text-gray-300 font-medium">
+                For a comprehensive explanation of structured industrial immersion models, read our{' '}
+                <button 
+                  onClick={() => onPostClick('the-complete-guide-to-industrial-immersion-programs')}
+                  className="text-blue-500 font-bold hover:underline"
+                >
+                  complete guide to industrial immersion programs
+                </button>.
+              </p>
+            </div>
+          )}
 
           {/* Elite CTA Block */}
           <div className="glass-card p-12 md:p-20 rounded-[4rem] border-blue-500/20 relative overflow-hidden group mb-24">
@@ -291,3 +306,4 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
 };
 
 export default BlogPostDetail;
+
