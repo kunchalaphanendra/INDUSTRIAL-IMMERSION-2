@@ -7,10 +7,11 @@ interface NavbarProps {
   onLoginClick: () => void;
   onDashboardClick: () => void;
   onBlogClick: () => void;
+  onAboutClick: () => void;
   onAdminClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, onBlogClick, onAdminClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, onBlogClick, onAboutClick, onAdminClick }) => {
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -37,6 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
           <div className="flex items-center space-x-4 md:space-x-8 text-sm font-medium">
             <div className="hidden lg:flex items-center space-x-8 text-gray-400">
               <button onClick={handleHomeClick} className="hover:text-white transition-colors">Home</button>
+              <button onClick={onAboutClick} className="hover:text-white transition-colors">About</button>
               <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Programs</button>
               <button onClick={onBlogClick} className="hover:text-white transition-colors">Blog</button>
               <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
@@ -84,4 +86,5 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
 };
 
 export default Navbar;
+
 
