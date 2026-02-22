@@ -11,6 +11,7 @@ import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import TrackDetailModal from './components/TrackDetailModal';
 import Testimonials from './components/Testimonials';
+import About from './components/About';
 import AdminLayout from './components/AdminLayout';
 import AdminDashboardView from './components/AdminDashboardView';
 import AdminStudents from './components/AdminStudents';
@@ -164,7 +165,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -222,19 +223,28 @@ const App: React.FC = () => {
       setView('blog-post');
     };
 
+    const handleAboutNav = () => {
+      setView('about');
+    };
+
     window.addEventListener('nav-admin', handleAdminNav);
     window.addEventListener('nav-admin-login', handleAdminLoginNav);
     window.addEventListener('nav-home', handleHomeNav);
     window.addEventListener('nav-blog-post', handleBlogPostNav);
-
+    window.addEventListener('nav-about', handleAboutNav);
+    
     // Ensure cornerstone article is featured
     apiService.featurePostBySlug('the-complete-guide-to-industrial-immersion-programs');
+    
+    // Seed authority content
+    apiService.seedAuthorityContent();
 
     return () => {
       window.removeEventListener('nav-admin', handleAdminNav);
       window.removeEventListener('nav-admin-login', handleAdminLoginNav);
       window.removeEventListener('nav-home', handleHomeNav);
       window.removeEventListener('nav-blog-post', handleBlogPostNav);
+      window.removeEventListener('nav-about', handleAboutNav);
     };
   }, []);
 
@@ -310,6 +320,7 @@ const App: React.FC = () => {
           onLoginClick={() => setShowAuthModal(true)} 
           onDashboardClick={() => setView('dashboard')} 
           onBlogClick={() => setView('blog')}
+          onAboutClick={() => setView('about')}
           onAdminClick={() => { 
             if (isAdminLoggedIn()) {
               setView('admin'); 
@@ -357,6 +368,8 @@ const App: React.FC = () => {
               }, 100);
             }}
           />
+        ) : view === 'about' ? (
+          <About />
         ) : (
           <>
             <Hero />
@@ -408,3 +421,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
