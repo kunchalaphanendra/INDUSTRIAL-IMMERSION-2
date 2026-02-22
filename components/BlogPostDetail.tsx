@@ -164,6 +164,11 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">
                 {new Date(post.published_at || post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </span>
+              {post.updated_at && post.updated_at !== post.published_at && post.updated_at !== post.created_at && (
+                <span className="text-[10px] font-black text-blue-500/60 uppercase tracking-[0.4em]">
+                  Updated: {new Date(post.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </span>
+              )}
             </div>
             <h1 className="text-4xl md:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.9] mb-12">
               {post.title}
@@ -286,5 +291,3 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
 };
 
 export default BlogPostDetail;
-
-
