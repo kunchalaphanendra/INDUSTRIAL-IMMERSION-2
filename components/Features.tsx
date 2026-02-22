@@ -13,6 +13,14 @@ const Features: React.FC = () => {
            <p className="text-gray-300 text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
              "At STJUFENDS, we don't just teach. We execute. Our mission is to transform education into a live industrial process where students build proof-of-work alongside industry veterans."
            </p>
+           <div className="mt-8">
+             <button 
+               onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
+               className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
+             >
+               Explore our complete guide to industrial immersion →
+             </button>
+           </div>
            <div className="mt-12 flex justify-center gap-12">
               <div className="text-center">
                 <p className="text-3xl font-heading font-bold text-white">50+</p>
