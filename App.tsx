@@ -23,9 +23,99 @@ import AdminBlogCMS from './components/AdminBlogCMS';
 import BlogList from './components/BlogList';
 import BlogPostDetail from './components/BlogPostDetail';
 import { PARTNERS, TRACKS } from './constants';
-import { TrackKey, EnrollmentState, User } from './types';
+import { TrackKey, EnrollmentState, User, BlogPost } from './types';
 import { apiService } from './services/api';
 import { isAdminLoggedIn } from './lib/adminAuth';
+
+const BlogSection: React.FC<{ onPostClick: (slug: string) => void }> = ({ onPostClick }) => {
+  const [featured, setFeatured] = useState<BlogPost | null>(null);
+  const [latest, setLatest] = useState<Partial<BlogPost>[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadBlogData = async () => {
+      const [featuredPost, latestPosts] = await Promise.all([
+        apiService.fetchFeaturedPost(),
+        apiService.fetchLatestPosts(3)
+      ]);
+      setFeatured(featuredPost);
+      setLatest(latestPosts);
+      setLoading(false);
+    };
+    loadBlogData();
+  }, []);
+
+  if (loading || (!featured && latest.length === 0)) return null;
+
+  return (
+    <section className="py-24 bg-[#050505] border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Authority Layer</p>
+          <h2 className="text-3xl md:text-6xl font-heading font-bold mb-6 uppercase tracking-tight">Insights & Industry Perspectives</h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Featured Post */}
+          {featured && (
+            <div className="lg:col-span-7">
+              <div 
+                onClick={() => onPostClick(featured.slug)}
+                className="group cursor-pointer glass-card rounded-[3rem] overflow-hidden border-blue-500/20 h-full flex flex-col"
+              >
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img 
+                    src={featured.cover_image} 
+                    alt={featured.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-8 md:p-12 flex-1 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-widest">{featured.category}</span>
+                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{featured.reading_time} min read</span>
+                  </div>
+                  <h3 className="text-2xl md:text-4xl font-heading font-bold mb-6 text-white uppercase tracking-tight group-hover:text-blue-400 transition-colors">{featured.title}</h3>
+                  <p className="text-gray-400 text-lg mb-8 line-clamp-3">{featured.excerpt}</p>
+                  <div className="mt-auto">
+                    <button className="text-blue-500 font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 group-hover:gap-4 transition-all">
+                      Read Article <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Latest Posts */}
+          <div className={`${featured ? 'lg:col-span-5' : 'lg:col-span-12'} space-y-8`}>
+            {latest.filter(p => p.id !== featured?.id).map((post) => (
+              <div 
+                key={post.id}
+                onClick={() => onPostClick(post.slug!)}
+                className="group cursor-pointer glass-card rounded-3xl overflow-hidden border-white/5 flex gap-6 p-4 hover:border-blue-500/20 transition-all"
+              >
+                <div className="w-32 h-32 shrink-0 rounded-2xl overflow-hidden">
+                  <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div className="flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">{post.category}</span>
+                    <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{post.reading_time} min read</span>
+                  </div>
+                  <h4 className="text-lg font-heading font-bold text-white uppercase tracking-tight line-clamp-2 group-hover:text-blue-400 transition-colors">{post.title}</h4>
+                  <p className="text-gray-500 text-[10px] mt-2 font-black uppercase tracking-widest">
+                    {new Date(post.published_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const PartnersSection: React.FC = () => (
   <section className="py-12 bg-black border-y border-white/5 overflow-hidden">
@@ -127,13 +217,24 @@ const App: React.FC = () => {
       setSelectedBlogSlug(null);
     };
 
+    const handleBlogPostNav = (e: any) => {
+      setSelectedBlogSlug(e.detail);
+      setView('blog-post');
+    };
+
     window.addEventListener('nav-admin', handleAdminNav);
     window.addEventListener('nav-admin-login', handleAdminLoginNav);
     window.addEventListener('nav-home', handleHomeNav);
+    window.addEventListener('nav-blog-post', handleBlogPostNav);
+
+    // Ensure cornerstone article is featured
+    apiService.featurePostBySlug('the-complete-guide-to-industrial-immersion-programs');
+
     return () => {
       window.removeEventListener('nav-admin', handleAdminNav);
       window.removeEventListener('nav-admin-login', handleAdminLoginNav);
       window.removeEventListener('nav-home', handleHomeNav);
+      window.removeEventListener('nav-blog-post', handleBlogPostNav);
     };
   }, []);
 
@@ -268,6 +369,10 @@ const App: React.FC = () => {
               onViewDetails={(track) => setDetailTrack(track)}
             />
             <PricingSection />
+            <BlogSection onPostClick={(slug) => {
+              setSelectedBlogSlug(slug);
+              setView('blog-post');
+            }} />
             <GetStarted />
           </>
         )}
@@ -303,9 +408,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-
-
-
-
-
