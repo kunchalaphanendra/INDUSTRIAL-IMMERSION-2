@@ -63,10 +63,10 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
       <div className="text-center mb-20">
         <p className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-4">STJUFENDS Editorial</p>
         <h1 className="text-5xl md:text-7xl font-heading font-bold uppercase tracking-tighter leading-none mb-6">
-          Industrial <br /><span className="text-blue-500">Insights</span>
+          Insights on Industrial <br /><span className="text-blue-500">Immersion & Execution</span>
         </h1>
-        <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-          Deep dives into industrial immersion, career acceleration, and the future of technical education.
+        <p className="text-gray-400 max-w-3xl mx-auto text-lg font-medium leading-relaxed">
+          Our blog explores industrial immersion programs, execution-based education models, industry-academia collaboration, and workforce readiness frameworks. We publish structured insights for students, institutions, and businesses seeking practical exposure models.
         </p>
       </div>
 
@@ -192,4 +192,5 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
 };
 
 export default BlogList;
+
 
