@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -25,11 +22,6 @@ import AdminStudentProfile from './components/AdminStudentProfile';
 import AdminBlogCMS from './components/AdminBlogCMS';
 import BlogList from './components/BlogList';
 import BlogPostDetail from './components/BlogPostDetail';
-import Homepage from './components/Homepage';
-import StudentConversionPage from './components/StudentConversionPage';
-import InstitutionPartnershipPage from './components/InstitutionPartnershipPage';
-import ExecutionCertificatePage from './components/ExecutionCertificatePage';
-import IndustryExperienceCertificatePage from './components/IndustryExperienceCertificatePage';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User } from './types';
 import { apiService } from './services/api';
@@ -82,7 +74,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'student-program' | 'for-colleges' | 'execution-certificate' | 'industry-experience-certificate' | 'about'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -135,19 +127,13 @@ const App: React.FC = () => {
       setSelectedBlogSlug(null);
     };
 
-    const handleNavView = (e: any) => {
-      setView(e.detail);
-    };
-
     window.addEventListener('nav-admin', handleAdminNav);
     window.addEventListener('nav-admin-login', handleAdminLoginNav);
     window.addEventListener('nav-home', handleHomeNav);
-    window.addEventListener('nav-view', handleNavView);
     return () => {
       window.removeEventListener('nav-admin', handleAdminNav);
       window.removeEventListener('nav-admin-login', handleAdminLoginNav);
       window.removeEventListener('nav-home', handleHomeNav);
-      window.removeEventListener('nav-view', handleNavView);
     };
   }, []);
 
@@ -223,9 +209,6 @@ const App: React.FC = () => {
           onLoginClick={() => setShowAuthModal(true)} 
           onDashboardClick={() => setView('dashboard')} 
           onBlogClick={() => setView('blog')}
-          onProgramsClick={() => setView('student-program')}
-          onForCollegesClick={() => setView('for-colleges')}
-          onAboutClick={() => setView('about')}
           onAdminClick={() => { 
             if (isAdminLoggedIn()) {
               setView('admin'); 
@@ -265,43 +248,28 @@ const App: React.FC = () => {
             slug={selectedBlogSlug} 
             onBack={() => setView('blog')} 
             onPostClick={(slug) => setSelectedBlogSlug(slug)}
-            onApplyClick={() => setView('student-program')}
-            onPartnerClick={() => setView('for-colleges')}
-          />
-        ) : view === 'student-program' ? (
-          <StudentConversionPage 
-            onApplyClick={() => setShowAuthModal(true)} 
-          />
-        ) : view === 'for-colleges' ? (
-          <InstitutionPartnershipPage 
-            onContactClick={() => {
-              alert("Contact form integration pending. Please email team@stjufends.com");
-            }} 
-          />
-        ) : view === 'execution-certificate' ? (
-          <ExecutionCertificatePage onBack={() => setView('student-program')} />
-        ) : view === 'industry-experience-certificate' ? (
-          <IndustryExperienceCertificatePage onBack={() => setView('student-program')} />
-        ) : view === 'about' ? (
-          <div className="pt-32 pb-24 px-4 max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl font-heading font-bold uppercase tracking-tighter mb-8">About STJUFENDS</h1>
-            <p className="text-gray-400 text-xl leading-relaxed">
-              STJUFENDS is an industrial immersion platform bridging the gap between theoretical education and business execution. We provide structured programs for students and scalable integration models for institutions.
-            </p>
-          </div>
-        ) : (
-          <Homepage 
-            onExplorePrograms={() => setView('student-program')}
-            onPartnerWithUs={() => setView('for-colleges')}
-            onStudentProgramClick={() => setView('student-program')}
-            onInstitutionProgramClick={() => setView('for-colleges')}
-            onBlogClick={() => setView('blog')}
-            onPostClick={(slug) => {
-              setSelectedBlogSlug(slug);
-              setView('blog-post');
+            onApplyClick={() => {
+              setView('landing');
+              setTimeout(() => {
+                const element = document.getElementById('organisations');
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
             }}
-            onApplyClick={() => setShowAuthModal(true)}
           />
+        ) : (
+          <>
+            <Hero />
+            <PartnersSection />
+            <Features />
+            <Testimonials />
+            <ProgramSelector 
+              selectedTrack={selectedTrack} 
+              onSelect={handleTrackSelect}
+              onViewDetails={(track) => setDetailTrack(track)}
+            />
+            <PricingSection />
+            <GetStarted />
+          </>
         )}
       </main>
 
@@ -335,6 +303,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
