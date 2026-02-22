@@ -9,8 +9,11 @@ interface BlogListProps {
 
 const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
   const [posts, setPosts] = useState<Partial<BlogPost>[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Partial<BlogPost>[]>([]);
   const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
     const loadData = async () => {
@@ -26,12 +29,26 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
         : published;
 
       setPosts(regularPosts);
+      setFilteredPosts(regularPosts);
       setFeaturedPost(featured);
+
+      // Extract unique categories
+      const cats = Array.from(new Set(published.map(p => p.category || 'Uncategorized')));
+      setCategories(['All', ...cats]);
+
       setIsLoading(false);
     };
     loadData();
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    if (activeCategory === 'All') {
+      setFilteredPosts(posts);
+    } else {
+      setFilteredPosts(posts.filter(p => p.category === activeCategory));
+    }
+  }, [activeCategory, posts]);
 
   if (isLoading) {
     return (
@@ -99,13 +116,30 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
         </section>
       )}
 
-      {posts.length === 0 && !featuredPost ? (
+      {/* Category Filter */}
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeCategory === cat
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                : 'bg-white/5 text-gray-500 hover:text-white border border-white/5'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {filteredPosts.length === 0 && !featuredPost ? (
         <div className="text-center py-20 glass-card rounded-[3rem] border-white/5">
-          <p className="text-gray-500 font-bold uppercase tracking-widest">No articles published yet.</p>
+          <p className="text-gray-500 font-bold uppercase tracking-widest">No articles found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <article 
               key={post.id}
               onClick={() => onPostClick(post.slug || '')}
@@ -158,3 +192,4 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
 };
 
 export default BlogList;
+
