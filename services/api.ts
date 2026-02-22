@@ -381,6 +381,30 @@ export const apiService = {
     return data || [];
   },
 
+  async fetchLatestPosts(limit: number = 3): Promise<Partial<BlogPost>[]> {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, title, slug, excerpt, cover_image, category, reading_time, is_featured, created_at, published_at')
+      .or(`status.eq.published,and(status.eq.scheduled,published_at.lte.${now})`)
+      .order('published_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) return [];
+    return data || [];
+  },
+
+  async featurePostBySlug(slug: string): Promise<void> {
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('id')
+      .eq('slug', slug)
+      .single();
+    if (data) {
+      await this.updateBlogPost(data.id, { is_featured: true });
+    }
+  },
+
   async fetchFeaturedPost(): Promise<BlogPost | null> {
     const now = new Date().toISOString();
     const { data, error } = await supabase
@@ -566,4 +590,3 @@ export const apiService = {
     }));
   }
 };
-
