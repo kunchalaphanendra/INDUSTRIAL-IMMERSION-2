@@ -25,9 +25,15 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, onViewDetai
         <div className="text-center mb-16">
           <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Our Education Programs</p>
           <h2 className="text-3xl md:text-6xl font-heading font-bold mb-6 uppercase tracking-tight">Organisations</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="text-gray-500 max-w-2xl mx-auto mb-4">
             Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance.
           </p>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
+            className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
+          >
+            New to industrial immersion? Read our complete guide →
+          </button>
         </div>
 
         {/* Tab Switcher */}
