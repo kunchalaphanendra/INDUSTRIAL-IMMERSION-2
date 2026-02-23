@@ -33,7 +33,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
   const showToggle = !hideToggle && !isSchoolsPage;
 
   return (
-    <section id="organisations" className="py-24 bg-black border-t border-white/5">
+    <section id="institutions" className="py-24 bg-black border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className={`text-center mb-16 ${isSchoolsPage ? 'pt-12 pb-8' : ''}`}>
@@ -163,6 +163,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
 
