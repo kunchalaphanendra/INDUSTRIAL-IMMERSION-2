@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { EnrollmentState, TrackKey, UserRegistration, StudentType, Institution } from '../types';
+import { EnrollmentState, TrackKey, UserRegistration, StudentType, Institution } from '@/types';
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 import { supabase } from '../lib/supabaseClient';
@@ -328,6 +328,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
