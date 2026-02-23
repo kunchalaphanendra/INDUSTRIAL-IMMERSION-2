@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrackKey, TrackData, BillingType } from '../types';
+import { TrackKey, TrackData, BillingType } from '@/types';
 
 interface CourseCardProps {
   id: TrackKey;
@@ -51,3 +51,4 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, data, price, billing, onEnr
 };
 
 export default CourseCard;
+
