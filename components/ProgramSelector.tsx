@@ -7,10 +7,20 @@ interface ProgramSelectorProps {
   onSelect: (track: TrackKey) => void;
   onViewDetails?: (track: TrackKey) => void;
   selectedTrack: TrackKey | null;
+  hideToggle?: boolean;
+  forceType?: InstitutionType;
+  initialType?: InstitutionType;
 }
 
-const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, onViewDetails, selectedTrack }) => {
-  const [activeTab, setActiveTab] = useState<InstitutionType>(InstitutionType.SCHOOL);
+const ProgramSelector: React.FC<ProgramSelectorProps> = ({ 
+  onSelect, 
+  onViewDetails, 
+  selectedTrack,
+  hideToggle = false,
+  forceType,
+  initialType
+}) => {
+  const [activeTab, setActiveTab] = useState<InstitutionType>(initialType || forceType || InstitutionType.SCHOOL);
 
   const schoolTracks = [TrackKey.SCHOOL_TUITION, TrackKey.SCHOOL_SKILL];
   const collegeTracks = [TrackKey.COLLEGE_PROF, TrackKey.COLLEGE_IMMERSION];
@@ -37,22 +47,24 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, onViewDetai
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center mb-16">
-          <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex gap-2">
-            <button 
-              onClick={() => setActiveTab(InstitutionType.SCHOOL)}
-              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.SCHOOL ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
-            >
-              For School Students
-            </button>
-            <button 
-              onClick={() => setActiveTab(InstitutionType.COLLEGE)}
-              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.COLLEGE ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
-            >
-              For College Students
-            </button>
+        {!hideToggle && (
+          <div className="flex justify-center mb-16">
+            <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex gap-2">
+              <button 
+                onClick={() => setActiveTab(InstitutionType.SCHOOL)}
+                className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.SCHOOL ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
+              >
+                For School Students
+              </button>
+              <button 
+                onClick={() => setActiveTab(InstitutionType.COLLEGE)}
+                className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.COLLEGE ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
+              >
+                For College Students
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mb-12 text-center animate-in fade-in duration-700">
            <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed italic">
@@ -146,3 +158,4 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({ onSelect, onViewDetai
 };
 
 export default ProgramSelector;
+
