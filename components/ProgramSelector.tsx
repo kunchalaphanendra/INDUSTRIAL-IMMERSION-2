@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { TrackKey, InstitutionType, BillingType } from '../types';
+import { TrackKey, InstitutionType, BillingType } from '@/types';
 import { TRACKS } from '../constants';
 
 interface ProgramSelectorProps {
@@ -158,4 +158,5 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
