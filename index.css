@@ -2,10 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #030303;
-  color: #ffffff;
-  font-family: 'Inter', sans-serif;
+@layer base {
+  body {
+    background-color: #030303;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 .brand-text {
@@ -32,4 +43,5 @@ body {
   box-shadow: 0 0 25px rgba(59, 130, 246, 0.15);
   border-color: rgba(59, 130, 246, 0.3);
 }
+
 
