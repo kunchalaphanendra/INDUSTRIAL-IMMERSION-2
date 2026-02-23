@@ -43,7 +43,7 @@ const PartnersSection: React.FC = () => (
 
 const GetStarted: React.FC = () => {
   const scrollTo = (id: string) => {
-    const element = document.getElementById('organisations');
+    const element = document.getElementById('institutions');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
@@ -61,7 +61,7 @@ const GetStarted: React.FC = () => {
           </p>
           <div className="flex flex-col items-center justify-center">
             <button 
-              onClick={() => scrollTo('organisations')} 
+              onClick={() => scrollTo('institutions')} 
               className="w-full sm:w-auto px-16 py-6 bg-blue-600 text-white font-black rounded-3xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/20 text-xl uppercase tracking-[0.2em] active:scale-95 transform duration-200"
             >
               Choose Your Program
@@ -190,6 +190,20 @@ const App: React.FC = () => {
     }
   };
 
+  const scrollToSection = (id: string) => {
+    if (view !== 'landing') {
+      setView('landing');
+      // Wait for re-render
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const element = document.getElementById(id);
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('ii_token');
     localStorage.removeItem('ii_user');
@@ -244,6 +258,8 @@ const App: React.FC = () => {
           onDashboardClick={() => setView('dashboard')} 
           onBlogClick={() => setView('blog')}
           onAboutClick={() => setView('about')}
+          onProgramsClick={() => scrollToSection('institutions')}
+          onFAQClick={() => scrollToSection('faq')}
           onAdminClick={() => { 
             if (isAdminLoggedIn()) {
               setView('admin'); 
@@ -286,7 +302,7 @@ const App: React.FC = () => {
             onApplyClick={() => {
               setView('landing');
               setTimeout(() => {
-                const element = document.getElementById('organisations');
+                const element = document.getElementById('institutions');
                 if (element) element.scrollIntoView({ behavior: 'smooth' });
               }, 100);
             }}
@@ -352,6 +368,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
