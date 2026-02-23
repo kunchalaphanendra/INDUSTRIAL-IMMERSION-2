@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ApplicationRecord } from '../types';
+import { ApplicationRecord } from '@/types';
 import { apiService } from '../services/api';
 
 const AdminPayments: React.FC = () => {
