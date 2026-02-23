@@ -1,5 +1,5 @@
 
-import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType, Institution, BlogPost, BlogPostInput } from '../types';
+import { UserRegistration, TrackKey, User, EnrollmentRecord, Review, ApplicationRecord, CourseStatus, StudentType, Institution, BlogPost, BlogPostInput } from '@/types';
 import { supabase } from '../lib/supabaseClient';
 import { generateApplicationId } from '../utils/idGenerator';
 // Import admin credentials for internal verification
@@ -693,4 +693,5 @@ export const apiService = {
     }
   }
 };
+
 
