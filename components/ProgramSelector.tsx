@@ -41,7 +41,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
             {isSchoolsPage ? "School Programs" : "Our Education Programs"}
           </p>
           <h2 className={`font-heading font-bold mb-6 uppercase tracking-tight ${isSchoolsPage ? 'text-4xl md:text-7xl leading-none' : 'text-3xl md:text-6xl'}`}>
-            {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Organisations"}
+            {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Institutions"}
           </h2>
           <p className={`text-gray-500 mx-auto mb-4 ${isSchoolsPage ? 'text-lg md:text-xl max-w-3xl' : 'max-w-2xl'}`}>
             {isSchoolsPage 
@@ -171,6 +171,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
 
