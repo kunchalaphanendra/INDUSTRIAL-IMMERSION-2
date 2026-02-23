@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User } from '../types';
+import { User } from '@/types';
 
 interface NavbarProps {
   user: User | null;
@@ -95,6 +95,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
 };
 
 export default Navbar;
+
 
 
 
