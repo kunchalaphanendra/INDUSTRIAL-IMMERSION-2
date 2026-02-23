@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Institution, StudentType } from '../types';
+import { Institution, StudentType } from '@/types';
 import { apiService } from '../services/api';
 
 const AdminInstitutions: React.FC = () => {
@@ -214,5 +214,6 @@ const AdminInstitutions: React.FC = () => {
 };
 
 export default AdminInstitutions;
+
 
 
