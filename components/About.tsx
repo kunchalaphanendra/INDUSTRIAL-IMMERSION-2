@@ -171,14 +171,6 @@ const About: React.FC = () => {
               <p>
                 The long-term vision is larger than a program. It is to build a sustainable bridge between education and industry.
               </p>
-              <div className="pt-8">
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
-                  className="text-blue-500 text-sm font-bold hover:underline"
-                >
-                  Explore our complete guide to industrial immersion →
-                </button>
-              </div>
               <div className="pt-12 border-t border-white/5 mt-12">
                 <p className="text-white font-heading font-bold text-2xl uppercase tracking-tighter">— Founder</p>
                 <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2">STJUFENDS Industrial Immersion</p>
@@ -192,3 +184,4 @@ const About: React.FC = () => {
 };
 
 export default About;
+
