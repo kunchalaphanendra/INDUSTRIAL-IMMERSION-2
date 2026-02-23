@@ -390,6 +390,7 @@ const App: React.FC = () => {
               onSelect={handleTrackSelect}
               onViewDetails={(track) => setDetailTrack(track)}
               initialType={initialInstitutionType || undefined}
+              isSchoolsPage={initialInstitutionType === InstitutionType.SCHOOL}
             />
           </div>
         ) : (
@@ -445,6 +446,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
