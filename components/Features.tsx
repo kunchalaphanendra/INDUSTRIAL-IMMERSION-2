@@ -1,93 +1,141 @@
-
 import React from 'react';
 
 const Features: React.FC = () => {
   return (
-    <div id="about" className="space-y-32 py-24 border-t border-white/5">
-      {/* Manifesto / About Section */}
-      <section className="max-w-5xl mx-auto px-4 text-center">
-        <div className="p-12 md:p-20 bg-blue-600/5 rounded-[4rem] border border-blue-500/10 relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-8 text-4xl opacity-10 font-heading">“</div>
-           <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-8">The STJUFENDS Manifesto</p>
-           <h3 className="text-2xl md:text-4xl font-heading font-bold text-white mb-8 uppercase tracking-tight">Bridging Execution and Academics</h3>
-           <p className="text-gray-300 text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
-             "At STJUFENDS, we don't just teach. We execute. Our mission is to transform education into a live industrial process where students build proof-of-work alongside industry veterans."
-           </p>
-           <div className="mt-8">
-             <button 
-               onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
-               className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
-             >
-               Explore our complete guide to industrial immersion →
-             </button>
-           </div>
-           <div className="mt-12 flex justify-center gap-12">
-              <div className="text-center">
-                <p className="text-3xl font-heading font-bold text-white">50+</p>
-                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-2">Partner Brands</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-heading font-bold text-white">10k+</p>
-                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-2">Active Professionals</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-heading font-bold text-white">100%</p>
-                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-2">Industrial Immersion</p>
-              </div>
-           </div>
+    <div className="space-y-32 py-24 border-t border-white/5">
+      {/* Who Is This Designed For? */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-6xl font-heading font-bold uppercase tracking-tight">Who Is This Designed For?</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="glass-card p-12 rounded-[3rem] border-white/5 flex flex-col items-center text-center group hover:border-blue-500/30 transition-all">
+            <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-500 text-3xl mb-8 group-hover:scale-110 transition-transform">👤</div>
+            <h3 className="text-2xl font-heading font-bold text-white mb-4 uppercase tracking-widest">Individuals</h3>
+            <p className="text-gray-400 font-medium leading-relaxed">
+              Students and graduates seeking structured, real-world business exposure.
+            </p>
+          </div>
+          <div className="glass-card p-12 rounded-[3rem] border-white/5 flex flex-col items-center text-center group hover:border-blue-500/30 transition-all">
+            <div className="w-16 h-16 bg-indigo-600/20 rounded-2xl flex items-center justify-center text-indigo-500 text-3xl mb-8 group-hover:scale-110 transition-transform">🏛️</div>
+            <h3 className="text-2xl font-heading font-bold text-white mb-4 uppercase tracking-widest">Institutions</h3>
+            <p className="text-gray-400 font-medium leading-relaxed">
+              Schools and colleges integrating execution-based industry immersion into their ecosystem.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Comparison Section */}
+      {/* What Participants Actually Work On */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-heading font-bold mb-6 flex flex-wrap items-center justify-center gap-x-4">
-            The <span className="brand-text text-5xl md:text-7xl lowercase first-letter:uppercase tracking-normal">STJUFENDS</span> <span className="text-blue-500 text-shadow-blue">Edge</span>
-          </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">Structured immersion that meets actual global business standards.</p>
+          <h2 className="text-3xl md:text-6xl font-heading font-bold uppercase tracking-tight">What Participants Actually Work On</h2>
+          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Every deliverable contributes to a live business function.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {[
+            { title: 'Business operations support', icon: '⚙️' },
+            { title: 'Growth & marketing execution', icon: '📈' },
+            { title: 'Process documentation', icon: '📄' },
+            { title: 'Product research & analysis', icon: '🔍' },
+            { title: 'Campaign implementation', icon: '🚀' },
+            { title: 'Workflow optimization', icon: '⚡' }
+          ].map((item, i) => (
+            <div key={i} className="glass-card p-8 rounded-3xl border-white/5 flex items-center gap-6 hover:bg-white/[0.02] transition-colors">
+              <span className="text-2xl">{item.icon}</span>
+              <p className="text-sm font-bold text-white uppercase tracking-widest leading-tight">{item.title}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mt-12">
+          Typical execution engagement: 8–15 structured hours per week (varies by cohort).
+        </p>
+      </section>
+
+      {/* How the Program Works */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-6xl font-heading font-bold uppercase tracking-tight">How the Program Works</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto relative">
+          <div className="hidden md:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-y-1/2" />
+          {[
+            { step: '01', title: 'Screening & Allocation', desc: 'Rigorous selection process to match skills with cohort requirements.' },
+            { step: '02', title: 'Orientation & Domain Assignment', desc: 'Deep dive into business functions and specific operational domains.' },
+            { step: '03', title: 'Execution Phase (Live Projects)', desc: 'Hands-on contribution to real deliverables under supervision.' },
+            { step: '04', title: 'Performance Evaluation & Certification', desc: 'Measurable output review and industry-verified certification.' }
+          ].map((item, i) => (
+            <div key={i} className="relative z-10 glass-card p-8 rounded-[2rem] border-white/5 text-center flex flex-col items-center">
+              <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl mb-6 shadow-lg shadow-blue-500/20">{item.step}</div>
+              <h3 className="text-sm font-heading font-bold text-white mb-4 uppercase tracking-widest leading-tight">{item.title}</h3>
+              <p className="text-gray-500 text-[11px] font-medium leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Industries We Work With */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="glass-card p-12 md:p-20 rounded-[4rem] border-white/5">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">Industries We Work With</h2>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mt-4">Industry availability varies by cohort and business alignment.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+            {[
+              { name: 'Fashion & Apparel', desc: 'Operational support for apparel manufacturing and retail.' },
+              { name: 'Food & Beverage Brands', desc: 'Growth execution for emerging F&B consumer brands.' },
+              { name: 'Consumer Electronics', desc: 'Market analysis and campaign support for wearables.' },
+              { name: 'Social Media & Growth', desc: 'Execution for growth-driven marketing agencies.' },
+              { name: 'Technology & SaaS', desc: 'Process documentation and research for tech ventures.' }
+            ].map((industry, i) => (
+              <div key={i} className="text-center space-y-4">
+                <p className="text-sm font-black text-white uppercase tracking-widest leading-tight">{industry.name}</p>
+                <p className="text-[10px] text-gray-500 font-medium leading-relaxed uppercase tracking-wider">{industry.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Execution Outcomes */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-6xl font-heading font-bold uppercase tracking-tight">Execution Outcomes</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto text-lg mt-4 font-medium">Our model is built on structured execution and measurable contribution within defined business frameworks.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-24">
+          {[
+            'Structured live business projects',
+            'Performance-based certification',
+            'Portfolio-ready deliverables',
+            'Real operational exposure',
+            'Supervised execution standards'
+          ].map((outcome, i) => (
+            <div key={i} className="glass-card p-8 rounded-3xl border-blue-500/10 flex items-center gap-6">
+              <span className="text-blue-500 font-bold">✓</span>
+              <p className="text-sm font-bold text-white uppercase tracking-widest">{outcome}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="glass-card rounded-3xl p-10 border-white/5">
-            <h3 className="text-xl font-heading font-bold mb-8 uppercase text-gray-500">Traditional Pathways</h3>
-            <ul className="space-y-6">
-              {[
-                { label: 'Theory Only', sub: 'Limited focus on real-world industry tools.' },
-                { label: 'Isolated Learning', sub: 'Static curriculum without live feedback loops.' },
-                { label: 'Paper Credentials', sub: 'Certificates without verifiable professional output.' }
-              ].map((item, idx) => (
-                <li key={idx} className="flex gap-4">
-                  <span className="text-red-500/50 shrink-0 font-bold">✕</span>
-                  <div>
-                    <p className="font-bold text-gray-400 uppercase tracking-widest text-xs">{item.label}</p>
-                    <p className="text-[11px] text-gray-600 uppercase tracking-wider mt-1">{item.sub}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="glass-card rounded-3xl p-10 border-blue-500/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4">
-               <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-widest">Immersion Standard</span>
+        {/* Testimonial Placeholder */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {[1, 2].map((_, i) => (
+            <div key={i} className="glass-card p-10 rounded-[3rem] border-white/5 relative">
+              <div className="absolute top-0 right-0 p-8 text-6xl opacity-5 font-heading">“</div>
+              <p className="text-gray-300 text-lg font-medium leading-relaxed mb-8 italic">
+                "The immersion program provided a level of operational exposure that I couldn't find in any internship. Working on real deliverables changed my perspective on business execution."
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/5 rounded-full border border-white/10" />
+                <div>
+                  <p className="text-white font-bold uppercase tracking-widest text-xs">Participant Name</p>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">College Name • Program Type</p>
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-heading font-bold mb-8 uppercase text-blue-400">STJUFENDS Ecosystem</h3>
-            <ul className="space-y-6">
-              {[
-                { label: 'Live Execution', sub: 'Curriculum mapped to actual industrial campaigns.' },
-                { label: 'Real-time Mentorship', sub: 'Weekly sprints with verified brand partners.' },
-                { label: 'Joint Proof-of-Work', sub: 'Experience letters issued with partner brands.' }
-              ].map((item, idx) => (
-                <li key={idx} className="flex gap-4">
-                  <span className="text-blue-500 shrink-0 font-bold">✓</span>
-                  <div>
-                    <p className="font-bold text-white uppercase tracking-widest text-xs">{item.label}</p>
-                    <p className="text-[11px] text-gray-400 uppercase tracking-wider mt-1">{item.sub}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
       </section>
     </div>
@@ -95,3 +143,4 @@ const Features: React.FC = () => {
 };
 
 export default Features;
+
