@@ -8,17 +8,21 @@ interface NavbarProps {
   onDashboardClick: () => void;
   onBlogClick: () => void;
   onAboutClick: () => void;
+  onProgramsClick: () => void;
+  onFAQClick: () => void;
   onAdminClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, onBlogClick, onAboutClick, onAdminClick }) => {
-  const scrollTo = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+const Navbar: React.FC<NavbarProps> = ({ 
+  user, 
+  onLoginClick, 
+  onDashboardClick, 
+  onBlogClick, 
+  onAboutClick, 
+  onProgramsClick,
+  onFAQClick,
+  onAdminClick 
+}) => {
   const handleHomeClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // If we are on blog page, we need to navigate back to landing
@@ -48,9 +52,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
                 Schools
               </button>
               <button onClick={onAboutClick} className="hover:text-white transition-colors">About</button>
-              <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Programs</button>
+              <button onClick={onProgramsClick} className="hover:text-white transition-colors">Programs</button>
               <button onClick={onBlogClick} className="hover:text-white transition-colors">Blog</button>
-              <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
+              <button onClick={onFAQClick} className="hover:text-white transition-colors">FAQ</button>
               {user?.isAdmin && (
                 <button 
                   onClick={onAdminClick}
@@ -95,6 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
 };
 
 export default Navbar;
+
 
 
 
