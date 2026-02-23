@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { BlogPost } from '../types';
+import { BlogPost } from '@/types';
 
 interface BlogListProps {
   onPostClick: (slug: string) => void;
@@ -192,5 +192,3 @@ const BlogList: React.FC<BlogListProps> = ({ onPostClick }) => {
 };
 
 export default BlogList;
-
-
