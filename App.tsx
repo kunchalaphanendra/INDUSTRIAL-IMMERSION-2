@@ -11,6 +11,7 @@ import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import TrackDetailModal from './components/TrackDetailModal';
 import Testimonials from './components/Testimonials';
+import AudienceSection from './components/AudienceSection';
 import About from './components/About';
 import AdminLayout from './components/AdminLayout';
 import AdminDashboardView from './components/AdminDashboardView';
@@ -396,6 +397,7 @@ const App: React.FC = () => {
         ) : (
           <>
             <Hero />
+            <AudienceSection />
             <PartnersSection />
             <Features />
             <Testimonials />
@@ -446,6 +448,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
