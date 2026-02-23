@@ -18,12 +18,36 @@ const Hero: React.FC = () => {
           <span className="brand-text tracking-widest uppercase text-[11px]">STJUFENDS Industrial Partnerships</span>
         </div>
         
-        <h1 className="text-5xl md:text-8xl font-heading font-extrabold mb-8 leading-[1.05] tracking-tight">
-          Radical <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 text-shadow-blue">Industry Immersion</span>
-        </h1>
+        <div className="mb-20">
+          <h1 className="text-6xl md:text-9xl font-heading font-black mb-4 leading-none tracking-tighter text-white uppercase">
+            Radical
+          </h1>
+          <h2 className="text-5xl md:text-8xl font-heading font-black leading-none tracking-tighter text-blue-500/90 uppercase">
+            Industry Immersion
+          </h2>
+        </div>
+
+        <div className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="mb-12">
+            <h3 className="text-4xl md:text-7xl font-heading font-black text-white mb-6 uppercase tracking-tighter leading-tight">
+              WORK ON <span className="text-blue-500">REAL</span> BUSINESS <br className="hidden md:block" /> PROJECTS.
+            </h3>
+            <p className="text-sm md:text-lg font-black text-white uppercase tracking-[0.3em] mb-12">
+              EARN INDUSTRY-VERIFIED EXECUTION EXPERIENCE.
+            </p>
+          </div>
+          
+          <div className="max-w-2xl mx-auto space-y-10">
+            <p className="text-gray-500 text-xs md:text-sm font-bold leading-relaxed uppercase tracking-widest">
+              A structured industrial immersion program where students contribute to live business operations across fashion, consumer products, technology, and growth-driven companies.
+            </p>
+            <p className="text-white font-black text-xs md:text-sm uppercase tracking-[0.2em]">
+              No simulations. No classroom theory. Real execution.
+            </p>
+          </div>
+        </div>
         
-        <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-300 mb-12 font-medium leading-relaxed">
+        <p className="max-w-2xl mx-auto text-xs md:text-sm text-gray-600 mb-16 font-bold uppercase tracking-widest leading-relaxed">
           STJUFENDS collaborates with forward-thinking institutions to bridge the gap between education and high-growth industries through hands-on work experience.
         </p>
 
@@ -41,3 +65,4 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
