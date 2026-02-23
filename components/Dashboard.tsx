@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { User, ApplicationRecord, TrackKey } from '../types';
+import { User, ApplicationRecord, TrackKey } from '@/types';
 import { apiService } from '../services/api';
 import { TRACKS } from '../constants';
 import { supabase } from '../lib/supabaseClient';
@@ -231,5 +231,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }
 };
 
 export default Dashboard;
+
 
 
