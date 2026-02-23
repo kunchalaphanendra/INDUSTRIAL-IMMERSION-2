@@ -140,10 +140,28 @@ const Features: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Who Should Not Apply? */}
+      <section className="max-w-4xl mx-auto px-4">
+        <div className="glass-card p-10 md:p-16 rounded-[3rem] border-red-500/10 bg-red-500/5 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 blur-[100px] -mr-32 -mt-32" />
+          <div className="w-20 h-20 bg-red-500/20 rounded-3xl flex items-center justify-center text-red-500 text-4xl shrink-0 shadow-[0_0_30px_rgba(239,68,68,0.2)]">⚠️</div>
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl md:text-4xl font-heading font-bold text-white mb-6 uppercase tracking-tight">Who Should Not Apply?</h2>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed mb-6">
+              Individuals seeking passive training, job guarantees, or theoretical coursework should not apply.
+            </p>
+            <p className="text-red-400 font-black uppercase tracking-[0.2em] text-xs md:text-sm">
+              This program is strictly for those prepared for professional accountability and real operational contribution.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
 
 export default Features;
+
 
 
