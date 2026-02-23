@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ApplicationRecord, CourseStatus, TrackKey, Institution } from '../types';
+import { ApplicationRecord, CourseStatus, TrackKey, Institution } from '@/types';
 import { apiService, AdminFilterOptions } from '../services/api';
 
 interface AdminStudentsProps {
@@ -237,6 +237,7 @@ const AdminStudents: React.FC<AdminStudentsProps> = ({ onSelectStudent }) => {
 };
 
 export default AdminStudents;
+
 
 
 
