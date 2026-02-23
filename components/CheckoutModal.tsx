@@ -40,8 +40,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
     institutionName: '', 
     currentStatus: loggedInUser?.studentType || 'Student',
     careerGoals: '',
-    studentType: (loggedInUser?.studentType as StudentType) || 'COLLEGE'
+    studentType: enrollment.track?.includes('school') ? 'SCHOOL' : ((loggedInUser?.studentType as StudentType) || 'COLLEGE')
   });
+
+  const isSchoolTrack = enrollment.track?.includes('school');
 
   // TASK 1 & 2: Fetch and Filter Institutions from Supabase
   useEffect(() => {
@@ -196,23 +198,25 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                     <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Full Name</label>
                     <input disabled value={formData.fullName} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs opacity-50 font-bold" />
                   </div>
-                  <div>
-                    <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Tier *</label>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
-                      >
-                        School
-                      </button>
-                      <button 
-                        onClick={() => setFormData({...formData, studentType: 'COLLEGE'})}
-                        className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
-                      >
-                        College
-                      </button>
+                  {!isSchoolTrack && (
+                    <div>
+                      <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Student Tier *</label>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setFormData({...formData, studentType: 'SCHOOL'})}
+                          className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'SCHOOL' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        >
+                          School
+                        </button>
+                        <button 
+                          onClick={() => setFormData({...formData, studentType: 'COLLEGE'})}
+                          className={`flex-1 py-3 px-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${formData.studentType === 'COLLEGE' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/10' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        >
+                          College
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                </div>
                
                {/* TASK 3: Replace Institution Input with Dropdown */}
@@ -255,8 +259,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 00000 00000" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white" />
                </div>
                <div>
-                  <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">Industrial Goals *</label>
-                  <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder="Describe your objectives..." className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none text-white" />
+                  <label className="text-[9px] font-black text-gray-600 uppercase mb-2 block tracking-widest">
+                    {isSchoolTrack ? 'Learning Objectives *' : 'Industrial Goals *'}
+                  </label>
+                  <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder={isSchoolTrack ? "What do you hope to achieve?" : "Describe your objectives..."} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none text-white" />
                </div>
                <button 
                 onClick={() => {
@@ -317,7 +323,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                </div>
                <h3 className="text-3xl font-heading font-black text-white mb-4 uppercase tracking-tighter">Seat Secured</h3>
-               <p className="text-gray-500 mb-10 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Verification Complete. Industrial Profile Synced.</p>
+               <p className="text-gray-500 mb-10 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                 {isSchoolTrack ? 'Enrollment Complete. Profile Synced.' : 'Verification Complete. Industrial Profile Synced.'}
+               </p>
                <button onClick={handleGoToDashboard} className="w-full py-5 bg-white text-black font-black rounded-2xl uppercase tracking-widest hover:bg-gray-200 transition-all">Go to Dashboard</button>
             </div>
           )}
@@ -328,6 +336,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
