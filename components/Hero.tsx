@@ -2,8 +2,8 @@
 import React from 'react';
 
 const Hero: React.FC = () => {
-  const scrollToOrganisations = () => {
-    const element = document.getElementById('organisations');
+  const scrollToInstitutions = () => {
+    const element = document.getElementById('institutions');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
@@ -56,10 +56,10 @@ const Hero: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
           <button 
-            onClick={scrollToOrganisations}
+            onClick={scrollToInstitutions}
             className="w-full sm:w-auto px-16 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-blue-500/10 active:scale-95 uppercase tracking-widest"
           >
-            Explore Programs
+            Explore Institutions
           </button>
         </div>
       </div>
@@ -68,5 +68,6 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
 
 
