@@ -1,11 +1,11 @@
 
-import { TrackKey, TrackData, BillingType, DomainKey, DomainData, FAQCategory } from './types';
+import { TrackKey, TrackData, BillingType, DomainKey, DomainData, FAQCategory } from '@/types';
 
 export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.SCHOOL_TUITION]: {
     title: 'School Tuition Program',
     duration: 'Monthly Subscription',
-    price: 1,
+    price: 999,
     billingType: BillingType.MONTHLY,
     description: 'After-school academic support designed to strengthen core foundations.',
     idealFor: 'Schools looking to enhance academic outcomes through structured learning.',
@@ -50,7 +50,7 @@ export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.COLLEGE_IMMERSION]: {
     title: 'Industry Immersion Certification',
     duration: '6 + 6 Months',
-    price: 1,
+    price: 14999,
     billingType: BillingType.ONETIME,
     description: 'Comprehensive 1-year journey: 6 months of cross-domain professional training (Fashion, Tech, FMCG, etc.) followed by 6 months of guaranteed work experience.',
     idealFor: 'Students seeking complete industrial exposure across multiple high-growth sectors.',
@@ -106,7 +106,7 @@ export const ENROLLMENT_STEPS = [
 ];
 
 export const PARTNERS = [
-  'Baufmineur', 
+  'Visionary Media', 'TechFlow Inc.', 'GrowthHackers', 'BrandPulse', 'NextGen Creative', 'Alpha Agency', 'SocialScale'
 ];
 
 export const CORE_AREAS = [
@@ -240,3 +240,4 @@ export const FAQ_CATEGORIES: FAQCategory[] = [
 ];
 
 export const FAQS = FAQ_CATEGORIES.flatMap(cat => cat.items);
+
