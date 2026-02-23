@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { apiService } from '../services/api';
-import { BlogPost, BlogPostInput, BlogPostStatus } from '../types';
+import { BlogPost, BlogPostInput, BlogPostStatus } from '@/types';
 
 const BLOG_CATEGORIES = [
   'Industry Insights',
@@ -634,5 +634,6 @@ const AdminBlogCMS: React.FC = () => {
 };
 
 export default AdminBlogCMS;
+
 
 
