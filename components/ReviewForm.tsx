@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Review, TrackKey } from '../types';
+import { User, Review, TrackKey } from '@/types';
 import { apiService } from '../services/api';
 
 interface ReviewFormProps {
@@ -130,4 +130,5 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ user, courseKey, courseTitle })
 };
 
 export default ReviewForm;
+
 
