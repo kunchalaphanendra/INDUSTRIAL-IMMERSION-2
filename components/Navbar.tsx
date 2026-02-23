@@ -38,6 +38,15 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
           <div className="flex items-center space-x-4 md:space-x-8 text-sm font-medium">
             <div className="hidden lg:flex items-center space-x-8 text-gray-400">
               <button onClick={handleHomeClick} className="hover:text-white transition-colors">Home</button>
+              <button 
+                onClick={() => {
+                  const event = new CustomEvent('nav-institutions', { detail: 'school' });
+                  window.dispatchEvent(event);
+                }} 
+                className="hover:text-white transition-colors"
+              >
+                Schools
+              </button>
               <button onClick={onAboutClick} className="hover:text-white transition-colors">About</button>
               <button onClick={() => scrollTo('organisations')} className="hover:text-white transition-colors">Programs</button>
               <button onClick={onBlogClick} className="hover:text-white transition-colors">Blog</button>
@@ -86,5 +95,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onDashboardClick, o
 };
 
 export default Navbar;
+
 
 
