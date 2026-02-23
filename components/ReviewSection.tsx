@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Review, TrackKey } from '../types';
+import { Review, TrackKey } from '@/types';
 import { apiService } from '../services/api';
 
 interface ReviewSectionProps {
@@ -74,3 +74,4 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({ courseKey }) => {
 };
 
 export default ReviewSection;
+
