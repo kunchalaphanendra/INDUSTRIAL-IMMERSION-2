@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrackKey, TrackData } from '../types';
+import { TrackKey, TrackData } from '@/types';
 import ReviewSection from './ReviewSection';
 
 interface TrackDetailModalProps {
@@ -140,4 +140,5 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({ trackKey, data, onC
 };
 
 export default TrackDetailModal;
+
 
