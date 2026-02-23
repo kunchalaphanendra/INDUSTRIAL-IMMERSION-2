@@ -110,7 +110,9 @@ const Features: React.FC = () => {
             'Performance-based certification',
             'Portfolio-ready deliverables',
             'Real operational exposure',
-            'Supervised execution standards'
+            'Supervised execution standards',
+            'Industry-verified experience certificate',
+            'Performance-based Letter of Recommendation (LOR)'
           ].map((outcome, i) => (
             <div key={i} className="glass-card p-8 rounded-3xl border-blue-500/10 flex items-center gap-6">
               <span className="text-blue-500 font-bold">✓</span>
@@ -143,4 +145,5 @@ const Features: React.FC = () => {
 };
 
 export default Features;
+
 
