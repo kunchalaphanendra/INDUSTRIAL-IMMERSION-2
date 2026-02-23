@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, StudentType } from '../types';
+import { User, StudentType } from '@/types';
 import { apiService } from '../services/api';
 
 interface AuthModalProps {
@@ -240,6 +240,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 };
 
 export default AuthModal;
+
 
 
 
