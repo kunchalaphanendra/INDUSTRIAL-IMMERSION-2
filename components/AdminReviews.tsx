@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Review } from '../types';
+import { Review } from '@/types';
 import { apiService } from '../services/api';
 
 const AdminReviews: React.FC = () => {
@@ -178,6 +178,7 @@ const AdminReviews: React.FC = () => {
 };
 
 export default AdminReviews;
+
 
 
 
