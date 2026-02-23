@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Review } from '../types';
+import { Review } from '@/types';
 import { apiService } from '../services/api';
 
 const Testimonials: React.FC = () => {
@@ -50,3 +50,4 @@ const Testimonials: React.FC = () => {
 };
 
 export default Testimonials;
+
