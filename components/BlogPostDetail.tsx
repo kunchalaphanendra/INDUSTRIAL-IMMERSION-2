@@ -1,236 +1,312 @@
 
-import React, { useEffect, useState } from 'react';
-import { User, ApplicationRecord, TrackKey } from '@/types';
+import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { TRACKS } from '../constants';
-import { supabase } from '../lib/supabaseClient';
-import ReviewForm from './ReviewForm';
+import { BlogPost } from '@/types';
 
-interface DashboardProps {
-  user: User;
-  onLogout: () => void;
-  onBackToLanding: () => void;
+interface BlogPostDetailProps {
+  slug: string;
+  onBack: () => void;
+  onPostClick: (slug: string) => void;
+  onApplyClick: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onBackToLanding }) => {
-  const [enrollments, setEnrollments] = useState<ApplicationRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
-
-  const loadData = async () => {
-    setLoading(true);
-    
-    // CRITICAL: Fetch current auth user to ensure we use the session email
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    
-    if (authUser?.email) {
-      const data = await apiService.fetchUserEnrollments(authUser.email);
-      setEnrollments(data);
-    } else {
-      console.warn("No authenticated email found for dashboard load.");
-    }
-    
-    setLoading(false);
-  };
+const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostClick, onApplyClick }) => {
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<Partial<BlogPost>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toc, setToc] = useState<{ id: string; text: string; level: number }[]>([]);
 
   useEffect(() => {
-    loadData();
-  }, [user.email]);
+    const loadPost = async () => {
+      setIsLoading(true);
+      const data = await apiService.fetchBlogPostBySlug(slug);
+      if (data) {
+        setPost(data);
+        
+        // SEO Optimization
+        document.title = `${data.meta_title || data.title} | STJUFENDS`;
+        
+        // Canonical Link
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+          canonical = document.createElement('link');
+          canonical.setAttribute('rel', 'canonical');
+          document.head.appendChild(canonical);
+        }
+        canonical.setAttribute('href', data.canonical_url || `${window.location.origin}/blog/${data.slug}`);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setToast("Application ID copied");
-    setTimeout(() => setToast(null), 3000);
-  };
+        // Meta Description
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute('name', 'description');
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute('content', data.meta_description || data.excerpt);
+
+        // OG Tags
+        const ogTags = [
+          { property: 'og:title', content: data.og_title || data.meta_title || data.title },
+          { property: 'og:description', content: data.og_description || data.meta_description || data.excerpt },
+          { property: 'og:image', content: data.og_image || data.cover_image },
+          { property: 'og:type', content: 'article' }
+        ];
+
+        ogTags.forEach(tag => {
+          let el = document.querySelector(`meta[property="${tag.property}"]`);
+          if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute('property', tag.property);
+            document.head.appendChild(el);
+          }
+          el.setAttribute('content', tag.content || '');
+        });
+
+        // Schema Markup
+        const schema = {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": data.title,
+          "description": data.meta_description || data.excerpt,
+          "image": data.cover_image,
+          "author": {
+            "@type": "Organization",
+            "name": "STJUFENDS"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "STJUFENDS",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://stjufends.com/logo.png" // Placeholder
+            }
+          },
+          "datePublished": data.published_at || data.created_at,
+          "dateModified": data.updated_at || data.created_at
+        };
+
+        let schemaScript = document.getElementById('blog-schema');
+        if (!schemaScript) {
+          schemaScript = document.createElement('script');
+          schemaScript.id = 'blog-schema';
+          schemaScript.setAttribute('type', 'application/ld+json');
+          document.head.appendChild(schemaScript);
+        }
+        schemaScript.innerHTML = JSON.stringify(schema);
+
+        // Parse TOC
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.content, 'text/html');
+        const headings = Array.from(doc.querySelectorAll('h2, h3'));
+        const tocItems = headings.map((h, i) => {
+          const id = h.id || `heading-${i}`;
+          h.id = id;
+          return {
+            id,
+            text: h.textContent || '',
+            level: parseInt(h.tagName.substring(1))
+          };
+        });
+        setToc(tocItems);
+
+        const related = await apiService.fetchRelatedPosts(data.id, data.category);
+        setRelatedPosts(related);
+      }
+      setIsLoading(false);
+      window.scrollTo(0, 0);
+    };
+    loadPost();
+
+    return () => {
+      document.title = 'STJUFENDS | Industrial Immersion';
+      const schemaScript = document.getElementById('blog-schema');
+      if (schemaScript) schemaScript.remove();
+    };
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="py-24 px-4 text-center">
+        <h2 className="text-3xl font-bold mb-4">Post Not Found</h2>
+        <button onClick={onBack} className="text-blue-500 font-bold uppercase tracking-widest text-xs">← Back to Blog</button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#030303] pt-32 pb-20 selection:bg-blue-500/30 font-sans">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Toast Notification */}
-        {toast && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-top-4">
-            {toast}
-          </div>
-        )}
+    <div className="py-24 px-4 max-w-5xl mx-auto">
+      <button 
+        onClick={onBack}
+        className="mb-12 flex items-center gap-3 text-gray-500 hover:text-white transition-colors group"
+      >
+        <span className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-all">←</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Back to Insights</span>
+      </button>
 
-        {/* Profile Header */}
-        <div className="bg-[#080808] border border-white/5 rounded-[3rem] p-8 md:p-12 mb-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
-          
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            <div className="relative">
-              <img 
-                src={user.avatarUrl} 
-                className="w-24 h-24 rounded-3xl object-cover border border-white/10" 
-                alt="Profile" 
-              />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-black rounded-lg flex items-center justify-center border border-white/10">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+      <article className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16">
+        <div>
+          <header className="mb-12">
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] px-4 py-1.5 bg-blue-500/10 rounded-full border border-blue-500/20">
+                {post.category}
+              </span>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">
+                {post.reading_time} min read
+              </span>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">
+                {new Date(post.published_at || post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+              {post.updated_at && post.updated_at !== post.published_at && post.updated_at !== post.created_at && (
+                <span className="text-[10px] font-black text-blue-500/60 uppercase tracking-[0.4em]">
+                  Updated: {new Date(post.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+            <h1 className="text-4xl md:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.9] mb-12">
+              {post.title}
+            </h1>
+            {post.cover_image && (
+              <div className="aspect-[21/9] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl shadow-blue-500/5">
+                <img src={post.cover_image} alt={post.image_alt_text || post.title} className="w-full h-full object-cover" />
               </div>
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-4xl font-heading font-black mb-1 uppercase tracking-tight">{user.fullName}</h1>
-              <p className="text-gray-600 font-bold text-sm uppercase tracking-widest">{user.email}</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
-            {user.isAdmin && (
-              <a href="/admin/reviews" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-admin')); }} className="px-6 py-3 bg-blue-600/10 border border-blue-500/20 text-blue-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Admin Control</a>
             )}
-            <button onClick={onBackToLanding} className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10 uppercase tracking-widest text-[10px]">Home</button>
-            <button onClick={onLogout} className="px-6 py-3 bg-red-600/5 hover:bg-red-600/10 text-red-500 font-bold rounded-xl transition-all border border-red-500/10 uppercase tracking-widest text-[10px]">Logout</button>
-          </div>
-        </div>
+          </header>
 
-        {/* Student Identity Card UI */}
-        {!loading && enrollments.length > 0 && (
-          <div className="mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <div className="bg-[#0a0a0a] border border-blue-500/20 rounded-[2.5rem] p-10 relative overflow-hidden shadow-[0_0_40px_rgba(37,99,235,0.05)]">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                <svg className="w-32 h-32 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-              </div>
-              
-              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 mb-8 flex items-center gap-3">
-                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                Student Industrial Identity
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Application ID</p>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl font-heading font-black text-white tracking-widest uppercase">
-                        {enrollments[0].application_id}
-                      </span>
-                      <button 
-                        onClick={() => copyToClipboard(enrollments[0].application_id)}
-                        className="p-2 bg-white/5 hover:bg-blue-600/20 rounded-lg border border-white/10 transition-all text-gray-500 hover:text-blue-500"
-                        title="Copy ID"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Student Name</p>
-                    <p className="text-lg font-bold text-gray-200 uppercase tracking-wider">{enrollments[0].fullName}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Institution</p>
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">{enrollments[0].institutions?.name || 'Not assigned'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Primary Program</p>
-                    <p className="text-sm font-bold text-blue-400 uppercase tracking-widest">
-                      {TRACKS[enrollments[0].track_key]?.title || enrollments[0].track_key.replace(/_/g, ' ')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mb-1">Payment Status</p>
-                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 text-[9px] font-black uppercase tracking-widest rounded-lg border border-green-500/20">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                      {enrollments[0].payment_status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Active Plans Feed */}
-        <div className="space-y-12">
-          <div className="flex items-center justify-between px-4">
-             <div className="flex items-center gap-3">
-               <h2 className="text-sm font-heading font-black tracking-[0.3em] uppercase text-gray-400">My Enrollments</h2>
-             </div>
-             <button onClick={loadData} className="text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:underline transition-all">Refresh Sync</button>
-          </div>
-          
-          {loading ? (
-            <div className="bg-[#050505] border border-white/5 p-24 rounded-[3rem] flex flex-col items-center justify-center text-gray-600">
-              <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Querying Records...</p>
-            </div>
-          ) : enrollments.length === 0 ? (
-            <div className="bg-[#050505] border border-dashed border-white/10 p-20 rounded-[3rem] flex flex-col items-center justify-center text-gray-500 text-center">
-              <div className="text-5xl mb-6">📂</div>
-              <h3 className="text-lg font-heading font-bold text-white mb-2 uppercase tracking-widest">No Active Plans</h3>
-              <p className="max-w-xs mb-8 text-gray-600 text-xs uppercase font-bold tracking-wider">Your enrolled tracks will appear here after payment settlement.</p>
-              <button onClick={onBackToLanding} className="px-8 py-4 bg-blue-600 text-white font-black rounded-xl shadow-xl uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all">Browse Programs</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-12">
-              {enrollments.map(record => {
-                const track = TRACKS[record.track_key];
-                return (
-                  <div key={record.id} className="space-y-6 animate-in slide-in-from-bottom-4">
-                    <div className="bg-[#080808] p-10 rounded-[2.5rem] border border-white/5 hover:border-blue-500/20 transition-all group relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-[2px] h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
-                      
-                      <div className="space-y-8">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <span className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg border border-green-500/20">
-                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                            Active Plan
-                          </span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Enrollment ID:</span>
-                            <span className="text-[10px] font-heading font-black text-blue-500 uppercase tracking-widest">{record.application_id}</span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="text-3xl md:text-5xl font-heading font-black mb-4 uppercase tracking-tighter text-white group-hover:text-blue-500 transition-colors">
-                            {track?.title || record.track_key}
-                          </h3>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-white/[0.03]">
-                             <div className="space-y-1">
-                               <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Registration Date</p>
-                               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(record.created_at).toLocaleDateString()}</p>
-                             </div>
-                             <div className="space-y-1">
-                               <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Course Progress</p>
-                               <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{record.course_progress}</p>
-                             </div>
-                             <div className="space-y-1">
-                               <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Payment Settlement</p>
-                               <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest">Verified</p>
-                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Review Form below each plan */}
-                    <ReviewForm 
-                      user={user} 
-                      courseKey={record.track_key} 
-                      courseTitle={track?.title || record.track_key} 
-                    />
-                  </div>
-                )
-              })}
+          {/* Mobile TOC */}
+          {toc.length > 0 && (
+            <div className="lg:hidden glass-card p-8 rounded-3xl border-white/5 mb-12">
+              <h3 className="text-xs font-black uppercase tracking-widest text-blue-500 mb-4">On this page</h3>
+              <nav className="space-y-2">
+                {toc.map(item => (
+                  <a 
+                    key={item.id} 
+                    href={`#${item.id}`}
+                    className={`block text-sm text-gray-400 hover:text-white transition-colors ${item.level === 3 ? 'pl-4' : ''}`}
+                  >
+                    {item.text}
+                  </a>
+                ))}
+              </nav>
             </div>
           )}
+
+          <div 
+            className="prose prose-invert prose-blue max-w-none mb-12 blog-content"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+
+          {/* Internal Linking Rule */}
+          {post.slug !== 'the-complete-guide-to-industrial-immersion-programs' && (
+            <div className="mb-24 p-8 glass-card rounded-3xl border-blue-500/10 bg-blue-500/5">
+              <p className="text-gray-300 font-medium">
+                For a comprehensive explanation of structured industrial immersion models, read our{' '}
+                <button 
+                  onClick={() => onPostClick('the-complete-guide-to-industrial-immersion-programs')}
+                  className="text-blue-500 font-bold hover:underline"
+                >
+                  complete guide to industrial immersion programs
+                </button>.
+              </p>
+            </div>
+          )}
+
+          {/* Elite CTA Block */}
+          <div className="glass-card p-12 md:p-20 rounded-[4rem] border-blue-500/20 relative overflow-hidden group mb-24">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-50" />
+            <div className="relative z-10 text-center">
+              <p className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-6">Take the next step</p>
+              <h2 className="text-3xl md:text-5xl font-heading font-bold mb-10 uppercase tracking-tighter leading-none">
+                Ready for <br /><span className="text-blue-500">Structured Industry Exposure?</span>
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <button 
+                  onClick={onApplyClick}
+                  className="w-full sm:w-auto px-12 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/20 uppercase tracking-widest text-sm active:scale-95"
+                >
+                  Explore Programs
+                </button>
+                <button 
+                  onClick={() => {
+                    onApplyClick();
+                    setTimeout(() => {
+                      const el = document.getElementById('organisations');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 200);
+                  }}
+                  className="w-full sm:w-auto px-12 py-5 bg-white/5 text-white font-black rounded-2xl hover:bg-white/10 transition-all border border-white/10 uppercase tracking-widest text-sm"
+                >
+                  Partner With Us
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Related Posts */}
+          {relatedPosts.length > 0 && (
+            <section className="border-t border-white/5 pt-24">
+              <h3 className="text-xs font-black uppercase tracking-[0.5em] text-gray-500 mb-12 text-center">Related Insights</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {relatedPosts.map((rp) => (
+                  <div 
+                    key={rp.id}
+                    onClick={() => onPostClick(rp.slug || '')}
+                    className="group cursor-pointer"
+                  >
+                    <div className="aspect-video rounded-3xl overflow-hidden mb-6 border border-white/5">
+                      <img src={rp.cover_image} alt={rp.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    </div>
+                    <h4 className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug">
+                      {rp.title}
+                    </h4>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
-      </div>
+
+        {/* Sidebar TOC */}
+        <aside className="hidden lg:block sticky top-32 h-fit">
+          <div className="glass-card p-8 rounded-[2rem] border-white/5">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-6">On this page</h3>
+            <nav className="space-y-4">
+              {toc.map(item => (
+                <a 
+                  key={item.id} 
+                  href={`#${item.id}`}
+                  className={`block text-xs font-bold text-gray-500 hover:text-white transition-colors leading-relaxed ${item.level === 3 ? 'pl-4 border-l border-white/5' : ''}`}
+                >
+                  {item.text}
+                </a>
+              ))}
+            </nav>
+            <div className="mt-10 pt-10 border-t border-white/5">
+              <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-4">Share this insight</p>
+              <div className="flex gap-4">
+                {['Twitter', 'LinkedIn', 'Copy'].map(platform => (
+                  <button key={platform} className="text-gray-500 hover:text-blue-500 transition-colors text-xs font-bold">
+                    {platform}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </article>
     </div>
   );
 };
 
-export default Dashboard;
+export default BlogPostDetail;
+
 
 
 
