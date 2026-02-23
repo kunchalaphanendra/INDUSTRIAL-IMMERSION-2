@@ -49,14 +49,6 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
               : "Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance."
             }
           </p>
-          {!isSchoolsPage && (
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
-              className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
-            >
-              New to industrial immersion? Read our complete guide →
-            </button>
-          )}
         </div>
 
         {/* Tab Switcher */}
@@ -171,6 +163,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
 
