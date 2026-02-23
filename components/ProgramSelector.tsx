@@ -10,6 +10,7 @@ interface ProgramSelectorProps {
   hideToggle?: boolean;
   forceType?: InstitutionType;
   initialType?: InstitutionType;
+  isSchoolsPage?: boolean;
 }
 
 const ProgramSelector: React.FC<ProgramSelectorProps> = ({ 
@@ -18,9 +19,10 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
   selectedTrack,
   hideToggle = false,
   forceType,
-  initialType
+  initialType,
+  isSchoolsPage = false
 }) => {
-  const [activeTab, setActiveTab] = useState<InstitutionType>(initialType || forceType || InstitutionType.SCHOOL);
+  const [activeTab, setActiveTab] = useState<InstitutionType>(isSchoolsPage ? InstitutionType.SCHOOL : (initialType || forceType || InstitutionType.SCHOOL));
 
   const schoolTracks = [TrackKey.SCHOOL_TUITION, TrackKey.SCHOOL_SKILL];
   const collegeTracks = [TrackKey.COLLEGE_PROF, TrackKey.COLLEGE_IMMERSION];
@@ -28,26 +30,37 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
   const currentTracks = activeTab === InstitutionType.SCHOOL ? schoolTracks : collegeTracks;
   const isSchoolView = activeTab === InstitutionType.SCHOOL;
 
+  const showToggle = !hideToggle && !isSchoolsPage;
+
   return (
     <section id="organisations" className="py-24 bg-black border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="text-center mb-16">
-          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Our Education Programs</p>
-          <h2 className="text-3xl md:text-6xl font-heading font-bold mb-6 uppercase tracking-tight">Organisations</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto mb-4">
-            Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance.
+        <div className={`text-center mb-16 ${isSchoolsPage ? 'pt-12 pb-8' : ''}`}>
+          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">
+            {isSchoolsPage ? "School Programs" : "Our Education Programs"}
           </p>
-          <button 
-            onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
-            className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
-          >
-            New to industrial immersion? Read our complete guide →
-          </button>
+          <h2 className={`font-heading font-bold mb-6 uppercase tracking-tight ${isSchoolsPage ? 'text-4xl md:text-7xl leading-none' : 'text-3xl md:text-6xl'}`}>
+            {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Organisations"}
+          </h2>
+          <p className={`text-gray-500 mx-auto mb-4 ${isSchoolsPage ? 'text-lg md:text-xl max-w-3xl' : 'max-w-2xl'}`}>
+            {isSchoolsPage 
+              ? "After-school academic and skill development programs designed to support measurable student progress and institutional clarity."
+              : "Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance."
+            }
+          </p>
+          {!isSchoolsPage && (
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('nav-blog-post', { detail: 'the-complete-guide-to-industrial-immersion-programs' }))}
+              className="text-blue-500 text-[10px] font-black uppercase tracking-widest hover:underline"
+            >
+              New to industrial immersion? Read our complete guide →
+            </button>
+          )}
         </div>
 
         {/* Tab Switcher */}
-        {!hideToggle && (
+        {showToggle && (
           <div className="flex justify-center mb-16">
             <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex gap-2">
               <button 
@@ -158,5 +171,6 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
