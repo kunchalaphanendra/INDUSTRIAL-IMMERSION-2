@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { BlogPost } from '../types';
+import { BlogPost } from '@/types';
 
 interface BlogPostDetailProps {
   slug: string;
@@ -306,4 +306,5 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onBack, onPostCli
 };
 
 export default BlogPostDetail;
+
 
