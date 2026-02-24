@@ -13,9 +13,9 @@ interface ProgramSelectorProps {
   isSchoolsPage?: boolean;
 }
 
-const ProgramSelector: React.FC<ProgramSelectorProps> = ({ 
-  onSelect, 
-  onViewDetails, 
+const ProgramSelector: React.FC<ProgramSelectorProps> = ({
+  onSelect,
+  onViewDetails,
   selectedTrack,
   hideToggle = false,
   forceType,
@@ -35,18 +35,18 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
   return (
     <section id="institutions" className="py-24 bg-black border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <div className={`text-center mb-16 ${isSchoolsPage ? 'pt-12 pb-8' : ''}`}>
           <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">
             {isSchoolsPage ? "School Programs" : "Our Education Programs"}
           </p>
-          <h2 className={`font-heading font-bold mb-6 uppercase tracking-tight ${isSchoolsPage ? 'text-4xl md:text-7xl leading-none' : 'text-3xl md:text-6xl'}`}>
-            {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Institutions"}
+          <h2 className={`font-heading font-black mb-6 uppercase tracking-tight ${isSchoolsPage ? 'text-4xl md:text-7xl leading-none' : 'text-3xl md:text-6xl'}`}>
+            {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Education Programs"}
           </h2>
           <p className={`text-gray-500 mx-auto mb-4 ${isSchoolsPage ? 'text-lg md:text-xl max-w-3xl' : 'max-w-2xl'}`}>
-            {isSchoolsPage 
+            {isSchoolsPage
               ? "After-school academic and skill development programs designed to support measurable student progress and institutional clarity."
-              : "Our programs are designed for institutions and students seeking structured learning, measurable outcomes, and industry relevance."
+              : "Structured learning programs designed for students seeking measurable outcomes, industry relevance, and career readiness."
             }
           </p>
         </div>
@@ -55,13 +55,13 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
         {showToggle && (
           <div className="flex justify-center mb-16">
             <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex gap-2">
-              <button 
+              <button
                 onClick={() => setActiveTab(InstitutionType.SCHOOL)}
                 className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.SCHOOL ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
               >
                 For School Students
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab(InstitutionType.COLLEGE)}
                 className={`px-8 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === InstitutionType.COLLEGE ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-500 hover:text-white'}`}
               >
@@ -72,25 +72,24 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
         )}
 
         <div className="mb-12 text-center animate-in fade-in duration-700">
-           <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed italic">
-             {isSchoolView 
-               ? "After-school programs designed to strengthen academics, communication, and digital skills while providing clear progress tracking for institutions and parents."
-               : "Industry-aligned programs that help college students build practical skills, certifications, and career readiness."
-             }
-           </p>
+          <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed italic">
+            {isSchoolView
+              ? "After-school programs designed to strengthen academics, communication, and digital skills while providing clear progress tracking for institutions and parents."
+              : "Industry-aligned programs that help college students build practical skills, certifications, and career readiness."
+            }
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {currentTracks.map((key) => {
             const track = TRACKS[key];
             const isSelected = selectedTrack === key;
-            
+
             return (
-              <div 
+              <div
                 key={key}
-                className={`group relative p-[1px] rounded-[2.5rem] transition-all duration-500 flex flex-col ${
-                  isSelected ? 'bg-blue-500/50 scale-[1.01]' : 'bg-white/10'
-                }`}
+                className={`group relative p-[1px] rounded-[2.5rem] transition-all duration-500 flex flex-col ${isSelected ? 'bg-blue-500/50 scale-[1.01]' : 'bg-white/10'
+                  }`}
               >
                 <div className="bg-[#080808] rounded-[calc(2.5rem-1px)] p-8 md:p-12 h-full flex flex-col justify-between border border-transparent">
                   <div>
@@ -108,7 +107,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
                         </p>
                       </div>
                     </div>
-                    
+
                     <h3 className="text-2xl md:text-3xl font-heading font-bold mb-6 text-white uppercase tracking-tight leading-tight">{track.title}</h3>
                     <p className="text-gray-500 text-sm mb-10 leading-relaxed font-medium">
                       {track.description}
@@ -118,7 +117,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
                       <p className="text-[10px] font-black uppercase text-blue-500 mb-3 tracking-widest">Ideal For</p>
                       <p className="text-gray-400 text-xs font-medium leading-relaxed">{track.idealFor}</p>
                     </div>
-                    
+
                     <ul className="space-y-4 mb-12">
                       {track.features.slice(0, 3).map((f, i) => (
                         <li key={i} className="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
@@ -131,23 +130,22 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
                   <div className="space-y-4">
                     {/* Only show "View Full Syllabus" for College Tracks */}
                     {!isSchoolView && (
-                      <button 
+                      <button
                         onClick={() => onViewDetails?.(key)}
                         className="w-full py-4 text-gray-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em]"
                       >
                         View Full Syllabus
                       </button>
                     )}
-                    
-                    <button 
+
+                    <button
                       onClick={() => onSelect(key)}
-                      className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.25em] transition-all shadow-2xl active:scale-[0.98] ${
-                        isSchoolView && !isSelected
-                        ? 'bg-white text-black hover:bg-gray-200' 
-                        : isSelected 
-                        ? 'bg-blue-600 text-white shadow-blue-500/20' 
-                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10'
-                      }`}
+                      className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.25em] transition-all shadow-2xl active:scale-[0.98] ${isSchoolView && !isSelected
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : isSelected
+                            ? 'bg-blue-600 text-white shadow-blue-500/20'
+                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10'
+                        }`}
                     >
                       {isSelected ? 'Selected' : 'Apply Now'}
                     </button>
@@ -163,9 +161,3 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
-
-
-
-
-
-
