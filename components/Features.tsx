@@ -39,7 +39,10 @@ const Features: React.FC = () => {
             { title: 'Process documentation', icon: '📄' },
             { title: 'Product research & analysis', icon: '🔍' },
             { title: 'Campaign implementation', icon: '🚀' },
-            { title: 'Workflow optimization', icon: '⚡' }
+            { title: 'Workflow optimization', icon: '⚡' },
+            { title: 'Web & app development', icon: '💻' },
+            { title: 'Data analytics & automation', icon: '📊' },
+            { title: 'UI/UX design & prototyping', icon: '🎨' }
           ].map((item, i) => (
             <div key={i} className="glass-card p-8 rounded-3xl border-white/5 flex items-center gap-6 hover:bg-white/[0.02] transition-colors">
               <span className="text-2xl">{item.icon}</span>
@@ -162,6 +165,7 @@ const Features: React.FC = () => {
 };
 
 export default Features;
+
 
 
 
