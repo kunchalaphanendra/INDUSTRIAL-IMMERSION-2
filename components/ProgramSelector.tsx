@@ -37,9 +37,6 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className={`text-center mb-16 ${isSchoolsPage ? 'pt-12 pb-8' : ''}`}>
-          <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">
-            {isSchoolsPage ? "School Programs" : "Our Education Programs"}
-          </p>
           <h2 className={`font-heading font-black mb-6 uppercase tracking-tight ${isSchoolsPage ? 'text-4xl md:text-7xl leading-none' : 'text-3xl md:text-6xl'}`}>
             {isSchoolsPage ? "Structured Academic & Skill Programs for Schools" : "Education Programs"}
           </h2>
@@ -141,10 +138,10 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
                     <button
                       onClick={() => onSelect(key)}
                       className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.25em] transition-all shadow-2xl active:scale-[0.98] ${isSchoolView && !isSelected
-                          ? 'bg-white text-black hover:bg-gray-200'
-                          : isSelected
-                            ? 'bg-blue-600 text-white shadow-blue-500/20'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10'
+                        ? 'bg-white text-black hover:bg-gray-200'
+                        : isSelected
+                          ? 'bg-blue-600 text-white shadow-blue-500/20'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10'
                         }`}
                     >
                       {isSelected ? 'Selected' : 'Apply Now'}
@@ -161,3 +158,4 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
