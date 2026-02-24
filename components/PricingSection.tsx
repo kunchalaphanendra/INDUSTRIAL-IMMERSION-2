@@ -96,7 +96,7 @@ const PricingSection: React.FC = () => {
                           </svg>
                         </span>
                       </summary>
-                      <div className="mt-6 text-gray-500 text-[13px] leading-relaxed font-medium uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
+                      <div className="mt-6 text-gray-500 text-[13px] leading-relaxed font-medium tracking-wider animate-in fade-in slide-in-from-top-2">
                         {faq.answer}
                       </div>
                     </details>
@@ -112,3 +112,4 @@ const PricingSection: React.FC = () => {
 };
 
 export default PricingSection;
+
