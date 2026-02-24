@@ -59,7 +59,7 @@ const Hero: React.FC = () => {
             onClick={scrollToInstitutions}
             className="w-full sm:w-auto px-16 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-blue-500/10 active:scale-95 uppercase tracking-widest"
           >
-            Explore Institutions
+            Explore Programs
           </button>
         </div>
       </div>
