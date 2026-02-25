@@ -39,11 +39,19 @@ const About: React.FC = () => {
         <div>
           <h2 className="text-xs font-black text-blue-500 uppercase tracking-[0.4em] mb-8">Our Mission</h2>
           <p className="text-3xl md:text-5xl font-heading font-bold text-white uppercase tracking-tighter leading-tight mb-8">
-            Integrating Structured Execution into Education
+            Bridging the Gap Between Theory and Operational Reality
           </p>
-          <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed">
-            To build industry-ready individuals by integrating structured execution experience into education and institutional ecosystems. We believe practical exposure should not begin after graduation — it should be integrated during learning.
-          </p>
+          <div className="space-y-6 text-gray-400 text-lg md:text-xl font-medium leading-relaxed">
+            <p>
+              Our mission is to integrate structured execution into education systems and bridge the gap between academic theory and operational reality.
+            </p>
+            <p>
+              We aim to create an ecosystem where students gain measurable industry exposure before entering the workforce, institutions strengthen employability outcomes, and businesses access structured execution support.
+            </p>
+            <p className="text-white font-bold italic border-l-2 border-blue-500 pl-6 py-2">
+              Industrial immersion is not an alternative to education — it is a practical extension of it.
+            </p>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="glass-card p-8 rounded-3xl border-white/5 text-center">
@@ -184,4 +192,3 @@ const About: React.FC = () => {
 };
 
 export default About;
-
