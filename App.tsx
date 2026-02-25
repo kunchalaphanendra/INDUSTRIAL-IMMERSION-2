@@ -86,11 +86,37 @@ const App: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initialInstitutionType, setInitialInstitutionType] = useState<InstitutionType | null>(null);
 
+  // Sync view with browser history
+  const navigateTo = (newView: typeof view, state?: any) => {
+    setView(newView);
+    window.history.pushState({ view: newView, ...state }, '', '');
+  };
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view) {
+        setView(event.state.view);
+        if (event.state.slug) setSelectedBlogSlug(event.state.slug);
+      } else {
+        setView('landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Initial state for the home page
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'landing' }, '', '');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   useEffect(() => {
     const recoverSession = async () => {
       // 1. Check for Admin Session first
       if (isAdminLoggedIn()) {
-        setView('admin');
+        navigateTo('admin');
         setIsInitializing(false);
         return;
       }
@@ -112,39 +138,36 @@ const App: React.FC = () => {
 
     const handleAdminNav = () => {
       if (isAdminLoggedIn()) {
-        setView('admin');
+        navigateTo('admin');
         setAdminSubView('overview');
         setSelectedStudentId(null);
       } else {
-        setView('admin-login');
+        navigateTo('admin-login');
       }
     };
 
     const handleAdminLoginNav = () => {
-      setView('admin-login');
+      navigateTo('admin-login');
     };
 
     const handleHomeNav = () => {
-      setView('landing');
+      navigateTo('landing');
       setSelectedBlogSlug(null);
     };
 
     const handleBlogPostNav = (e: any) => {
       setSelectedBlogSlug(e.detail);
-      setView('blog-post');
+      navigateTo('blog-post', { slug: e.detail });
     };
 
     const handleAboutNav = () => {
-      setView('about');
+      navigateTo('about');
     };
 
     const handleInstitutionsNav = (e: any) => {
-      setView('institutions');
-      if (e.detail === 'school') {
-        setInitialInstitutionType(InstitutionType.SCHOOL);
-      } else {
-        setInitialInstitutionType(InstitutionType.COLLEGE);
-      }
+      const type = e.detail === 'school' ? InstitutionType.SCHOOL : InstitutionType.COLLEGE;
+      setInitialInstitutionType(type);
+      navigateTo('institutions', { type });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -186,13 +209,13 @@ const App: React.FC = () => {
     if (selectedTrack) {
       setEnrollment({ track: selectedTrack });
     } else {
-      setView('dashboard');
+      navigateTo('dashboard');
     }
   };
 
   const scrollToSection = (id: string) => {
     if (view !== 'landing') {
-      setView('landing');
+      navigateTo('landing');
       // Wait for re-render
       setTimeout(() => {
         const element = document.getElementById(id);
@@ -208,7 +231,7 @@ const App: React.FC = () => {
     localStorage.removeItem('ii_token');
     localStorage.removeItem('ii_user');
     setUser(null);
-    setView('landing');
+    navigateTo('landing');
   };
 
   if (isInitializing) {
@@ -255,18 +278,18 @@ const App: React.FC = () => {
         <Navbar 
           user={user} 
           onLoginClick={() => setShowAuthModal(true)} 
-          onDashboardClick={() => setView('dashboard')} 
-          onBlogClick={() => setView('blog')}
-          onAboutClick={() => setView('about')}
+          onDashboardClick={() => navigateTo('dashboard')} 
+          onBlogClick={() => navigateTo('blog')}
+          onAboutClick={() => navigateTo('about')}
           onProgramsClick={() => scrollToSection('institutions')}
           onFAQClick={() => scrollToSection('faq')}
           onAdminClick={() => { 
             if (isAdminLoggedIn()) {
-              setView('admin'); 
+              navigateTo('admin'); 
               setAdminSubView('overview'); 
               setSelectedStudentId(null);
             } else {
-              setView('admin-login');
+              navigateTo('admin-login');
             }
           }}
         />
@@ -277,7 +300,7 @@ const App: React.FC = () => {
           <AdminLayout 
             activeView={adminSubView} 
             onViewChange={(v) => { setAdminSubView(v); setSelectedStudentId(null); }} 
-            onExit={() => { setView('landing'); }}
+            onExit={() => { navigateTo('landing'); }}
           >
             {renderAdminContent()}
           </AdminLayout>
@@ -285,22 +308,25 @@ const App: React.FC = () => {
           <Dashboard 
             user={user} 
             onLogout={handleLogout} 
-            onBackToLanding={() => setView('landing')} 
+            onBackToLanding={() => navigateTo('landing')} 
           />
         ) : view === 'blog' ? (
           <BlogList 
             onPostClick={(slug) => {
               setSelectedBlogSlug(slug);
-              setView('blog-post');
+              navigateTo('blog-post', { slug });
             }} 
           />
         ) : view === 'blog-post' && selectedBlogSlug ? (
           <BlogPostDetail 
             slug={selectedBlogSlug} 
-            onBack={() => setView('blog')} 
-            onPostClick={(slug) => setSelectedBlogSlug(slug)}
+            onBack={() => navigateTo('blog')} 
+            onPostClick={(slug) => {
+              setSelectedBlogSlug(slug);
+              navigateTo('blog-post', { slug });
+            }}
             onApplyClick={() => {
-              setView('landing');
+              navigateTo('landing');
               setTimeout(() => {
                 const element = document.getElementById('institutions');
                 if (element) element.scrollIntoView({ behavior: 'smooth' });
@@ -368,6 +394,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
