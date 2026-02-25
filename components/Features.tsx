@@ -1,3 +1,4 @@
+// Features component for displaying program details
 import React from 'react';
 
 const Features: React.FC = () => {
@@ -165,6 +166,7 @@ const Features: React.FC = () => {
 };
 
 export default Features;
+
 
 
 
