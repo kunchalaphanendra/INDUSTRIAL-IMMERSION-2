@@ -28,7 +28,7 @@ export enum TrackKey {
   COLLEGE_PROF = 'college_prof',
   COLLEGE_IMMERSION = 'college_immersion',
   INFLUENCER_COHORT = 'influencer_cohort',
-  MANAGEMENT_SUITE = 'management_suite',
+  MANAGEMENT_SUIT = 'management_suit',
   FINANCE_PRO = 'finance_pro',
   CORPORATE_IMMERSION = 'corporate_immersion'
 }
@@ -171,6 +171,7 @@ export interface FAQCategory {
   title: string;
   items: FAQItem[];
 }
+
 
 
 
