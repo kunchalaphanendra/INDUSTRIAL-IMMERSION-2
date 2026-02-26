@@ -36,10 +36,6 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-gray-500 text-sm">
               <li><button onClick={() => handleNav('student-program')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Student Program</button></li>
               <li><button onClick={() => handleNav('for-colleges')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">For Colleges</button></li>
-              <li><button onClick={() => handleNav('influencer-cohort')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Influencer Cohort</button></li>
-              <li><button onClick={() => handleNav('management-suit')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Management Suit</button></li>
-              <li><button onClick={() => handleNav('finance-pro')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Finance Pro</button></li>
-              <li><button onClick={() => handleNav('corporate-immersion')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Corporate Immersion</button></li>
               <li><button onClick={() => handleNav('blog')} className="hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black">Industrial Insights</button></li>
             </ul>
           </div>
@@ -86,6 +82,7 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
+
 
 
 
