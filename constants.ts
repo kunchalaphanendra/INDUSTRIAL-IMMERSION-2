@@ -77,8 +77,8 @@ export const TRACKS: Record<TrackKey, TrackData> = {
       'Creator network access'
     ]
   },
-  [TrackKey.MANAGEMENT_SUITE]: {
-    title: 'Management Suite',
+  [TrackKey.MANAGEMENT_SUIT]: {
+    title: 'Management Suit',
     duration: '6 Months',
     price: 19999,
     billingType: BillingType.ONETIME,
@@ -300,6 +300,7 @@ export const FAQ_CATEGORIES: FAQCategory[] = [
 ];
 
 export const FAQS = FAQ_CATEGORIES.flatMap(cat => cat.items);
+
 
 
 
