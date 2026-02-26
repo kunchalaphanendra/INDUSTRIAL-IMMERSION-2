@@ -76,7 +76,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions' | 'privacy' | 'terms' | 'refund' | 'cookie'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions' | 'privacy' | 'terms' | 'refund' | 'cookie' | 'influencer-cohort' | 'management-suit' | 'finance-pro' | 'corporate-immersion'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -174,7 +174,15 @@ const App: React.FC = () => {
 
     const handleViewNav = (e: any) => {
       const targetView = e.detail as any;
-      navigateTo(targetView);
+      if (['influencer-cohort', 'management-suit', 'finance-pro', 'corporate-immersion', 'student-program', 'for-colleges'].includes(targetView)) {
+        navigateTo('landing');
+        setTimeout(() => {
+          const element = document.getElementById('institutions');
+          if (element) element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        navigateTo(targetView);
+      }
     };
 
     window.addEventListener('nav-admin', handleAdminNav);
@@ -404,13 +412,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-
-
-
-
-
-
-
-
-
