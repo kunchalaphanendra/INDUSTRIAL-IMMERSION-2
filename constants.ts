@@ -61,66 +61,6 @@ export const TRACKS: Record<TrackKey, TrackData> = {
       'Professional Mentorship & Network',
       'Joint Industry Experience Letter'
     ]
-  },
-  [TrackKey.INFLUENCER_COHORT]: {
-    title: 'Influencer Cohort',
-    duration: '3 Months',
-    price: 12999,
-    billingType: BillingType.ONETIME,
-    description: 'Master the art of personal branding and content execution for the creator economy.',
-    idealFor: 'Aspiring creators and brand ambassadors seeking industrial exposure.',
-    features: [
-      'Content strategy & execution',
-      'Brand collaboration modules',
-      'Audience growth mechanics',
-      'Production quality training',
-      'Creator network access'
-    ]
-  },
-  [TrackKey.MANAGEMENT_SUIT]: {
-    title: 'Management Suit',
-    duration: '6 Months',
-    price: 19999,
-    billingType: BillingType.ONETIME,
-    description: 'Advanced operational management and business execution for future leaders.',
-    idealFor: 'Graduates looking to enter management roles with practical experience.',
-    features: [
-      'Operational excellence training',
-      'Team leadership execution',
-      'Business process mapping',
-      'Stakeholder management',
-      'Strategic planning projects'
-    ]
-  },
-  [TrackKey.FINANCE_PRO]: {
-    title: 'Finance Pro',
-    duration: '4 Months',
-    price: 15999,
-    billingType: BillingType.ONETIME,
-    description: 'Practical financial operations and industrial accounting for modern businesses.',
-    idealFor: 'Finance students seeking real-world exposure to business accounts.',
-    features: [
-      'Industrial accounting tasks',
-      'Financial reporting & analysis',
-      'Taxation & compliance modules',
-      'Budgeting & forecasting',
-      'FinTech tool proficiency'
-    ]
-  },
-  [TrackKey.CORPORATE_IMMERSION]: {
-    title: 'Corporate Immersion',
-    duration: '12 Months',
-    price: 24999,
-    billingType: BillingType.ONETIME,
-    description: 'Full-scale corporate embedding with rotational roles across departments.',
-    idealFor: 'Professionals seeking a complete transition into corporate environments.',
-    features: [
-      'Departmental rotations',
-      'Corporate culture integration',
-      'High-impact project ownership',
-      'Executive mentorship',
-      'Global business standards'
-    ]
   }
 };
 
@@ -300,6 +240,7 @@ export const FAQ_CATEGORIES: FAQCategory[] = [
 ];
 
 export const FAQS = FAQ_CATEGORIES.flatMap(cat => cat.items);
+
 
 
 
