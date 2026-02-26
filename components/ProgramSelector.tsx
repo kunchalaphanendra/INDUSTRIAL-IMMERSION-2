@@ -29,7 +29,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
     TrackKey.COLLEGE_PROF, 
     TrackKey.COLLEGE_IMMERSION,
     TrackKey.INFLUENCER_COHORT,
-    TrackKey.MANAGEMENT_SUIT,
+    TrackKey.MANAGEMENT_SUITE,
     TrackKey.FINANCE_PRO,
     TrackKey.CORPORATE_IMMERSION
   ];
@@ -165,5 +165,6 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
