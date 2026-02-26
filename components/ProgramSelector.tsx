@@ -25,14 +25,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
   const [activeTab, setActiveTab] = useState<InstitutionType>(isSchoolsPage ? InstitutionType.SCHOOL : (initialType || forceType || InstitutionType.SCHOOL));
 
   const schoolTracks = [TrackKey.SCHOOL_TUITION, TrackKey.SCHOOL_SKILL];
-  const collegeTracks = [
-    TrackKey.COLLEGE_PROF, 
-    TrackKey.COLLEGE_IMMERSION,
-    TrackKey.INFLUENCER_COHORT,
-    TrackKey.MANAGEMENT_SUIT,
-    TrackKey.FINANCE_PRO,
-    TrackKey.CORPORATE_IMMERSION
-  ];
+  const collegeTracks = [TrackKey.COLLEGE_PROF, TrackKey.COLLEGE_IMMERSION];
 
   const currentTracks = activeTab === InstitutionType.SCHOOL ? schoolTracks : collegeTracks;
   const isSchoolView = activeTab === InstitutionType.SCHOOL;
@@ -165,6 +158,7 @@ const ProgramSelector: React.FC<ProgramSelectorProps> = ({
 };
 
 export default ProgramSelector;
+
 
 
 
