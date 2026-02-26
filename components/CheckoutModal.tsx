@@ -29,6 +29,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [selectedInstId, setSelectedInstId] = useState<string>('');
   const [customInstName, setCustomInstName] = useState<string>('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+  const [agreedToRefund, setAgreedToRefund] = useState(false);
   
   const loggedInUserStr = localStorage.getItem('ii_user');
   const loggedInUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
@@ -264,6 +267,39 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   </label>
                   <textarea rows={3} value={formData.careerGoals} onChange={e => setFormData({...formData, careerGoals: e.target.value})} placeholder={isSchoolTrack ? "What do you hope to achieve?" : "Describe your objectives..."} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none resize-none text-white" />
                </div>
+
+               <div className="space-y-3 pt-2">
+                 <label className="flex items-start gap-3 cursor-pointer group">
+                   <div className="relative flex items-center mt-0.5">
+                     <input 
+                       type="checkbox" 
+                       checked={agreedToTerms}
+                       onChange={(e) => setAgreedToTerms(e.target.checked)}
+                       className="peer h-4 w-4 appearance-none rounded border border-white/20 bg-white/5 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer" 
+                     />
+                     <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                   </div>
+                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
+                     I agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'terms' })); }} className="text-blue-500 hover:underline">Terms & Conditions</button> *
+                   </span>
+                 </label>
+
+                 <label className="flex items-start gap-3 cursor-pointer group">
+                   <div className="relative flex items-center mt-0.5">
+                     <input 
+                       type="checkbox" 
+                       checked={agreedToPrivacy}
+                       onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                       className="peer h-4 w-4 appearance-none rounded border border-white/20 bg-white/5 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer" 
+                     />
+                     <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                   </div>
+                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
+                     I agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'privacy' })); }} className="text-blue-500 hover:underline">Privacy Policy</button> *
+                   </span>
+                 </label>
+               </div>
+
                <button 
                 onClick={() => {
                   // Task 5: Safety Validation
@@ -273,6 +309,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                   }
                   if (selectedInstId === 'other' && !customInstName.trim()) {
                     setErrorMessage("Institution name is required.");
+                    return;
+                  }
+                  if (!agreedToTerms || !agreedToPrivacy) {
+                    setErrorMessage("Please agree to the Terms and Privacy Policy.");
                     return;
                   }
                   setStep(2);
@@ -306,8 +346,35 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                </div>
                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest">Secure Checkout</h3>
                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-8">SSL ENCRYPTED</p>
+               
+               <div className="mb-8 p-6 bg-white/[0.02] border border-white/5 rounded-2xl text-left">
+                 <label className="flex items-start gap-4 cursor-pointer group">
+                   <div className="relative flex items-center mt-0.5">
+                     <input 
+                       type="checkbox" 
+                       checked={agreedToRefund}
+                       onChange={(e) => setAgreedToRefund(e.target.checked)}
+                       className="peer h-5 w-5 appearance-none rounded border border-white/20 bg-white/5 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer" 
+                     />
+                     <svg className="absolute w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                   </div>
+                   <div className="flex-1">
+                     <p className="text-[11px] font-black text-white uppercase tracking-widest mb-1 group-hover:text-blue-500 transition-colors">Refund Policy Agreement *</p>
+                     <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
+                       I have read and agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'refund' })); }} className="text-blue-500 hover:underline">Refund Policy</button> regarding this enrollment.
+                     </p>
+                   </div>
+                 </label>
+               </div>
+
                <button 
-                 onClick={handlePayment} 
+                 onClick={() => {
+                   if (!agreedToRefund) {
+                     setErrorMessage("Please agree to the Refund Policy to proceed.");
+                     return;
+                   }
+                   handlePayment();
+                 }} 
                  disabled={isProcessing} 
                  className={`w-full py-6 rounded-2xl text-xl uppercase tracking-[0.2em] shadow-2xl transition-all ${isProcessing ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                >
@@ -336,6 +403,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
 };
 
 export default CheckoutModal;
+
 
 
 
