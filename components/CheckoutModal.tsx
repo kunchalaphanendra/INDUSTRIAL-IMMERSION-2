@@ -4,6 +4,7 @@ import { EnrollmentState, TrackKey, UserRegistration, StudentType, Institution }
 import { TRACKS } from '../constants';
 import { apiService } from '../services/api';
 import { supabase } from '../lib/supabaseClient';
+import { getLegalContent } from './LegalPages';
 
 /**
  * PAYMENT CONFIGURATION
@@ -32,6 +33,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
   const [agreedToRefund, setAgreedToRefund] = useState(false);
+  const [legalOverlay, setLegalOverlay] = useState<'privacy' | 'terms' | 'refund' | null>(null);
   
   const loggedInUserStr = localStorage.getItem('ii_user');
   const loggedInUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
@@ -280,7 +282,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                      <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                    </div>
                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
-                     I agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'terms' })); }} className="text-blue-500 hover:underline">Terms & Conditions</button> *
+                     I agree to the <button onClick={(e) => { e.preventDefault(); setLegalOverlay('terms'); }} className="text-blue-500 hover:underline">Terms & Conditions</button> *
                    </span>
                  </label>
 
@@ -295,7 +297,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                      <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                    </div>
                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
-                     I agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'privacy' })); }} className="text-blue-500 hover:underline">Privacy Policy</button> *
+                     I agree to the <button onClick={(e) => { e.preventDefault(); setLegalOverlay('privacy'); }} className="text-blue-500 hover:underline">Privacy Policy</button> *
                    </span>
                  </label>
                </div>
@@ -361,7 +363,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
                    <div className="flex-1">
                      <p className="text-[11px] font-black text-white uppercase tracking-widest mb-1 group-hover:text-blue-500 transition-colors">Refund Policy Agreement *</p>
                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
-                       I have read and agree to the <button onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('nav-view', { detail: 'refund' })); }} className="text-blue-500 hover:underline">Refund Policy</button> regarding this enrollment.
+                       I have read and agree to the <button onClick={(e) => { e.preventDefault(); setLegalOverlay('refund'); }} className="text-blue-500 hover:underline">Refund Policy</button> regarding this enrollment.
                      </p>
                    </div>
                  </label>
@@ -387,7 +389,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
           {step === 4 && (
             <div className="text-center py-10 animate-in zoom-in">
                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8 text-green-500">
-                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                </div>
                <h3 className="text-3xl font-heading font-black text-white mb-4 uppercase tracking-tighter">Seat Secured</h3>
                <p className="text-gray-500 mb-10 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
@@ -397,12 +399,34 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ enrollment, onClose, onCo
             </div>
           )}
         </div>
+
+        {/* Legal Overlay */}
+        {legalOverlay && (
+          <div className="absolute inset-0 z-50 bg-[#080808] animate-in slide-in-from-bottom-full duration-300 flex flex-col">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setLegalOverlay(null)} className="text-gray-500 hover:text-white transition-colors">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.2em]">{getLegalContent(legalOverlay).title}</h3>
+              </div>
+              <button onClick={() => setLegalOverlay(null)} className="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Close</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-10 custom-scrollbar text-gray-400 text-xs leading-relaxed">
+              {getLegalContent(legalOverlay).content}
+              <div className="pt-12 border-t border-white/5 mt-12 mb-8">
+                <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest">Last Updated: February 26, 2026</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default CheckoutModal;
+
 
 
 
