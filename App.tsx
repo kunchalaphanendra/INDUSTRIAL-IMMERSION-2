@@ -23,6 +23,7 @@ import AdminStudentProfile from './components/AdminStudentProfile';
 import AdminBlogCMS from './components/AdminBlogCMS';
 import BlogList from './components/BlogList';
 import BlogPostDetail from './components/BlogPostDetail';
+import LegalPages from './components/LegalPages';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User, BlogPost, InstitutionType } from '@/types';
 import { apiService } from './services/api';
@@ -75,7 +76,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions' | 'privacy' | 'terms' | 'refund' | 'cookie'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -171,12 +172,18 @@ const App: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleViewNav = (e: any) => {
+      const targetView = e.detail as any;
+      navigateTo(targetView);
+    };
+
     window.addEventListener('nav-admin', handleAdminNav);
     window.addEventListener('nav-admin-login', handleAdminLoginNav);
     window.addEventListener('nav-home', handleHomeNav);
     window.addEventListener('nav-blog-post', handleBlogPostNav);
     window.addEventListener('nav-about', handleAboutNav);
     window.addEventListener('nav-institutions', handleInstitutionsNav);
+    window.addEventListener('nav-view', handleViewNav);
     
     // Ensure cornerstone article is featured
     apiService.featurePostBySlug('the-complete-guide-to-industrial-immersion-programs');
@@ -191,6 +198,7 @@ const App: React.FC = () => {
       window.removeEventListener('nav-blog-post', handleBlogPostNav);
       window.removeEventListener('nav-about', handleAboutNav);
       window.removeEventListener('nav-institutions', handleInstitutionsNav);
+      window.removeEventListener('nav-view', handleViewNav);
     };
   }, []);
 
@@ -335,6 +343,8 @@ const App: React.FC = () => {
           />
         ) : view === 'about' ? (
           <About />
+        ) : ['privacy', 'terms', 'refund', 'cookie'].includes(view) ? (
+          <LegalPages type={view as any} onBack={() => navigateTo('landing')} />
         ) : view === 'institutions' ? (
           <div className="pt-20">
             <ProgramSelector 
@@ -394,6 +404,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 
