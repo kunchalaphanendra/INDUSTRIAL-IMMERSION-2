@@ -24,7 +24,6 @@ import AdminBlogCMS from './components/AdminBlogCMS';
 import BlogList from './components/BlogList';
 import BlogPostDetail from './components/BlogPostDetail';
 import LegalPages from './components/LegalPages';
-import ProgramPages from './components/ProgramPages';
 import { PARTNERS, TRACKS } from './constants';
 import { TrackKey, EnrollmentState, User, BlogPost, InstitutionType } from '@/types';
 import { apiService } from './services/api';
@@ -77,7 +76,7 @@ const GetStarted: React.FC = () => {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions' | 'privacy' | 'terms' | 'refund' | 'cookie' | 'influencer-cohort' | 'management-suite' | 'finance-pro' | 'corporate-immersion'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin' | 'admin-login' | 'blog' | 'blog-post' | 'about' | 'institutions' | 'privacy' | 'terms' | 'refund' | 'cookie' | 'influencer-cohort' | 'management-suit' | 'finance-pro' | 'corporate-immersion'>('landing');
   const [adminSubView, setAdminSubView] = useState<'overview' | 'students' | 'payments' | 'reviews' | 'institutions' | 'blog'>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -175,7 +174,7 @@ const App: React.FC = () => {
 
     const handleViewNav = (e: any) => {
       const targetView = e.detail as any;
-      if (['student-program', 'for-colleges'].includes(targetView)) {
+      if (['influencer-cohort', 'management-suit', 'finance-pro', 'corporate-immersion', 'student-program', 'for-colleges'].includes(targetView)) {
         navigateTo('landing');
         setTimeout(() => {
           const element = document.getElementById('institutions');
@@ -354,18 +353,6 @@ const App: React.FC = () => {
           <About />
         ) : ['privacy', 'terms', 'refund', 'cookie'].includes(view) ? (
           <LegalPages type={view as any} onBack={() => navigateTo('landing')} />
-        ) : ['influencer-cohort', 'management-suite', 'finance-pro', 'corporate-immersion'].includes(view) ? (
-          <ProgramPages 
-            type={view as any} 
-            onBack={() => navigateTo('landing')} 
-            onApply={() => {
-              navigateTo('landing');
-              setTimeout(() => {
-                const element = document.getElementById('institutions');
-                if (element) element.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-            }}
-          />
         ) : view === 'institutions' ? (
           <div className="pt-20">
             <ProgramSelector 
@@ -425,4 +412,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
