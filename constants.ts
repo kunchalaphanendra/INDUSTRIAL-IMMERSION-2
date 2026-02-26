@@ -35,7 +35,7 @@ export const TRACKS: Record<TrackKey, TrackData> = {
   [TrackKey.COLLEGE_PROF]: {
     title: 'Professional Skills Certification',
     duration: '4 Months',
-    price: 9999,
+    price: 1,
     billingType: BillingType.ONETIME,
     description: 'Core skill development for career readiness and professional foundation.',
     idealFor: 'Colleges seeking structured skill curriculum for their students.',
